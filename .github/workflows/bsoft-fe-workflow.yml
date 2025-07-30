@@ -11,7 +11,7 @@ jobs:
     runs-on: self-hosted
 
     env:
-      DEPLOY_PATH: "C:\\inetpub\\wwwroot\\YourSiteName"    # Edit this for your environment
+      DEPLOY_PATH: "C:\\inetpub\\wwwroot" # Edit this for your environment
 
     steps:
       - name: Checkout repository
