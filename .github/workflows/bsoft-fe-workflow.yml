@@ -17,10 +17,6 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Enable PowerShell Script Execution
-        shell: pwsh
-        run: Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope Process
-
       - name: Setup pnpm
         uses: pnpm/action-setup@v3
         with:
