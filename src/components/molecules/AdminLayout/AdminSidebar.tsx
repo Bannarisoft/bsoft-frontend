@@ -89,29 +89,29 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ modules }) => {
     };
   }, []);
 
-  const itemVariants = {
-    initial: { scale: 1 },
-    hover: {
-      scale: 1.035,
-      transition: {
-        type: "spring",
-        stiffness: 500,
-        damping: 20,
-      },
-    },
-  };
+  // const itemVariants = {
+  //   initial: { scale: 1 },
+  //   hover: {
+  //     scale: 1.035,
+  //     transition: {
+  //       type: "spring",
+  //       stiffness: 500,
+  //       damping: 20,
+  //     },
+  //   },
+  // };
 
-  const moduleVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: (i: number) => ({
-      opacity: 1,
-      y: 0,
-      transition: {
-        delay: i * 0.1,
-        duration: 0.5,
-      },
-    }),
-  };
+  // const moduleVariants = {
+  //   hidden: { opacity: 0, y: 20 },
+  //   visible: (i: number) => ({
+  //     opacity: 1,
+  //     y: 0,
+  //     transition: {
+  //       delay: i * 0.1,
+  //       duration: 0.5,
+  //     },
+  //   }),
+  // };
 
   return (
     <Box
@@ -145,7 +145,7 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ modules }) => {
             custom={index}
             initial="hidden"
             animate="visible"
-            variants={moduleVariants}
+            // variants={moduleVariants}
           >
             <Box
               mb={{ xs: 2, sm: 2.5, md: 3 }}
@@ -212,7 +212,7 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ modules }) => {
                   return (
                     <motion.div
                       key={item.id}
-                      variants={itemVariants}
+                      // variants={itemVariants}
                       initial="initial"
                       whileHover="hover"
                       onMouseEnter={() => setHoveredItem(item.id)}

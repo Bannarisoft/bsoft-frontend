@@ -1,0 +1,23 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bsoft-frontend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: bsoft-frontend
+  template:
+    metadata:
+      labels:
+        app: bsoft-frontend
+    spec:
+      containers:
+        - name: bsoft-frontend
+          image: bsoft-frontend:latest
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 3000
+          envFrom:
+            - secretRef:
+                name: bsoft-env
