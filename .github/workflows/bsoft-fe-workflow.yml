@@ -6,7 +6,7 @@ on:
 
 jobs:
   build-and-deploy:
-    runs-on: self-hosted  # this runs on your IIS server
+    runs-on: self-hosted  # your IIS machine must be running the GitHub runner
 
     steps:
       - name: Checkout code
@@ -30,6 +30,10 @@ jobs:
 
       - name: Copy files to IIS (static export)
         run: |
-          Remove-Item -Recurse -Force "C:\inetpub\wwwroot\bsoft\*"
-          Copy-Item -Recurse -Force ".\out\*" "C:\inetpub\wwwroot\bsoft\"
+          $target = "D:\BSOFT-FrontEnd\BSOFT-FrontEnd\Bsoft"
+          if (!(Test-Path $target)) {
+            New-Item -ItemType Directory -Path $target
+          }
+          Remove-Item -Recurse -Force "$target\*" -ErrorAction SilentlyContinue
+          Copy-Item -Recurse -Force ".\out\*" "$target\"
         shell: pwsh
