@@ -1,32 +1,35 @@
-name: Next.js CI/CD
+name: Next.js CI/CD on IIS
 
 on:
   push:
     branches: ["Development"]
-  pull_request:
-    branches: ["Development"]
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
+  build-and-deploy:
+    runs-on: self-hosted  # this runs on your IIS server
 
     steps:
-      - name: Checkout repository
+      - name: Checkout code
         uses: actions/checkout@v3
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v3
         with:
-          version: 9   # use your project's pnpm version
+          version: 9
 
-      - name: Setup Node.js 18.x
+      - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
           node-version: 18
-          cache: "pnpm"
 
       - name: Install dependencies
         run: pnpm install
 
-      - name: Build Next.js app
+      - name: Build the app
         run: pnpm run build:auto
+
+      - name: Copy files to IIS (static export)
+        run: |
+          Remove-Item -Recurse -Force "C:\inetpub\wwwroot\your-app\*"
+          Copy-Item -Recurse -Force ".\out\*" "C:\inetpub\wwwroot\your-app\"
+        shell: pwsh
