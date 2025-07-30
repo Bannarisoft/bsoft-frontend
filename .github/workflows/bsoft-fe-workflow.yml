@@ -30,6 +30,6 @@ jobs:
 
       - name: Copy files to IIS (static export)
         run: |
-          Remove-Item -Recurse -Force "C:\inetpub\wwwroot\your-app\*"
-          Copy-Item -Recurse -Force ".\out\*" "C:\inetpub\wwwroot\your-app\"
+          Remove-Item -Recurse -Force "C:\inetpub\wwwroot\bsoft\*"
+          Copy-Item -Recurse -Force ".\out\*" "C:\inetpub\wwwroot\bsoft\"
         shell: pwsh
