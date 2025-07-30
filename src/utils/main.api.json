@@ -1,0 +1,709 @@
+{
+  "MachineGroup": {
+    "GetMachineGroup": {
+      "endpoint": "api/MachineGroup?PageNumber={page}&PageSize={size}&SearchTerm={searchTerm}",
+      "method": "GET"
+    },
+    "AddMachineGroup": {
+      "endpoint": "api/MachineGroup",
+      "method": "POST"
+    },
+    "UpdateMachineGroup": {
+      "endpoint": "api/MachineGroup",
+      "method": "PUT"
+    },
+    "DeleteMachineGroup": {
+      "endpoint": "api/MachineGroup/{id}",
+      "method": "DELETE"
+    }
+  },
+  "MachineGroupUser": {
+    "GetMachineGroupUser": {
+      "endpoint": "api/MachineGroupUser?PageNumber={page}&PageSize={size}&SearchTerm={searchTerm}",
+      "method": "GET"
+    },
+    "AddMachineGroupUser": {
+      "endpoint": "api/MachineGroupUser",
+      "method": "POST"
+    },
+    "UpdateMachineGroupUser": {
+      "endpoint": "api/MachineGroupUser",
+      "method": "PUT"
+    },
+    "DeleteMachineGroupUser": {
+      "endpoint": "api/MachineGroupUser/{id}",
+      "method": "DELETE"
+    }
+  },
+  "Machine": {
+    "MachineMaster": {
+      "endpoint": "api/Machine?SearchTerm={searchTerm}",
+      "method": "GET"
+    },
+    "GetByMachinName": {
+      "endpoint": "api/Machine/by-name",
+      "method": "GET"
+    },
+    "MachineGroupByName": {
+      "endpoint": "api/MachineGroup/by-name",
+      "method": "GET"
+    },
+    "ShiftByName": {
+      "endpoint": "api/ShiftMaster/by-name",
+      "method": "GET"
+    },
+    "WorkCenterByName": {
+      "endpoint": "api/WorkCenter/by-name",
+      "method": "GET"
+    },
+    "CostCenterByName": {
+      "endpoint": "api/CostCenter/by-name",
+      "method": "GET"
+    },
+    "AddMachine": {
+      "endpoint": "api/Machine",
+      "method": "POST"
+    },
+    "UpdateMachine": {
+      "endpoint": "api/Machine",
+      "method": "PUT"
+    },
+    "DeleteMachine": {
+      "endpoint": "api/Machine?id={id}",
+      "method": "DELETE"
+    },
+    "LineNumber": {
+      "endpoint": "api/Machine/MachineLineNo",
+      "method": "GET"
+    },
+    "MachineGroupById": {
+      "endpoint": "api/Machine/MachineGroup/{Id}",
+      "method": "GET"
+    },
+    "AssetByMachine": {
+      "endpoint": "api/Machine/GetByAssetId/{assetId}",
+      "method": "GET"
+    },
+    "Specification": {
+      "endpoint": "api/MiscMaster/by-name?MiscTypeCode={type}",
+      "method": "GET"
+    }
+  },
+
+  "MachineSpecification": {
+    "AddSpecification": {
+      "endpoint": "api/MachineSpecification",
+      "method": "POST"
+    },
+    "UpdateSpecification": {
+      "endpoint": "api/MachineSpecification",
+      "method": "PUT"
+    },
+    "DeleteSpecification": {
+      "endpoint": "api/MachineSpecification?id={id}",
+      "method": "DELETE"
+    },
+    "GetSpecification": {
+      "endpoint": "api/MachineSpecification/{id}",
+      "method": "GET"
+    }
+  },
+  "Maintanence": {
+    "GetMaintanence": {
+      "endpoint": "api/MaintenanceCategory?PageNumber={page}&PageSize={size}&SearchTerm={searchTerm}",
+      "method": "GET"
+    },
+    "AddMaintanence": {
+      "endpoint": "api/MaintenanceCategory",
+      "method": "POST"
+    },
+    "UpdateMaintanence": {
+      "endpoint": "api/MaintenanceCategory",
+      "method": "PUT"
+    },
+    "DeleteMaintanence": {
+      "endpoint": "api/MaintenanceCategory?id={id}",
+      "method": "DELETE"
+    }
+  },
+  "MaintanenceType": {
+    "GetMaintanenceType": {
+      "endpoint": "api/MaintenanceType?PageNumber={page}&PageSize={size}&SearchTerm={searchTerm}",
+      "method": "GET"
+    },
+    "PostMaintanenceType": {
+      "endpoint": "api/MaintenanceType",
+      "method": "POST"
+    },
+    "UpdateMaintanenceType": {
+      "endpoint": "api/MaintenanceType",
+      "method": "PUT"
+    },
+    "DeleteMaintanenceType": {
+      "endpoint": "api/MaintenanceType?id={id}",
+      "method": "DELETE"
+    },
+    "GetByName": {
+      "endpoint": "api/MaintenanceCategory/by-name",
+      "method": "GET"
+    },
+    "GetBymain": {
+      "endpoint": "api/MaintenanceType/by-name",
+      "method": "GET"
+    }
+  },
+  "WorkCenter": {
+    "GetWorkCenter": {
+      "endpoint": "api/WorkCenter?PageNumber={page}&PageSize={size}&SearchTerm={searchTerm}",
+      "method": "GET"
+    },
+    "AddWorkCenter": {
+      "endpoint": "api/WorkCenter",
+      "method": "POST"
+    },
+    "UpdateWorkCenter": {
+      "endpoint": "api/WorkCenter",
+      "method": "PUT"
+    },
+    "DeleteWorkCenter": {
+      "endpoint": "api/WorkCenter?id={id}",
+      "method": "DELETE"
+    }
+  },
+  "CostCenter": {
+    "GetCostCenter": {
+      "endpoint": "api/CostCenter?PageNumber={page}&PageSize={size}&SearchTerm={searchTerm}",
+      "method": "GET"
+    },
+    "CostDetailMaster": {
+      "endpoint": "api/CostCenter/{id}",
+      "method": "GET"
+    },
+    "AddCostCenter": {
+      "endpoint": "api/CostCenter",
+      "method": "POST"
+    },
+    "UpdateCostCenter": {
+      "endpoint": "api/CostCenter",
+      "method": "PUT"
+    },
+    "DeleteCostCenter": {
+      "endpoint": "api/CostCenter?id={id}",
+      "method": "DELETE"
+    }
+  },
+  "ActivityMaster": {
+    "GetActivity": {
+      "endpoint": "api/ActivityMaster?PageNumber={page}&PageSize={size}&SearchTerm={searchTerm}",
+      "method": "GET"
+    },
+    "ActivityType": {
+      "endpoint": "api/MiscMaster/by-name?MiscTypeCode={type}",
+      "method": "GET"
+    },
+    "GetMiscType": {
+      "endpoint": "api/ActivityMaster/by-name",
+      "method": "GET"
+    },
+    "GetMachineGroup": {
+      "endpoint": "api/ActivityMaster/{id}",
+      "method": "GET"
+    },
+    "AddActivety": {
+      "endpoint": "api/ActivityMaster",
+      "method": "POST"
+    },
+    "UpdateActivety": {
+      "endpoint": "api/ActivityMaster/update",
+      "method": "PUT"
+    }
+  },
+  "ActivityCheckListMaster": {
+    "GetCheckList": {
+      "endpoint": "api/ActivityCheckListMaster?PageNumber={page}&PageSize={size}&SearchTerm={searchTerm}",
+      "method": "GET"
+    },
+    "GetAllCheckList": {
+      "endpoint": "api/ActivityCheckListMaster/{id}",
+      "method": "GET"
+    },
+
+    "AddCheckList": {
+      "endpoint": "api/ActivityCheckListMaster",
+      "method": "POST"
+    },
+    "UpdateCheckList": {
+      "endpoint": "api/ActivityCheckListMaster",
+      "method": "PUT"
+    }
+  },
+  "ShiftMaster": {
+    "GetShift": {
+      "endpoint": "api/ShiftMaster?PageNumber={page}&PageSize={size}&SearchTerm={searchTerm}",
+      "method": "GET"
+    },
+    "GetShiftByName": {
+      "endpoint": "api/ShiftMaster/by-name",
+      "method": "GET"
+    },
+    "AddShift": {
+      "endpoint": "api/ShiftMaster",
+      "method": "POST"
+    },
+    "UpdateShift": {
+      "endpoint": "api/ShiftMaster",
+      "method": "PUT"
+    },
+    "DeleteShift": {
+      "endpoint": "api/ShiftMaster/{id}",
+      "method": "DELETE"
+    }
+  },
+  "ShiftMasterDetail": {
+    "GetShiftDetail": {
+      "endpoint": "api/ShiftMasterDetail?PageNumber={page}&PageSize={size}&SearchTerm={searchTerm}",
+      "method": "GET"
+    },
+    "shiftDetailMasterGroup": {
+      "endpoint": "api/ShiftMasterDetail/{id}",
+      "method": "GET"
+    },
+    "AddShiftDetail": {
+      "endpoint": "api/ShiftMasterDetail",
+      "method": "POST"
+    },
+    "UpdateShiftDetail": {
+      "endpoint": "api/ShiftMasterDetail",
+      "method": "PUT"
+    },
+    "DeleteShift": {
+      "endpoint": "api/ShiftMasterDetail/{id}",
+      "method": "DELETE"
+    }
+  },
+  "WorkOrder": {
+    "GetWorkOrders": {
+      "endpoint": "api/WorkOrder?fromDate={from}&toDate={to}&requestTypeId={type}&departmentId={dept}&machineId={machine}",
+      "method": "GET"
+    },
+    "CreateTimer": {
+      "endpoint": "api/WorkOrder/schedule/Create",
+      "method": "POST"
+    },
+    "UpdateTimer": {
+      "endpoint": "api/WorkOrder/schedule/Update",
+      "method": "PUT"
+    },
+    "Type": {
+      "endpoint": "api/WorkOrder/RequestType",
+      "method": "GET"
+    },
+    "WorkOrderDetail": {
+      "endpoint": "api/WorkOrder/{id}",
+      "method": "GET"
+    },
+    "StoreType": {
+      "endpoint": "api/WorkOrder/StoreType",
+      "method": "GET"
+    },
+    "StoreItem": {
+      "endpoint": "api/StockLedger/item-codes/{oldUnit}/{dept}",
+      "method": "GET"
+    },
+    "CurrentStock": {
+      "endpoint": "api/StockLedger/current-stock?oldUnitcode={oldUnit}&itemcode={itemCode}&departmentId={dept}",
+      "method": "GET"
+    },
+    "ImageUpload": {
+      "endpoint": "api/WorkOrder/upload-image/Item",
+      "method": "POST"
+    },
+    "DeleteImage": {
+      "endpoint": "api/WorkOrder/delete-image/Item",
+      "method": "DELETE"
+    },
+    "UpdateWorkOrder": {
+      "endpoint": "api/WorkOrder",
+      "method": "PUT"
+    },
+    "WorkOrderStatus": {
+      "endpoint": "api/WorkOrder/Status",
+      "method": "GET"
+    },
+    "GetMachineByDepartment": {
+      "endpoint": "api/Machine/GetMachinesByDepartmentId/{Id}",
+      "method": "GET"
+    },
+    "Activity": {
+      "GetByName": {
+        "endpoint": "api/ActivityMaster/by-name",
+        "method": "GET"
+      },
+      "ItemGroup": {
+        "endpoint": "api/Item/GetGroupCode/{oldUnit}",
+        "method": "GET"
+      },
+      "ItemGroupByCode": {
+        "endpoint": "api/Item/GetItemMasters/{oldUnit}/{grpcode}",
+        "method": "GET"
+      },
+      "GetCheckList": {
+        "endpoint": "api/ActivityCheckListMaster/ByActivityId",
+        "method": "POST"
+      },
+      "GetByGroupName": {
+        "endpoint": "api/ActivityMaster/GetActivity/{group}",
+        "method": "GET"
+      }
+    },
+    "Schedule": {
+      "PreventiveScheduler": {
+        "endpoint": "api/PreventiveScheduler/GetAll?PageNumber={page}&PageSize={size}&SearchTerm={searchTerm}",
+        "method": "GET"
+      },
+      "GetAllScheduler": {
+        "endpoint": "api/PreventiveScheduler/GetById/{Id}",
+        "method": "GET"
+      },
+      "CreateSchedule": {
+        "endpoint": "api/PreventiveScheduler",
+        "method": "POST"
+      },
+      "ScheduleMisc": {
+        "endpoint": "api/MiscMaster/by-name?MiscTypeCode={type}",
+        "method": "GET"
+      },
+      "MySchedule": {
+        "endpoint": "api/PreventiveScheduler/SchedulerAbstractByDate?DepartmentId={id}",
+        "method": "GET"
+      },
+      "ScheduleDetails": {
+        "endpoint": "api/PreventiveScheduler/SchedulerDetailByDate",
+        "method": "POST"
+      },
+      "RootCause": {
+        "endpoint": "api/WorkOrder/RootCause",
+        "method": "GET"
+      },
+      "SchedueGetById": {
+        "endpoint": "api/PreventiveScheduler/GetById/{id}",
+        "method": "GET"
+      },
+      "UpdateSchedule": {
+        "endpoint": "api/PreventiveScheduler",
+        "method": "PUT"
+      },
+      "Reschedule": {
+        "endpoint": "api/PreventiveScheduler/reschedule",
+        "method": "PUT"
+      },
+      "UpdateActive": {
+        "endpoint": "api/PreventiveScheduler/UpdateActiveStatus",
+        "method": "PUT"
+      },
+      "GetMachinesBySchedule": {
+        "endpoint": "api/PreventiveScheduler/MachineDetailBySchedule?Id={scheduleId}",
+        "method": "GET"
+      },
+      "FrequencyUpdater": {
+        "endpoint": "api/PreventiveScheduler/MachineFrequencyUpdate",
+        "method": "POST"
+      },
+      "UnmappedMachines": {
+        "endpoint": "api/PreventiveScheduler/UnMappedMachines?Id={scheduleId}",
+        "method": "GET"
+      },
+      "mapMachines": {
+        "endpoint": "api/PreventiveScheduler/MapMachines",
+        "method": "POST"
+      }
+    }
+  },
+  "MaintenanceRequest": {
+    "GetInternalRequest": {
+      "endpoint": "api/MaintenanceRequest/InternalRequest?PageNumber={page}&PageSize={size}&SearchTerm={searchTerm}&FromDate={FromDate}&ToDate={ToDate}",
+      "method": "GET"
+    },
+    "GetExternalRequest": {
+      "endpoint": "api/MaintenanceRequest/ExternalRequest?PageNumber={page}&PageSize={size}&SearchTerm={searchTerm}&FromDate={FromDate}&ToDate={ToDate}",
+      "method": "GET"
+    },
+    "AddRequest": {
+      "endpoint": "api/MaintenanceRequest/create",
+      "method": "POST"
+    },
+    "CreateWorkOrder": {
+      "endpoint": "api/MaintenanceRequest/create-WO-from-external-request/by-ids",
+      "method": "POST"
+    },
+    "UpdateRequest": {
+      "endpoint": "api/MaintenanceRequest",
+      "method": "PUT"
+    },
+    "ScheduleMisc": {
+      "endpoint": "api/MiscMaster/by-name?MiscTypeCode={type}",
+      "method": "GET"
+    },
+    "GetServiceType": {
+      "endpoint": "api/MaintenanceRequest/ServiceType",
+      "method": "GET"
+    },
+    "GetServiceLocation": {
+      "endpoint": "api/MaintenanceRequest/ServiceLocation",
+      "method": "GET"
+    },
+    "GetDispatch": {
+      "endpoint": "api/MaintenanceRequest/DispatchMode",
+      "method": "GET"
+    },
+    "RequestType": {
+      "endpoint": "api/MiscMaster/by-name?name={name}&MiscTypeCode={type}",
+      "method": "GET"
+    },
+    "VendorDetails": {
+      "endpoint": "api/MaintenanceRequest/GetExistingVendor/{oldUnitId}/{VendorCode}",
+      "method": "GET"
+    },
+    "GetSpares": {
+      "endpoint": "api/MaintenanceRequest/SparesType",
+      "method": "GET"
+    },
+    "CloseRequest": {
+      "endpoint": "api/MaintenanceRequest/status-Closed/{id}",
+      "method": "PATCH"
+    }
+  },
+  "Misc": {
+    "GetsMisc": {
+      "endpoint": "api/MiscMaster?PageNumber={page}&PageSize={size}&SearchTerm={searchTerm}",
+      "method": "GET"
+    },
+
+    "AddMisc": {
+      "endpoint": "api/MiscMaster",
+      "method": "POST"
+    },
+    "UpdateMisc": {
+      "endpoint": "api/MiscMaster",
+      "method": "PUT"
+    },
+    "DeleteMisc": {
+      "endpoint": "api/MiscMaster/{id}",
+      "method": "DELETE"
+    },
+    "MiscType": {
+      "endpoint": "api/MiscTypeMaster/by-name",
+      "method": "GET"
+    }
+  },
+  "MRS": {
+    "department": {
+      "endpoint": "api/MRS/department/{oldUnit}",
+      "method": "GET"
+    },
+    "Mrs": {
+      "endpoint": "api/MiscMaster/by-name?MiscTypeCode={type}",
+      "method": "GET"
+    },
+    "subDepartment": {
+      "endpoint": "api/MRS/SubDepartment/{oldUnit}",
+      "method": "GET"
+    },
+    "category": {
+      "endpoint": "api/MRS/Category/{oldUnit}",
+      "method": "GET"
+    },
+    "subCostCenter": {
+      "endpoint": "api/MRS/SubCostCenter/{oldUnit}",
+      "method": "GET"
+    },
+    "workOrder": {
+      "endpoint": "api/WorkOrder/GetWorkOrderDropdown",
+      "method": "GET"
+    },
+    "MainStoreStock": {
+      "endpoint": "api/MainStoreStock/MainStore-StockItems?oldUnitcode={oldUnit}&GroupCode={grpcode}",
+      "method": "GET"
+    },
+    "QuantityAvailable": {
+      "endpoint": "api/MainStoreStock/{oldUnit}/{itemCode}",
+      "method": "GET"
+    },
+    "CreateMrs": {
+      "endpoint": "api/MRS/CreateMRS",
+      "method": "POST"
+    },
+    "PendingQty": {
+      "endpoint": "api/MRS/pending-issue?oldUnitCode={oldUnit}&itemCode={itemCode}",
+      "method": "GET"
+    }
+  },
+  "Report": {
+    "StockReport": {
+      "endpoint": "api/Report/CurrentStock/{oldUnit}/{dept}",
+      "method": "GET"
+    },
+    "RequestReport": {
+      "endpoint": "api/Report/RequestReport?requestFromDate={from}&requestToDate={to}&RequestType={req}&requestStatus={status}&departmentId={dept}",
+      "method": "GET"
+    },
+    "WorkOrderReport": {
+      "endpoint": "api/Report/WorkOrderReport?fromDate={from}&toDate={to}&requestTypeId={req}",
+      "method": "GET"
+    },
+    "ItemConsumption": {
+      "endpoint": "api/Report/ItemConsumption?fromDate={from}&toDate={to}",
+      "method": "GET"
+    },
+    "SubStoreStockLedger": {
+      "endpoint": "api/Report/SubStoresStockLedger?oldUnitcode={oldUnit}&fromDate={from}&toDate={to}&DepartmentId={dept}",
+      "method": "GET"
+    },
+    "WorkOrderChecklistReport": {
+      "endpoint": "api/Report/WorkOrderChecklistReport?WorkOrderFromDate={from}&WorkOrderToDate={to}",
+      "method": "GET"
+    },
+    "MRSReport": {
+      "endpoint": "api/Report/MRSReport?fromDate={from}&toDate={to}&OldUnitCode={oldUnit}",
+      "method": "GET"
+    },
+    "ScheduleReport": {
+      "endpoint": "api/Report/SchedulerReport?FromDueDate={from}&ToDueDate={to}",
+      "method": "GET"
+    },
+    "MaterialPlanningReport": {
+      "endpoint": "api/Report/MaterialPlanningReport?FromDueDate={from}&ToDueDate={to}",
+      "method": "GET"
+    },
+    "PowerReport": {
+      "endpoint": "api/Report/PowerConsumptionReport?FromDate={from}&ToDate={to}",
+      "method": "GET"
+    }
+  },
+  "FeederGroup": {
+    "GetFeederGroup": {
+      "endpoint": "api/FeederGroup?PageNumber={page}&PageSize={size}&SearchTerm={searchTerm}",
+      "method": "GET"
+    },
+    "AddFeederGroup": {
+      "endpoint": "api/FeederGroup/create",
+      "method": "POST"
+    },
+    "UpdateFeederGroup": {
+      "endpoint": "api/FeederGroup",
+      "method": "PUT"
+    },
+    "DeleteFeederGroup": {
+      "endpoint": "api/FeederGroup/{id}",
+      "method": "DELETE"
+    },
+    "GetByFeederGroup": {
+      "endpoint": "api/FeederGroup/by-name",
+      "method": "Get"
+    }
+  },
+  "Feeder": {
+    "GetFeeder": {
+      "endpoint": "api/Feeder?PageNumber={page}&PageSize={size}&SearchTerm={searchTerm}",
+      "method": "GET"
+    },
+    "AddFeeder": {
+      "endpoint": "api/Feeder/create",
+      "method": "POST"
+    },
+    "UpdateFeeder": {
+      "endpoint": "api/Feeder",
+      "method": "PUT"
+    },
+    "DeleteFeeder": {
+      "endpoint": "api/Feeder/{id}",
+      "method": "DELETE"
+    },
+    "GetByParentFeeder": {
+      "endpoint": "api/Feeder/by-name",
+      "method": "Get"
+    },
+    "FeederType": {
+      "endpoint": "api/MiscMaster/by-name?MiscTypeCode={type}",
+      "method": "GET"
+    },
+    "MeterType": {
+      "endpoint": "api/MiscMaster/by-name?MiscTypeCode={type}",
+      "method": "GET"
+    }
+  },
+  "PowerConsumption": {
+    "GetPowerConsumption": {
+      "endpoint": "api/PowerConsumption?PageNumber={page}&PageSize={size}&SearchTerm={searchTerm}",
+      "method": "GET"
+    },
+    "AddPowerConsumption": {
+      "endpoint": "api/PowerConsumption",
+      "method": "POST"
+    },
+    "GetFeederById": {
+      "endpoint": "api/PowerConsumption/{id}",
+      "method": "GET"
+    },
+    "GetOpeningReader": {
+      "endpoint": "api/PowerConsumption/GetOpeningReaderValue/{feederId}",
+      "method": "GET"
+    }
+  },
+  "GeneratorConsumption": {
+    "GetGeneratorConsumption": {
+      "endpoint": "api/GeneratorConsumption",
+      "method": "GET"
+    },
+    "AddGeneratorConsumption": {
+      "endpoint": "api/GeneratorConsumption",
+      "method": "POST"
+    },
+    "GetGeneratorList": {
+      "endpoint": "api/GeneratorConsumption/GetGeneratorConsumption?PageNumber={page}&PageSize={size}&SearchTerm={searchTerm}",
+      "method": "GET"
+    },
+    "GetOpeningMeter": {
+      "endpoint": "api/GeneratorConsumption/GetOpeningReaderValue/{generatorId}",
+      "method": "GET"
+    },
+    "PurposeType": {
+      "endpoint": "api/MiscMaster/by-name?MiscTypeCode={type}",
+      "method": "GET"
+    }
+  },
+  "Dashboard": {
+    "WorkOrderSummary": {
+      "endpoint": "api/Dashboard/workOrder-summary?FromDate={from}&ToDate={to}&DepartmentId={dept}&MachineGroupId={group}&ItemCode={item}&Type={type}",
+      "method": "GET"
+    },
+    "Cards": {
+      "endpoint": "api/Dashboard/card-dashboard?FromDate={from}&ToDate={to}&DepartmentId={dept}&MachineGroupId={group}&ItemCode={item}&Type={type}",
+      "method": "GET"
+    },
+    "ItemConsumption": {
+      "endpoint": "api/Dashboard/item-consumption?FromDate={from}&ToDate={to}&DepartmentId={dept}&MachineGroupId={group}&ItemCode={item}&Type={type}",
+      "method": "GET"
+    },
+    "MaintanenceHours": {
+      "endpoint": "api/Dashboard/maintenance-hoursMachine?FromDate={from}&ToDate={to}&DepartmentId={dept}&MachineGroupId={group}&ItemCode={item}&Type={type}",
+      "method": "GET"
+    },
+    "MaintanenceHoursDept": {
+      "endpoint": "api/Dashboard/maintenance-hoursDept?FromDate={from}&ToDate={to}",
+      "method": "GET"
+    },
+    "itemConsumptionByDept": {
+      "endpoint": "api/Dashboard/itemConsumption-dept?FromDate={from}&ToDate={to}",
+      "method": "GET"
+    },
+    "itemConsumptionByGroup": {
+      "endpoint": "api/Dashboard/itemConsumption-machineGroup?FromDate={from}&ToDate={to}&DepartmentId={dept}",
+      "method": "GET"
+    },
+    "GetAllItems": {
+      "endpoint": "api/StockLedger/AllitemCodes?oldUnitCode={oldUnitId}&departmentId={dept}",
+      "method": "GET"
+    }
+  }
+}

@@ -1,0 +1,484 @@
+{
+  "PublicApi": {
+    "postalApi": {
+      "endpoint": "https://api.postalpincode.in/pincode/{pincode}",
+      "method": "GET"
+    }
+  },
+  "AuthLogin": {
+    "endpoint": "api/Auth/login",
+    "method": "POST",
+    "FirstTimeLogin": {
+      "endpoint": "api/User/password/first-time",
+      "method": "PUT"
+    },
+    "ResetRequest": {
+      "endpoint": "api/User/password/reset-request",
+      "method": "POST"
+    },
+    "SendMail": {
+      "endpoint": "api/email/send",
+      "method": "POST"
+    },
+    "ForgotPasswordReset": {
+      "endpoint": "api/User/password/reset",
+      "method": "PUT"
+    },
+    "Logout": {
+      "endpoint": "api/Auth/deactivate-user-session/{id}",
+      "method": "POST"
+    },
+    "ForceLogout": {
+      "endpoint": "api/Auth/deactivate-user-sessionByUsername",
+      "method": "POST"
+    },
+    "ChangePassword": {
+      "endpoint": "api/User/password",
+      "method": "PUT"
+    }
+  },
+  "Company": {
+    "endpoint": "api/Company?PageNumber={page}&PageSize={size}&SearchTerm={searchTerm}",
+    "method": "GET",
+    "GetCompany": {
+      "endpoint": "api/Company/{id}",
+      "method": "GET"
+    },
+    "AddCompany": {
+      "endpoint": "api/Company",
+      "method": "POST"
+    },
+    "UpdateCompany": {
+      "endpoint": "api/Company",
+      "method": "PUT"
+    },
+    "DeleteCompany": {
+      "endpoint": "api/Company/{id}",
+      "method": "DELETE"
+    },
+    "GetAllCompany": {
+      "endpoint": "api/Company/by-name",
+      "method": "GET"
+    }
+  },
+  "Countries": {
+    "endpoint": "api/Country?PageNumber={page}&PageSize={size}&SearchTerm={searchTerm}",
+    "method": "GET",
+    "getCountry": {
+      "endpoint": "api/Country/by-name",
+      "method": "GET"
+    },
+    "addCountry": {
+      "endpoint": "api/Country",
+      "method": "POST"
+    },
+    "updateCountry": {
+      "endpoint": "api/Country",
+      "method": "PUT"
+    },
+    "deleteCountry": {
+      "endpoint": "api/Country/{id}",
+      "method": "DELETE"
+    }
+  },
+  "State": {
+    "endpoint": "api/State?PageNumber={page}&PageSize={size}&SearchTerm={searchTerm}",
+    "method": "GET",
+    "getState": {
+      "endpoint": "api/State/by-name",
+      "method": "GET"
+    },
+    "addState": {
+      "endpoint": "api/State",
+      "method": "POST"
+    },
+    "updateState": {
+      "endpoint": "api/State",
+      "method": "PUT"
+    },
+    "deleteState": {
+      "endpoint": "api/State/{id}",
+      "method": "DELETE"
+    },
+    "getById": {
+      "endpoint": "api/State/by-country/{countryId}",
+      "method": "GET"
+    }
+  },
+  "City": {
+    "endpoint": "api/City?PageNumber={page}&PageSize={size}&SearchTerm={searchTerm}",
+    "method": "GET",
+    "getCity": {
+      "endpoint": "api/City/{id}",
+      "method": "GET"
+    },
+    "addCity": {
+      "endpoint": "api/City",
+      "method": "POST"
+    },
+    "updateCity": {
+      "endpoint": "api/City",
+      "method": "PUT"
+    },
+    "DeleteCity": {
+      "endpoint": "api/City/{id}",
+      "method": "DELETE"
+    },
+    "getById": {
+      "endpoint": "api/City/by-state/{stateId}",
+      "method": "GET"
+    }
+  },
+  "Entities": {
+    "endpoint": "api/Entity?PageNumber={page}&PageSize={size}&SearchTerm={searchTerm}",
+    "method": "GET",
+    "getEntity": {
+      "endpoint": "api/Entity/by-name",
+      "method": "GET"
+    },
+    "addEntity": {
+      "endpoint": "api/Entity",
+      "method": "POST"
+    },
+    "updateEntity": {
+      "endpoint": "api/Entity",
+      "method": "PUT"
+    },
+    "deleteEntity": {
+      "endpoint": "api/Entity/{id}",
+      "method": "DELETE"
+    },
+    "searchEntity": {
+      "endpoint": "api/Entity/entity/by-name/{name}",
+      "method": "GET"
+    }
+  },
+  "Unit": {
+    "endpoint": "api/Unit?PageNumber={page}&PageSize={size}&SearchTerm={searchTerm}",
+    "method": "GET",
+    "getUnit": {
+      "endpoint": "api/Unit/by-name",
+      "method": "GET"
+    },
+    "getUnitByUser": {
+      "endpoint": "api/Unit/by-userid?CompanyId={companyId}&UserId={userId}",
+      "method": "GET"
+    },
+    "addUnit": {
+      "endpoint": "api/Unit",
+      "method": "POST"
+    },
+    "updateUnit": {
+      "endpoint": "api/Unit/update",
+      "method": "PUT"
+    },
+    "deleteUnit": {
+      "endpoint": "api/Unit/{id}",
+      "method": "DELETE"
+    },
+    "getOverallUnit": {
+      "endpoint": "api/Unit/{id}",
+      "method": "GET"
+    },
+    "getUnitByCompany": {
+      "endpoint": "api/Unit/by-name?CompanyId={id}",
+      "method": "GET"
+    }
+  },
+  "Image": {
+    "upload": {
+      "endpoint": "api/Company/upload-logo",
+      "method": "POST"
+    },
+    "delete": {
+      "endpoint": "api/Company/delete-logo",
+      "method": "DELETE"
+    }
+  },
+  "Department": {
+    "endpoint": "api/Department?PageNumber={page}&PageSize={size}&SearchTerm={searchTerm}",
+    "method": "GET",
+    "getDepartment": {
+      "endpoint": "api/Department/by-name",
+      "method": "GET"
+    },
+    "withoutControl": {
+      "endpoint": "api/Department/withoutDatacontrol",
+      "method": "GET"
+    },
+    "departmentGroupName": {
+      "endpoint": "api/Department/maintenance-by-group-user-based/{name}",
+      "method": "GET"
+    },
+    "addDepartment": {
+      "endpoint": "api/Department",
+      "method": "POST"
+    },
+    "updateDepartment": {
+      "endpoint": "api/Department",
+      "method": "PUT"
+    },
+    "deleteDepartment": {
+      "endpoint": "api/Department/{id}",
+      "method": "DELETE"
+    },
+    "getGroupName": {
+      "endpoint": "api/Department/by-department-group/{name}",
+      "method": "GET"
+    }
+  },
+  "DepartmentGroup": {
+    "endpoint": "api/DepartmentGroup/GetAllDepartmentGroup?PageNumber={page}&PageSize={size}&SearchTerm={searchTerm}",
+    "method": "GET",
+    "DepartmentGroupByName": {
+      "endpoint": "api/DepartmentGroup/by-name",
+      "method": "GET"
+    },
+    "AddDepartmentGroup": {
+      "endpoint": "api/DepartmentGroup",
+      "method": "POST"
+    },
+    "UpdateDepartmentGroup": {
+      "endpoint": "api/DepartmentGroup/update",
+      "method": "PUT"
+    }
+  },
+  "Division": {
+    "endpoint": "api/Division?PageNumber={page}&PageSize={size}&SearchTerm={searchTerm}",
+    "method": "GET",
+    "getDivision": {
+      "endpoint": "api/Division/by-name",
+      "method": "GET"
+    },
+    "addDivision": {
+      "endpoint": "api/Division",
+      "method": "POST"
+    },
+    "updateDivision": {
+      "endpoint": "api/Division",
+      "method": "PUT"
+    },
+    "deleteDivision": {
+      "endpoint": "api/Division/{id}",
+      "method": "DELETE"
+    }
+  },
+  "Language": {
+    "endpoint": "api/Language?PageNumber={page}&PageSize={size}&SearchTerm={searchTerm}",
+    "method": "GET",
+    "addLanguage": {
+      "endpoint": "api/Language",
+      "method": "POST"
+    },
+    "updateLanguage": {
+      "endpoint": "api/Language",
+      "method": "PUT"
+    },
+    "deleteLanguage": {
+      "endpoint": "api/Language/{id}",
+      "method": "PUT"
+    },
+    "getByName": {
+      "endpoint": "api/Language/by-name",
+      "method": "GET"
+    }
+  },
+  "Currency": {
+    "endpoint": "api/Currency?PageNumber={page}&PageSize={size}&SearchTerm={searchTerm}",
+    "method": "GET",
+    "getCurrency": {
+      "endpoint": "api/Currency/{id}",
+      "method": "GET"
+    },
+    "addCurrency": {
+      "endpoint": "api/Currency",
+      "method": "POST"
+    },
+    "updateCurrency": {
+      "endpoint": "api/Currency",
+      "method": "PUT"
+    },
+    "deleteCurrency": {
+      "endpoint": "api/Currency/{id}",
+      "method": "DELETE"
+    },
+    "getByName": {
+      "endpoint": "api/Currency/by-name",
+      "method": "GET"
+    }
+  },
+
+  "CompanySettings": {
+    "endpoint": "api/CompanySettings",
+    "method": "POST",
+    "getCompany": {
+      "endpoint": "api/CompanySettings",
+      "method": "GET"
+    },
+    "updateCompany": {
+      "endpoint": "api/CompanySettings/update",
+      "method": "PUT"
+    }
+  },
+  "TimeZone": {
+    "getByName": {
+      "endpoint": "api/TimeZones/by-name",
+      "method": "GET"
+    }
+  },
+  "FinanceYear": {
+    "getByName": {
+      "endpoint": "api/FinancialYear/by-Year",
+      "method": "GET"
+    }
+  },
+  "TimeZones": {
+    "endpoint": "api/TimeZones?PageNumber={page}&PageSize={size}&SearchTerm={searchTerm}",
+    "method": "GET"
+  },
+  "Financial": {
+    "endpoint": "api/FinancialYear?PageNumber={page}&PageSize={size}&SearchTerm={searchTerm}",
+    "method": "GET",
+    "addfinancial": {
+      "endpoint": "api/FinancialYear",
+      "method": "POST"
+    },
+    "updatefinancial": {
+      "endpoint": "api/FinancialYear",
+      "method": "PUT"
+    },
+    "deletefinancial": {
+      "endpoint": "api/FinancialYear/{id}",
+      "method": "DELETE"
+    }
+  },
+  "Role": {
+    "endpoint": "api/UserRole?PageNumber={page}&PageSize={size}&SearchTerm={searchTerm}",
+    "method": "GET",
+    "addrole": {
+      "endpoint": "api/UserRole",
+      "method": "POST"
+    },
+    "updaterole": {
+      "endpoint": "api/UserRole",
+      "method": "PUT"
+    },
+    "deleterole": {
+      "endpoint": "api/UserRole/{id}",
+      "method": "DELETE"
+    },
+    "getRole": {
+      "endpoint": "api/UserRole/by-name",
+      "method": "GET"
+    },
+    "RoleMenu": {
+      "endpoint": "api/RoleEntitlements/roleprivileges/{UserId}",
+      "method": "GET"
+    }
+  },
+  "Module": {
+    "endpoint": "api/Module?PageNumber={page}&PageSize={size}&SearchTerm={searchTerm}",
+    "method": "GET",
+    "getModule": {
+      "endpoint": "api/Modules/by-name",
+      "method": "GET"
+    },
+    "addModule": {
+      "endpoint": "api/Module",
+      "method": "POST"
+    }
+  },
+  "Menu": {
+    "endpoint": "api/Menu?PageNumber={page}&PageSize={size}&SearchTerm={searchTerm}",
+    "method": "GET",
+    "modulemenu": {
+      "endpoint": "api/Menu/by-module",
+      "method": "POST"
+    },
+    "parentMenu": {
+      "endpoint": "api/Menu/by-parent",
+      "method": "POST"
+    },
+    "getparentMenu": {
+      "endpoint": "api/Menu/by-name",
+      "method": "GET"
+    },
+    "addMenu": {
+      "endPoint": "api/Menu",
+      "method": "POST"
+    },
+    "updateMenu": {
+      "endPoint": "api/Menu",
+      "method": "PUT"
+    },
+    "deleteMenu": {
+      "endpoint": "api/Menu/{id}",
+      "method": "DELETE"
+    }
+  },
+  "RoleEntitlements": {
+    "roleEntitlements": {
+      "endpoint": "api/RoleEntitlements",
+      "method": "POST"
+    },
+    "GetroleEntitlements": {
+      "endpoint": "api/RoleEntitlements/{id}",
+      "method": "GET"
+    },
+    "UpdateroleEntitlements": {
+      "endpoint": "api/RoleEntitlements",
+      "method": "PUT"
+    }
+  },
+  "User": {
+    "endpoint": "api/User?PageNumber={page}&PageSize={size}&SearchTerm={searchTerm}",
+    "method": "GET",
+    "adduser": {
+      "endpoint": "api/User",
+      "method": "POST"
+    },
+    "updateuser": {
+      "endpoint": "api/User",
+      "method": "PUT"
+    },
+    "deleteuser": {
+      "endpoint": "api/User/{id}",
+      "method": "DELETE"
+    },
+    "getoveralluser": {
+      "endpoint": "api/User/{id}",
+      "method": "GET"
+    },
+    "getByuser": {
+      "endpoint": "api/User/by-name",
+      "method": "GET"
+    }
+  },
+
+  "UserGroup": {
+    "endpoint": "api/UserGroup/by-name",
+    "method": "GET"
+  },
+  "SwitchProfile": {
+    "getUnit": {
+      "endpoint": "api/SwitchProfile/by-name",
+      "method": "GET"
+    },
+    "postUnit": {
+      "endpoint": "api/SwitchProfile/SwitchProfile",
+      "method": "POST"
+    }
+  },
+  "PurchaseInfo": {
+    "OldUnit": {
+      "endpoint": "api/AssetPurchase/{name}",
+      "method": "GET"
+    }
+  },
+  "Notification": {
+    "Detail": {
+      "endpoint": "api/NotificationDetail/detail/{userId}",
+      "method": "GET"
+    }
+  }
+}

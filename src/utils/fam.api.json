@@ -1,0 +1,575 @@
+{
+  "Misc": {
+    "endpoint": "api/MiscMaster?PageNumber={page}&PageSize={size}&SearchTerm={searchTerm}",
+    "method": "GET",
+    "AddMisc": {
+      "endpoint": "api/MiscMaster",
+      "method": "POST"
+    },
+    "UpdateMisc": {
+      "endpoint": "api/MiscMaster",
+      "method": "PUT"
+    },
+    "DeleteMisc": {
+      "endpoint": "api/MiscMaster/{id}",
+      "method": "DELETE"
+    },
+    "MiscType": {
+      "endpoint": "api/MiscTypeMaster/by-name",
+      "method": "GET"
+    }
+  },
+  "AssetGroup": {
+    "endpoint": "api/AssetGroup?PageNumber={page}&PageSize={size}&SearchTerm={searchTerm}",
+    "method": "GET",
+    "AssetGroupName": {
+      "endpoint": "api/AssetGroup/by-name",
+      "method": "GET"
+    },
+    "AddAssetGroup": {
+      "endpoint": "api/AssetGroup",
+      "method": "POST"
+    },
+    "UpdateAssetGroup": {
+      "endpoint": "api/AssetGroup",
+      "method": "PUT"
+    },
+    "DeleteAssetGroup": {
+      "endpoint": "api/AssetGroup/{id}",
+      "method": "DELETE"
+    },
+    "GetSubGroup": {
+      "endpoint": "api/AssetSubGroup/groupId?groupId={id}",
+      "method": "GET"
+    }
+  },
+  "AssetSubGroup": {
+    "endpoint": "api/AssetSubGroup?PageNumber={page}&PageSize={size}&SearchTerm={searchTerm}",
+    "method": "GET",
+    "AddAssetGroup": {
+      "endpoint": "api/AssetSubGroup",
+      "method": "POST"
+    },
+    "UpdateAssetGroup": {
+      "endpoint": "api/AssetSubGroup",
+      "method": "PUT"
+    },
+    "DeleteAssetGroup": {
+      "endpoint": "api/AssetSubGroup/{id}",
+      "method": "DELETE"
+    }
+  },
+  "Category": {
+    "endpoint": "api/AssetCategories?PageNumber={page}&PageSize={size}&SearchTerm={searchTerm}",
+    "method": "GET",
+    "AssetCategoryName": {
+      "endpoint": "api/AssetCategories/by-name",
+      "method": "GET"
+    },
+    "AddAssetCategory": {
+      "endpoint": "api/AssetCategories",
+      "method": "POST"
+    },
+    "UpdateAssetCategory": {
+      "endpoint": "api/AssetCategories",
+      "method": "PUT"
+    },
+    "DeleteAssetCategory": {
+      "endpoint": "api/AssetCategories/{id}",
+      "method": "DELETE"
+    }
+  },
+  "SubCategory": {
+    "endpoint": "api/AssetSubCategories?PageNumber={page}&PageSize={size}&SearchTerm={searchTerm}",
+    "method": "GET",
+    "AssetSubCategoryName": {
+      "endpoint": "api/AssetSubCategories/by-name",
+      "method": "GET"
+    },
+    "AddAssetSubCategory": {
+      "endpoint": "api/AssetSubCategories",
+      "method": "POST"
+    },
+    "UpdateAssetsubCategory": {
+      "endpoint": "api/AssetSubCategories",
+      "method": "PUT"
+    },
+    "DeleteAssetSubCategory": {
+      "endpoint": "api/AssetSubCategories/{id}",
+      "method": "DELETE"
+    }
+  },
+  "Manufacturer": {
+    "endpoint": "api/Manufacture?PageNumber={page}&PageSize={size}&SearchTerm={searchTerm}",
+    "method": "GET",
+    "AddManufacturer": {
+      "endpoint": "api/Manufacture",
+      "method": "POST"
+    },
+    "ManufacturerName": {
+      "endpoint": "api/Manufacture/by-name",
+      "method": "GET"
+    },
+    "Manufacturertype": {
+      "endpoint": "api/Manufacture/ManufactureType",
+      "method": "GET"
+    },
+    "UpdateManufacturer": {
+      "endpoint": "api/Manufacture",
+      "method": "PUT"
+    },
+    "DeleteManufacturer": {
+      "endpoint": "api/Manufacture/{id}",
+      "method": "DELETE"
+    },
+    "GetManufacturer": {
+      "endpoint": "api/Manufacture/{id}",
+      "method": "GET"
+    }
+  },
+  "Depreciation": {
+    "endpoint": "api/DepreciationGroup?PageNumber={page}&PageSize={size}&SearchTerm={searchTerm}",
+    "method": "GET",
+    "BookType": {
+      "endpoint": "api/DepreciationGroup/bookType",
+      "method": "GET"
+    },
+    "DepreciationMethod": {
+      "endpoint": "api/DepreciationGroup/DepMethod",
+      "method": "GET"
+    },
+    "AddDepreciationGroup": {
+      "endpoint": "api/DepreciationGroup",
+      "method": "POST"
+    },
+    "UpdateDepreciationGroup": {
+      "endpoint": "api/DepreciationGroup",
+      "method": "PUT"
+    },
+    "DeleteDepreciationGroup": {
+      "endpoint": "api/DepreciationGroup/{id}",
+      "method": "DELETE"
+    },
+    "DepreciationPeriod": {
+      "endpoint": "api/DepreciationDetail/DeprecationPeriod",
+      "method": "GET"
+    },
+    "DepreciationDetail": {
+      "endpoint": "api/DepreciationDetail?companyId={companyId}&unitId={unitId}&finYearId={finYearId}&startDate={startDate}&endDate={endDate}&depreciationType={depreciationType}&pageNumber={page}&pageSize={size}&searchTerm={search}&depreciationPeriod={period}",
+      "method": "GET"
+    },
+    "AddDepreciationDetail": {
+      "endpoint": "api/DepreciationDetail",
+      "method": "POST"
+    },
+    "GetApstract": {
+      "endpoint": "api/DepreciationDetail/Abstract?companyId={companyId}&unitId={unitId}&finYearId={finYearId}&startDate={startDate}&endDate={endDate}&depreciationType={depreciationType}&depreciationPeriod={period}",
+      "method": "GET"
+    },
+    "WdvMethod": {
+      "ViewStatement": {
+        "endpoint": "api/WDVDepreciation/GetWDV?FinYearId={finYear}",
+        "method": "GET"
+      },
+      "GenerateStatement": {
+        "endpoint": "api/WDVDepreciation",
+        "method": "POST"
+      }
+    }
+  },
+
+  "AssetGeneral": {
+    "endpoint": "api/AssetMasterGeneral?PageNumber={page}&PageSize={size}&SearchTerm={searchTerm}",
+    "method": "GET",
+    "ByName": {
+      "endpoint": "api/AssetMasterGeneral/ParentAsset?assetType={type}",
+      "method": "GET"
+    },
+    "WorkingStatus": {
+      "endpoint": "api/AssetMasterGeneral/WorkingStatus",
+      "method": "GET"
+    },
+    "AssetType": {
+      "endpoint": "api/AssetMasterGeneral/AssetType",
+      "method": "GET"
+    },
+    "AssetSource": {
+      "endpoint": "api/AssetPurchase/AssetSource/by-name",
+      "method": "GET"
+    },
+    "ImageUpload": {
+      "endpoint": "api/AssetMasterGeneral/upload-logo",
+      "method": "POST"
+    },
+    "DeleteImage": {
+      "endpoint": "api/AssetMasterGeneral/delete-logo",
+      "method": "DELETE"
+    },
+    "AddAsset": {
+      "endpoint": "api/AssetMasterGeneral",
+      "method": "POST"
+    },
+    "UpdateAsset": {
+      "endpoint": "api/AssetMasterGeneral",
+      "method": "PUT"
+    }
+  },
+  "Uom": {
+    "endpoint": "api/UOM?PageNumber={page}&PageSize={size}&SearchTerm={searchTerm}",
+    "method": "GET",
+    "UomType": {
+      "endpoint": "api/MiscMaster/by-name?name={name}&MiscTypeCode={type}",
+      "method": "GET"
+    },
+    "Misc": {
+      "endpoint": "api/MiscMaster/by-name?MiscTypeCode={type}",
+      "method": "GET"
+    },
+    "AddUom": {
+      "endpoint": "api/UOM",
+      "method": "POST"
+    },
+    "UpdateUom": {
+      "endpoint": "api/UOM",
+      "method": "PUT"
+    },
+    "DeleteUom": {
+      "endpoint": "api/UOM/{id}",
+      "method": "DELETE"
+    },
+    "AssetUomName": {
+      "endpoint": "api/UOM/by-name",
+      "method": "GET"
+    }
+  },
+  "PurchaseInfo": {
+    "Source": {
+      "endpoint": "api/AssetPurchase/AssetSource/by-name",
+      "method": "GET"
+    },
+    "Grn": {
+      "endpoint": "api/AssetPurchase/GetGrnNo/{oldUnitId}/{assetSourceId}",
+      "method": "GET"
+    },
+    "Items": {
+      "endpoint": "api/AssetPurchase/GetGrnItems/{oldUnitId}/{assetSourceId}/{grnNo}",
+      "method": "GET"
+    },
+    "Details": {
+      "endpoint": "api/AssetPurchase/GetGrnDetails/{oldUnitId}/{assetSourceId}/{grnNo}/{grnSerialNo}",
+      "method": "GET"
+    },
+    "AdditionalCost": {
+      "endpoint": "api/AssetAdditionalCost/CostType",
+      "method": "GET"
+    },
+    "OldUnit": {
+      "endpoint": "api/AssetPurchase/{name}",
+      "method": "GET"
+    }
+  },
+  "AssetLocation": {
+    "location": {
+      "endpoint": "api/Location/by-name",
+      "method": "GET"
+    },
+    "subLocation": {
+      "endpoint": "api/AssetLocation/AssetSubLocation/{id}",
+      "method": "GET"
+    },
+    "custodian": {
+      "endpoint": "api/AssetLocation/GetAllCustodian/{id}",
+      "method": "GET"
+    }
+  },
+  "AssetInfo": {
+    "category": {
+      "endpoint": "api/AssetCategories/group/{id}",
+      "method": "GET"
+    },
+    "subCategory": {
+      "endpoint": "api/AssetSubCategories/Category/{id}",
+      "method": "GET"
+    },
+    "Specification": {
+      "endpoint": "api/SpecificationMaster/by-name?assetGroupId={id}",
+      "method": "GET",
+      "AddSpecification": {
+        "endpoint": "api/AssetSpecification",
+        "method": "POST"
+      },
+      "UpdateSpecification": {
+        "endpoint": "api/AssetSpecification",
+        "method": "PUT"
+      }
+    },
+    "GetAssetDetailById": {
+      "endpoint": "api/AssetMasterGeneral/{id}",
+      "method": "GET"
+    },
+    "GetAssetDetailByIdSplit": {
+      "endpoint": "api/AssetMasterGeneral/{id}/split",
+      "method": "GET"
+    }
+  },
+  "Location": {
+    "endpoint": "api/Location?PageNumber={page}&PageSize={size}&SearchTerm={searchTerm}",
+    "method": "GET",
+    "AddLocation": {
+      "endpoint": "api/Location",
+      "method": "POST"
+    },
+    "UpdateLocation": {
+      "endpoint": "api/Location",
+      "method": "PUT"
+    },
+    "DeleteLocation": {
+      "endpoint": "api/Location/{id}",
+      "method": "DELETE"
+    },
+    "ByName": {
+      "endpoint": "api/Location/by-name",
+      "method": "GET"
+    },
+    "Getlocation": {
+      "endpoint": "api/Location/{id}",
+      "method": "GET"
+    }
+  },
+  "SubLocation": {
+    "endpoint": "api/SubLocation?PageNumber={page}&PageSize={size}&SearchTerm={searchTerm}",
+    "method": "GET",
+    "AddSubLocation": {
+      "endpoint": "api/SubLocation",
+      "method": "POST"
+    },
+    "UpdateSubLocation": {
+      "endpoint": "api/SubLocation",
+      "method": "PUT"
+    },
+    "GetSublocation": {
+      "endpoint": "api/SubLocation/{id}",
+      "method": "GET"
+    },
+    "DeleteSubLocation": {
+      "endpoint": "api/SubLocation/{id}",
+      "method": "DELETE"
+    }
+  },
+  "AssetWarranty": {
+    "WarrantyType": {
+      "endpoint": "api/AssetWarranty/WarrantyType",
+      "method": "GET"
+    },
+    "WarrantyClaimStatus": {
+      "endpoint": "api/AssetWarranty/WarrantyClaimStatus",
+      "method": "GET"
+    },
+    "AddWarranty": {
+      "endpoint": "api/AssetWarranty",
+      "method": "POST"
+    },
+    "UpdateWarranty": {
+      "endpoint": "api/AssetWarranty",
+      "method": "PUT"
+    },
+    "VendorDetails": {
+      "endpoint": "api/AssetAmc/GetExistingVendor/{oldUnitId}/{VendorCode}",
+      "method": "GET"
+    },
+    "CoverageScopeAmc": {
+      "endpoint": "api/AssetAmc/CoverageScope",
+      "method": "GET"
+    },
+    "RenewStatus": {
+      "endpoint": "api/AssetAmc/RenewStatus",
+      "method": "GET"
+    },
+    "AddAMC": {
+      "endpoint": "api/AssetAmc",
+      "method": "POST"
+    },
+    "UpdateAmc": {
+      "endpoint": "api/AssetAmc",
+      "method": "PUT"
+    },
+    "DeleteAmc": {
+      "endpoint": "api/AssetAmc/{id}",
+      "method": "DELETE"
+    },
+    "AddInsurance": {
+      "endpoint": "api/AssetInsurance",
+      "method": "POST"
+    },
+    "UpdateInsurance": {
+      "endpoint": "api/AssetInsurance",
+      "method": "PUT"
+    },
+    "DeleteInsurance": {
+      "endpoint": "api/AssetInsurance/{id}",
+      "method": "DELETE"
+    }
+  },
+  "AssetDisposal": {
+    "DisposalType": {
+      "endpoint": "api/AssetDisposal/DisposalType",
+      "method": "GET"
+    },
+    "AddDisposal": {
+      "endpoint": "api/AssetDisposal",
+      "method": "POST"
+    },
+    "UpdateDisposal": {
+      "endpoint": "api/AssetDisposal",
+      "method": "PUT"
+    }
+  },
+  "AssetTransfer": {
+    "endpoint": "api/AssetTransfer/GetAllAssetTransfers?PageNumber={page}&PageSize={size}&FromDate={FromDate}&ToDate={ToDate}&SearchTerm={searchTerm}",
+    "method": "GET",
+    "AssetTransferTypes": {
+      "endpoint": "api/AssetTransfer/TransferTypes",
+      "method": "GET"
+    },
+    "CategoryByDepartment": {
+      "endpoint": "api/AssetTransfer/GetCategoryByDepartmentId/{id}",
+      "method": "GET"
+    },
+    "AssetByCategoryDepartment": {
+      "endpoint": "api/AssetTransfer/GetAssetsByCategory/{category}/{department}",
+      "method": "GET"
+    },
+    "GetCustodiansByDepartment": {
+      "endpoint": "api/AssetTransfer/GetCustodiansByDepartment?departmentId={departmentId}&oldUnitId={oldUnitId}",
+      "method": "GET"
+    },
+    "GetCustodiansByCategory": {
+      "endpoint": "api/AssetTransfer/GetCategoriesByCustodian?departmentId={departmentId}&custodianId={custodianId}",
+      "method": "GET"
+    },
+    "GetBulkAssetToTransfer": {
+      "endpoint": "api/AssetTransfer/GetBulkAssetsToTransfer?departmentId={departmentId}&custodianId={custodianId}&categoryId={categoryId}",
+      "method": "GET"
+    },
+    "AssetDetails": {
+      "endpoint": "api/AssetTransfer/GetAssetDetailsToTransfer/{assetId}",
+      "method": "GET"
+    },
+    "AddAssetTransfer": {
+      "endpoint": "api/AssetTransfer",
+      "method": "POST"
+    }
+  },
+  "AssetAcceptance": {
+    "endpoint": "api/AssetTransferReceipt/GetAssetTransferReceiptPending?PageNumber={page}&PageSize={size}&AssetTransferId={transferId}&FromDate={from}&ToDate={to}",
+    "method": "GET",
+    "AssetAcknowledge": {
+      "endpoint": "api/AssetTransferReceipt",
+      "method": "POST"
+    },
+    "GetById": {
+      "endpoint": "api/AssetTransferReceipt/GetAssetTransferReceiptDtlPending/{id}",
+      "method": "GET"
+    },
+    "AssetTransferType": {
+      "endpoint": "api/AssetTransfer/TransferTypes",
+      "method": "GET"
+    }
+  },
+  "AssetTransferApproval": {
+    "endpoint": "api/AssetIssueTransferApproval?PageNumber={page}&PageSize={size}&SearchTerm={searchTerm}&FromDate={FromDate}&ToDate={ToDate}&TransferType={TransferType}",
+    "method": "GET",
+    "GetTransferApproval": {
+      "endpoint": "api/AssetIssueTransferApproval/{id}",
+      "method": "GET"
+    },
+    "AddTransferApproval": {
+      "endpoint": "api/AssetIssueTransferApproval/update-status",
+      "method": "POST"
+    }
+  },
+  "AssetMasterGeneral": {
+    "ExelUpload": {
+      "endpoint": "api/AssetMasterGeneral/import",
+      "method": "POST"
+    },
+    "AssetByName": {
+      "endpoint": "api/AssetMasterGeneral/by-name",
+      "method": "GET"
+    },
+    "InvoiceUpload": {
+      "endpoint": "api/AssetMasterGeneral/upload-document",
+      "method": "POST"
+    },
+    "InvoiceDelete": {
+      "endpoint": "api/AssetMasterGeneral/delete-document",
+      "method": "DELETE"
+    },
+    "SaveInvoice": {
+      "endpoint": "api/AssetMasterGeneral/saveDocument",
+      "method": "POST"
+    }
+  },
+  "PhysicalVerification": {
+    "ExelUpload": {
+      "endpoint": "api/AssetMasterGeneral/PhysicalAuditUpload",
+      "method": "POST"
+    }
+  },
+  "GetResponsiblePerson": {
+    "endpoint": "api/AssetLocation/GetAllCustodian/{OldUnitId}",
+    "method": "GET"
+  },
+  "Report": {
+    "AssetReport": {
+      "endpoint": "api/Report/AssetReport",
+      "method": "GET"
+    },
+    "AssetReportWithDate": {
+      "endpoint": "api/Report/AssetReport?fromDate={from}&toDate={to}",
+      "method": "GET"
+    },
+    "TransferReport": {
+      "endpoint": "api/Report/AssetTransferReport?FromDate={from}&ToDate={to}",
+      "method": "GET"
+    },
+    "AuditReport": {
+      "endpoint": "api/Report/AssetAuditReport?auditTypeId={id}",
+      "method": "GET"
+    }
+  },
+  "Specificaton": {
+    "endpoint": "api/SpecificationMaster?PageNumber={page}&PageSize={size}&SearchTerm={searchTerm}",
+    "method": "GET",
+    "AddSpecification": {
+      "endpoint": "api/SpecificationMaster",
+      "method": "POST"
+    },
+    "UpdateSpecification": {
+      "endpoint": "api/SpecificationMaster",
+      "method": "PUT"
+    },
+    "Delete": {
+      "endpoint": "api/SpecificationMaster/{id}",
+      "method": "DELETE"
+    },
+    "DeleteAssetSpec": {
+      "endpoint": "api/AssetSpecification/{id}",
+      "method": "DELETE"
+    }
+  },
+  "Dashboard": {
+    "AssetSummary": {
+      "endpoint": "Dashboard/Asset-summary",
+      "method": "GET"
+    },
+    "Cards": {
+      "endpoint": "Dashboard/card-dashboard",
+      "method": "GET"
+    },
+     "AssetExpirySummary": {
+      "endpoint": "Dashboard/AssetExpiry-summary",
+      "method": "GET"
+    }
+  }
+}
