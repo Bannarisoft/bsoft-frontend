@@ -1,14 +1,18 @@
-name: Next.js CI/CD
+name: Next.js CI/CD Deploy to IIS
 
 on:
   push:
-    branches: ["Development"]
+    branches: ["Development"]  # Update as needed
   pull_request:
     branches: ["Development"]
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
+  build-and-deploy:
+    runs-on: self-hosted
+
+    env:
+      DEPLOY_PATH: "C:\\inetpub\\wwwroot\\YourSiteName"  # Set this to your IIS site's folder
+      PM2_PROCESS: "app"  # Name of your PM2 app, update as needed
 
     steps:
       - name: Checkout repository
@@ -17,7 +21,7 @@ jobs:
       - name: Setup pnpm
         uses: pnpm/action-setup@v3
         with:
-          version: 9   # use your project's pnpm version
+          version: 9
 
       - name: Setup Node.js 18.x
         uses: actions/setup-node@v3
@@ -30,3 +34,33 @@ jobs:
 
       - name: Build Next.js app
         run: pnpm run build:auto
+
+      - name: Stop IIS website
+        shell: pwsh
+        run: |
+          Import-Module WebAdministration
+          Stop-Website -Name "YourSiteName"
+
+      - name: Copy files to IIS directory
+        shell: pwsh
+        run: |
+          Copy-Item -Path "$PWD\*" -Destination "${{ env.DEPLOY_PATH }}" -Recurse -Force -Exclude ".git",".github","node_modules",".next",".env"
+          # Copy .next, node_modules, and server files explicitly
+          Copy-Item -Path "$PWD\.next" -Destination "${{ env.DEPLOY_PATH }}\.next" -Recurse -Force
+          Copy-Item -Path "$PWD\node_modules" -Destination "${{ env.DEPLOY_PATH }}\node_modules" -Recurse -Force
+          If (Test-Path "$PWD\app.js") { Copy-Item "$PWD\app.js" "${{ env.DEPLOY_PATH }}\app.js" -Force }
+          If (Test-Path "$PWD\web.config") { Copy-Item "$PWD\web.config" "${{ env.DEPLOY_PATH }}\web.config" -Force }
+
+      - name: Start IIS website
+        shell: pwsh
+        run: |
+          Import-Module WebAdministration
+          Start-Website -Name "YourSiteName"
+
+      # Optional: Restart the PM2 process for your Node/Next.js app
+      - name: Restart PM2 app
+        shell: pwsh
+        run: |
+          if (Get-Command pm2 -ErrorAction SilentlyContinue) {
+            pm2 restart $env:PM2_PROCESS || pm2 start "${{ env.DEPLOY_PATH }}\app.js" --name "$env:PM2_PROCESS"
+          }
