@@ -3,7 +3,7 @@ name: CI/CD Deploy to Kubernetes
 on:
   push:
     branches:
-      - main  # or 'dev' or whatever branch you want to trigger deploy
+      - Development  # or 'dev' or whatever branch you want to trigger deploy
 
 jobs:
   build-and-deploy:
