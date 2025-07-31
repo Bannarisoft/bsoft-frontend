@@ -3,9 +3,7 @@ name: Deploy Frontend to Kubernetes
 on:
   push:
     branches:
-      - main
-      - prod
-      - feature/*
+      - Development
 
 jobs:
   build-push-deploy:
