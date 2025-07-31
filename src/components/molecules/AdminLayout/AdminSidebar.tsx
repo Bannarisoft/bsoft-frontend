@@ -207,7 +207,6 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ modules }) => {
                   const hasActiveChild = isChildActive(item.childMenus);
                   const isHovered = hoveredItem === item.id;
                   const menuIcon = getIconByMenuItem(item);
-
                   return (
                     <motion.div
                       key={item.id}
