@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: bsoft-frontend
-          image: docker.io/YOUR_DOCKER_USERNAME/bsoft-frontend:latest
+          image: docker.io/bannarisoft/bsoft-frontend:latest
           ports:
             - containerPort: 3000
           envFrom:
