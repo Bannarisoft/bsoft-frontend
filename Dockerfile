@@ -2,22 +2,15 @@ FROM node:18-alpine
 
 WORKDIR /app
 
-# Install pnpm globally
 RUN npm install -g pnpm
 
-# Copy package manager files
-COPY pnpm-lock.yaml ./
-COPY package.json ./
+COPY package.json pnpm-lock.yaml ./
 
-# Install dependencies using pnpm
 RUN pnpm install
 
-# Copy rest of the app
 COPY . .
 
-# Build (optional)
-RUN pnpm build
+RUN pnpm run build:auto
 
-EXPOSE 3000
-
-CMD ["pnpm", "start:auto"]
+ENV NODE_ENV=production
+CMD ["pnpm", "run", "start:auto"]
