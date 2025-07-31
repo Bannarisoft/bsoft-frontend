@@ -28,7 +28,7 @@ jobs:
           context: .
           file: ./Dockerfile
           push: true
-          tags: docker.io/jabaraj/bsoft-frontend:latest
+          tags: docker.io/${{ secrets.DOCKER_USERNAME }}/bsoft-frontend:latest
 
       - name: 🚀 Deploy to Kubernetes
         run: |
