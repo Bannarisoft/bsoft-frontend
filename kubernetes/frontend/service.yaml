@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: bsoft-frontend-service
+  name: bsoft-frontend
 spec:
   selector:
     app: bsoft-frontend
@@ -9,4 +9,4 @@ spec:
     - protocol: TCP
       port: 80
       targetPort: 3000
-  type: LoadBalancer  # or ClusterIP or NodePort
+  type: ClusterIP

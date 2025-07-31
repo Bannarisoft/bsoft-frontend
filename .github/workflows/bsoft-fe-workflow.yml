@@ -1,56 +1,37 @@
-name: CI/CD Deploy to Kubernetes
+name: Deploy Frontend to Kubernetes
 
 on:
   push:
     branches:
-      - Development  # Change this to your deployment branch (e.g., main or production)
+      - main
+      - prod
+      - feature/*
 
 jobs:
-  build-and-deploy:
-    runs-on: ubuntu-latest
-
-    env:
-      IMAGE_NAME: bsoft-frontend
-      REGISTRY: docker.io
-      DOCKER_USER: bannarisoft
-      FULL_IMAGE_NAME: bannarisoft/bsoft-frontend:latest
+  build-push-deploy:
+    runs-on: [self-hosted, Linux]
 
     steps:
-      - name: ⏬ Checkout repository
+      - name: 🧾 Checkout Code
         uses: actions/checkout@v3
 
-      - name: 🐋 Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
+      - name: 🐳 Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
 
-      - name: 🔐 Log in to Docker Hub
-        uses: docker/login-action@v2
+      - name: 🔐 Login to Docker Hub
+        uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - name: 🏗️ Build and push Docker image
+      - name: 🛠️ Build & Push Docker Image
         uses: docker/build-push-action@v5
         with:
           context: .
+          file: ./Dockerfile
           push: true
-          tags: ${{ env.FULL_IMAGE_NAME }}
-
-      - name: 📂 Set up kubectl
-        uses: azure/setup-kubectl@v3
-        with:
-          version: 'latest'
-
-      - name: ⚙️ Configure kubeconfig
-        run: |
-          mkdir -p ~/.kube
-          echo "${{ secrets.KUBECONFIG }}" > ~/.kube/config
-          chmod 600 ~/.kube/config
-
-      - name: 🔐 Create or Update Kubernetes Secret from .env.production
-        run: |
-          kubectl delete secret bsoft-env --ignore-not-found
-          kubectl create secret generic bsoft-env --from-env-file=.env.production
+          tags: docker.io/YOUR_DOCKER_USERNAME/bsoft-frontend:latest
 
       - name: 🚀 Deploy to Kubernetes
         run: |
-          kubectl apply -f kubernetes/
+          kubectl apply -f kubernetes/frontend/
