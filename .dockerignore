@@ -2,7 +2,6 @@ node_modules
 .next
 Dockerfile
 .dockerignore
-pnpm-lock.yaml
 npm-debug.log
 .git
 .github
