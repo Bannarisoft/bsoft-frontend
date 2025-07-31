@@ -1,32 +1,23 @@
-# Dockerfile
-
-# Use the official Next.js image or Node base
-FROM node:18-alpine AS builder
+FROM node:18-alpine
 
 WORKDIR /app
 
-COPY package*.json ./
-RUN npm install
+# Install pnpm globally
+RUN npm install -g pnpm
 
+# Copy package manager files
+COPY pnpm-lock.yaml ./
+COPY package.json ./
+
+# Install dependencies using pnpm
+RUN pnpm install
+
+# Copy rest of the app
 COPY . .
 
-# Copy production env file
-COPY .env.production .env.production
-
-# Build the app with production env
-ENV NODE_ENV=production
-RUN npm run build
-
-# Use lighter image for serving
-FROM node:18-alpine AS runner
-WORKDIR /app
-
-COPY --from=builder /app/public ./public
-COPY --from=builder /app/.next ./.next
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/package.json ./package.json
-COPY --from=builder /app/.env.production ./.env.production
+# Build (optional)
+RUN pnpm build
 
 EXPOSE 3000
 
-CMD ["npm", "start"]
+CMD ["pnpm", "start:auto"]
