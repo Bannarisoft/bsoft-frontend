@@ -3,7 +3,7 @@ name: CI/CD Deploy to Kubernetes
 on:
   push:
     branches:
-      - Development  # or 'dev' or whatever branch you want to trigger deploy
+      - Development  # Change this to your deployment branch
 
 jobs:
   build-and-deploy:
@@ -11,8 +11,8 @@ jobs:
 
     env:
       IMAGE_NAME: bsoft-frontend
-      REGISTRY: ghcr.io/${{ github.repository_owner }}
-      CLUSTER_CONTEXT: docker-desktop  # set to your context name if using minikube/k3d
+      REGISTRY: ghcr.io/bannarisoft  # must be all lowercase
+      CLUSTER_CONTEXT: docker-desktop  # change if you're using minikube or other
 
     steps:
       - name: ⏬ Checkout repository
@@ -35,17 +35,17 @@ jobs:
           push: true
           tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
 
-      - name: 📂 Set up Kubeconfig
+      - name: 📂 Set up kubectl
         uses: azure/setup-kubectl@v3
         with:
           version: 'latest'
 
-      - name: ⚙️ Configure Kubeconfig for local (docker-desktop or minikube)
+      - name: ⚙️ Configure kubeconfig
         run: |
           mkdir -p ~/.kube
           echo "${{ secrets.KUBECONFIG }}" > ~/.kube/config
 
-      - name: 🔐 Create/Update Kubernetes Secret
+      - name: 🔐 Create or Update Kubernetes Secret from .env.production
         run: |
           kubectl delete secret bsoft-env --ignore-not-found
           kubectl create secret generic bsoft-env --from-env-file=.env.production
