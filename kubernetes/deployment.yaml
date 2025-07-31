@@ -2,6 +2,8 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: bsoft-frontend
+  labels:
+    app: bsoft-frontend
 spec:
   replicas: 1
   selector:
@@ -14,8 +16,7 @@ spec:
     spec:
       containers:
         - name: bsoft-frontend
-          image: bsoft-frontend:latest
-          imagePullPolicy: Never
+          image: ghcr.io/bannarisoft/bsoft-frontend:latest
           ports:
             - containerPort: 3000
           envFrom:
