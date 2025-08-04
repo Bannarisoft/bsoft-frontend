@@ -14,9 +14,9 @@ spec:
     spec:
       containers:
         - name: bsoft-frontend
-          image: docker.io/jabaraj/bsoft-frontend:latest
+          image: jabaraj/bsoft-frontend:latest
           ports:
-            - containerPort: 3000
+            - containerPort: 80
           envFrom:
             - configMapRef:
                 name: frontend-env
