@@ -30,14 +30,14 @@ jobs:
           push: true
           tags: docker.io/${{ secrets.DOCKER_USERNAME }}/bsoft-frontend:latest
 
-      - name: 🗝️ Decode kubeconfig from secret
+      - name: 🗝️ Create kubeconfig file from secret
         run: |
-          echo "${{ secrets.KUBECONFIG_BASE64 }}" | base64 -d > kubeconfig.yaml
+          echo "${{ secrets.KUBECONFIG }}" > kubeconfig.yaml
 
-      - name: ⚙️ Set KUBECONFIG environment variable
+      - name: ⚙️ Set KUBECONFIG and check cluster
         run: |
           export KUBECONFIG=$PWD/kubeconfig.yaml
-          kubectl version --short
+          kubectl version
         shell: bash
 
       - name: 🚀 Deploy to Kubernetes
