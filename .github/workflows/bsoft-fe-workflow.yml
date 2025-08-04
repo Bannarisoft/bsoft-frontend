@@ -33,3 +33,11 @@ jobs:
       - name: 🚀 Deploy to Kubernetes
         run: |
           kubectl apply -f kubernetes/frontend/ --validate=false
+
+      - name: 🌐 Get Service URL (Minikube or NodePort)
+        run: |
+          echo "Fetching service URL..."
+          kubectl get svc bsoft-frontend -o wide
+          echo ""
+          echo "If using Minikube, access using:"
+          echo "$(minikube service bsoft-frontend --url || true)"
