@@ -32,8 +32,19 @@ jobs:
           
       - name: 🗝️ Create kubeconfig file from secret
         run: |
-          echo "${{ secrets.KUBECONFIG }}" > kubeconfig.yaml
+          echo "${{ secrets.KUBECONFIG }}" | base64 -d > kubeconfig.yaml
+          chmod 600 kubeconfig.yaml
           
+      - name: 🔍 Debug kubeconfig content
+        run: |
+          echo "=== Kubeconfig file content ==="
+          head -20 kubeconfig.yaml
+          echo "=== File size ==="
+          ls -la kubeconfig.yaml
+          echo "=== First few characters ==="
+          head -c 100 kubeconfig.yaml
+        shell: bash
+        
       - name: ⚙️ Set KUBECONFIG and check cluster
         run: |
           export KUBECONFIG=$PWD/kubeconfig.yaml
@@ -50,4 +61,9 @@ jobs:
         run: |
           export KUBECONFIG=$PWD/kubeconfig.yaml
           kubectl get svc bsoft-frontend -o wide
+        shell: bash
+        
+      - name: 🧹 Cleanup
+        run: |
+          rm -f kubeconfig.yaml
         shell: bash
