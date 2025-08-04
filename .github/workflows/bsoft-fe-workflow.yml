@@ -30,9 +30,9 @@ jobs:
           push: true
           tags: docker.io/${{ secrets.DOCKER_USERNAME }}/bsoft-frontend:latest
 
-      - name: 📂 Setup Kubeconfig from Secret
+      - name: 📂 Set Up Kubeconfig from Secret
         run: |
-          echo "${{ secrets.KUBECONFIG }}" > kubeconfig.yaml
+          echo "${{ secrets.KUBECONFIG_BASE64 }}" | base64 -d > kubeconfig.yaml
           export KUBECONFIG=$PWD/kubeconfig.yaml
           kubectl config get-contexts
 
@@ -44,8 +44,8 @@ jobs:
       - name: 🌐 Get Service URL (Minikube or NodePort)
         run: |
           export KUBECONFIG=$PWD/kubeconfig.yaml
-          echo "Fetching service URL..."
+          echo "Fetching service info..."
           kubectl get svc bsoft-frontend -o wide
           echo ""
-          echo "If using Minikube, access using:"
-          echo "$(minikube service bsoft-frontend --url || true)"
+          echo "If using Minikube, access it via:"
+          minikube service bsoft-frontend --url || echo "Not using Minikube or command failed."
