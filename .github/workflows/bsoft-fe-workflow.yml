@@ -30,12 +30,20 @@ jobs:
           push: true
           tags: docker.io/${{ secrets.DOCKER_USERNAME }}/bsoft-frontend:latest
 
+      - name: 📂 Setup Kubeconfig from Secret
+        run: |
+          echo "${{ secrets.KUBECONFIG }}" > kubeconfig.yaml
+          export KUBECONFIG=$PWD/kubeconfig.yaml
+          kubectl config get-contexts
+
       - name: 🚀 Deploy to Kubernetes
         run: |
+          export KUBECONFIG=$PWD/kubeconfig.yaml
           kubectl apply -f kubernetes/frontend/ --validate=false
 
       - name: 🌐 Get Service URL (Minikube or NodePort)
         run: |
+          export KUBECONFIG=$PWD/kubeconfig.yaml
           echo "Fetching service URL..."
           kubectl get svc bsoft-frontend -o wide
           echo ""
