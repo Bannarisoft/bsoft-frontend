@@ -194,6 +194,7 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ modules }) => {
                   {module.moduleName}
                 </Typography>
               )}
+              
               <Box
                 sx={{
                   "& .active-tree": {
