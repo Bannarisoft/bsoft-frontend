@@ -8,20 +8,20 @@ on:
 jobs:
   build-push-deploy:
     runs-on: [self-hosted, Linux]
-    
+
     steps:
       - name: 🧾 Checkout Code
         uses: actions/checkout@v3
-        
+
       - name: 🐳 Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
-        
+
       - name: 🔐 Login to Docker Hub
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
-          
+
       - name: 🛠️ Build & Push Docker Image
         uses: docker/build-push-action@v5
         with:
@@ -29,12 +29,12 @@ jobs:
           file: ./Dockerfile
           push: true
           tags: docker.io/${{ secrets.DOCKER_USERNAME }}/bsoft-frontend:latest
-          
+
       - name: 🗝️ Create kubeconfig file from secret
         run: |
           echo "${{ secrets.KUBECONFIG }}" | base64 -d > kubeconfig.yaml
           chmod 600 kubeconfig.yaml
-          
+
       - name: 🔍 Debug kubeconfig content
         run: |
           echo "=== Kubeconfig file content ==="
@@ -44,25 +44,73 @@ jobs:
           echo "=== First few characters ==="
           head -c 100 kubeconfig.yaml
         shell: bash
-        
+
       - name: ⚙️ Set KUBECONFIG and check cluster
         run: |
           export KUBECONFIG=$PWD/kubeconfig.yaml
           kubectl version
         shell: bash
-        
+
       - name: 🚀 Deploy to Kubernetes
         run: |
           export KUBECONFIG=$PWD/kubeconfig.yaml
           kubectl apply -f kubernetes/frontend/ --validate=false
         shell: bash
-        
+
       - name: 🌐 Get Service URL (NodePort)
         run: |
           export KUBECONFIG=$PWD/kubeconfig.yaml
           kubectl get svc bsoft-frontend -o wide
         shell: bash
-        
+
+      - name: 🔁 Rollback on Failure
+        if: failure()
+        run: |
+          echo "Deployment failed. Rolling back to previous revision..."
+          export KUBECONFIG=$PWD/kubeconfig.yaml
+          kubectl rollout undo deployment bsoft-frontend
+        shell: bash
+
+      - name: 📧 Send Success Email
+        if: success()
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: 192.168.1.113
+          server_port: 25
+          username: ${{ secrets.EMAIL_USERNAME }}
+          password: ${{ secrets.EMAIL_PASSWORD }}
+          subject: "✅ Frontend Deployed to Kubernetes - ${{ github.ref_name }}"
+          to: ${{ secrets.EMAIL_TO }}
+          from: "CI/CD Bot <${{ secrets.EMAIL_USERNAME }}>"
+          content_type: text/html
+          body: |
+            <h3>✅ Deployment Success</h3>
+            <p><strong>Repository:</strong> ${{ github.repository }}</p>
+            <p><strong>Branch:</strong> ${{ github.ref_name }}</p>
+            <p><strong>Commit:</strong> ${{ github.sha }}</p>
+            <p><strong>Triggered by:</strong> ${{ github.actor }}</p>
+            <p><strong>Status:</strong> Deployment succeeded.</p>
+
+      - name: 📧 Send Failure Email
+        if: failure()
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: 192.168.1.113
+          server_port: 25
+          username: ${{ secrets.EMAIL_USERNAME }}
+          password: ${{ secrets.EMAIL_PASSWORD }}
+          subject: "❌ Frontend Deployment Failed - ${{ github.ref_name }}"
+          to: ${{ secrets.EMAIL_TO }}
+          from: "CI/CD Bot <${{ secrets.EMAIL_USERNAME }}>"
+          content_type: text/html
+          body: |
+            <h3>🚨 Deployment Failed</h3>
+            <p><strong>Repository:</strong> ${{ github.repository }}</p>
+            <p><strong>Branch:</strong> ${{ github.ref_name }}</p>
+            <p><strong>Commit:</strong> ${{ github.sha }}</p>
+            <p><strong>Triggered by:</strong> ${{ github.actor }}</p>
+            <p>⚠️ Deployment failed and a rollback was attempted.</p>
+
       - name: 🧹 Cleanup
         run: |
           rm -f kubeconfig.yaml
