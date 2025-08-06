@@ -77,13 +77,13 @@ jobs:
         with:
           server_address: 192.168.1.113
           server_port: 25
+          ignore_cert: true
           username: ${{ secrets.EMAIL_USERNAME }}
           password: ${{ secrets.EMAIL_PASSWORD }}
           subject: "✅ Frontend Deployed to Kubernetes - ${{ github.ref_name }}"
           to: ${{ secrets.EMAIL_TO }}
           from: "CI/CD Bot <${{ secrets.EMAIL_USERNAME }}>"
-          content_type: text/html
-          body: |
+          html_body: |
             <h3>✅ Deployment Success</h3>
             <p><strong>Repository:</strong> ${{ github.repository }}</p>
             <p><strong>Branch:</strong> ${{ github.ref_name }}</p>
@@ -97,13 +97,13 @@ jobs:
         with:
           server_address: 192.168.1.113
           server_port: 25
+          ignore_cert: true
           username: ${{ secrets.EMAIL_USERNAME }}
           password: ${{ secrets.EMAIL_PASSWORD }}
           subject: "❌ Frontend Deployment Failed - ${{ github.ref_name }}"
           to: ${{ secrets.EMAIL_TO }}
           from: "CI/CD Bot <${{ secrets.EMAIL_USERNAME }}>"
-          content_type: text/html
-          body: |
+          html_body: |
             <h3>🚨 Deployment Failed</h3>
             <p><strong>Repository:</strong> ${{ github.repository }}</p>
             <p><strong>Branch:</strong> ${{ github.ref_name }}</p>
