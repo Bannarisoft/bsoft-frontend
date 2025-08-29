@@ -14,14 +14,13 @@
     "isolatedModules": true,
     "jsx": "preserve",
     "incremental": true,
-    "ignoreDeprecations": "6.0",
+    "ignoreDeprecations": "5.0",
     "plugins": [
       {
         "name": "next"
       }
     ]
   },
-  // "extends": "../tsconfig.json",
   "include": [
     "next-env.d.ts",
     "**/*.ts",
