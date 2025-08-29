@@ -36,43 +36,59 @@ jobs:
           chmod 600 kubeconfig.yaml
 
       - name: 📜 Decode PFX certificate & create Kubernetes TLS Secret
+        shell: bash
         run: |
-          echo "${{ secrets.PFX_CERT_BASE64 }}" | base64 -d > tls.pfx
-          # Convert PFX -> PEM cert and key
-          openssl pkcs12 -in tls.pfx -clcerts -nokeys -out tls.crt -passin pass:${{ secrets.PFX_CERT_PASSWORD }}
-          openssl pkcs12 -in tls.pfx -nocerts -nodes -out tls.key -passin pass:${{ secrets.PFX_CERT_PASSWORD }}
+          set -euo pipefail
+          # Write kubeconfig
+          printf '%s' "${{ secrets.KUBECONFIG }}" | base64 -d > kubeconfig.yaml
+          chmod 600 kubeconfig.yaml
+          export KUBECONFIG="$PWD/kubeconfig.yaml"
 
-          export KUBECONFIG=$PWD/kubeconfig.yaml
+          # Decode the PFX (use printf to avoid trailing newline)
+          printf '%s' "${{ secrets.PFX_CERT_BASE64 }}" | base64 -d > tls.pfx
+
+          # Extract certificate and key from PFX
+          # Quote the password (handles spaces/special chars)
+          # Add -legacy for OpenSSL 3 compatibility with older PFX MAC/algorithms
+          openssl pkcs12 -in tls.pfx -clcerts -nokeys -out tls.crt \
+            -passin "pass:${{ secrets.PFX_CERT_PASSWORD }}" -legacy
+          openssl pkcs12 -in tls.pfx -nocerts -nodes -out tls.key \
+            -passin "pass:${{ secrets.PFX_CERT_PASSWORD }}" -legacy
+
+          # Optional: verify outputs (will fail early if empty)
+          test -s tls.crt && test -s tls.key
+
+          # Create/Update TLS secret (expects PEM cert/key)
           kubectl create secret tls frontend-tls \
             --cert=tls.crt \
             --key=tls.key \
             --dry-run=client -o yaml | kubectl apply -f -
 
       - name: ⚙️ Set KUBECONFIG and check cluster
+        shell: bash
         run: |
           export KUBECONFIG=$PWD/kubeconfig.yaml
           kubectl version
-        shell: bash
 
       - name: 🚀 Deploy to Kubernetes
+        shell: bash
         run: |
           export KUBECONFIG=$PWD/kubeconfig.yaml
           kubectl apply -f kubernetes/frontend/ --validate=false
-        shell: bash
 
       - name: 🌐 Get Service URL (NodePort)
+        shell: bash
         run: |
           export KUBECONFIG=$PWD/kubeconfig.yaml
           kubectl get svc bsoft-frontend -o wide
-        shell: bash
 
       - name: 🔁 Rollback on Failure
         if: failure()
+        shell: bash
         run: |
           echo "Deployment failed. Rolling back to previous revision..."
           export KUBECONFIG=$PWD/kubeconfig.yaml
           kubectl rollout undo deployment bsoft-frontend
-        shell: bash
 
       - name: 📧 Send Success Email
         if: success()
@@ -115,6 +131,6 @@ jobs:
             <p>⚠️ Deployment failed and a rollback was attempted.</p>
 
       - name: 🧹 Cleanup
+        shell: bash
         run: |
           rm -f kubeconfig.yaml tls.pfx tls.crt tls.key
-        shell: bash
