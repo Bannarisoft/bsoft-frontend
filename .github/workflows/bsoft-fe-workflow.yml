@@ -30,52 +30,16 @@ jobs:
           push: true
           tags: docker.io/${{ secrets.DOCKER_USERNAME }}/bsoft-frontend:latest
 
-      - name: Decode PFX → PEM and create Kubernetes TLS Secret 📜
+      - name: ⚙️ Setup Kubeconfig
         shell: bash
         env:
           KUBECONFIG_B64: ${{ secrets.KUBECONFIG }}
-          PFX_CERT_BASE64: ${{ secrets.PFX_CERT_BASE64 }}
-          PFX_CERT_PASSWORD: ${{ secrets.PFX_CERT_PASSWORD }}
         run: |
           set -euo pipefail
-          
           # Decode kubeconfig
           printf '%s' "$KUBECONFIG_B64" | base64 -d > kubeconfig.yaml
           chmod 600 kubeconfig.yaml
           export KUBECONFIG="$PWD/kubeconfig.yaml"
-
-          # Decode PFX certificate
-          printf '%s' "$PFX_CERT_BASE64" | tr -d '\r' | base64 -d > tls.pfx
-          
-          # Convert PFX to PEM format (non-interactive)
-          # Extract certificate
-          openssl pkcs12 -in tls.pfx -clcerts -nokeys -out tls.crt \
-            -passin pass:"$PFX_CERT_PASSWORD" -legacy || \
-          openssl pkcs12 -in tls.pfx -clcerts -nokeys -out tls.crt \
-            -passin pass:"$PFX_CERT_PASSWORD"
-          
-          # Extract private key
-          openssl pkcs12 -in tls.pfx -nocerts -nodes -out tls.key \
-            -passin pass:"$PFX_CERT_PASSWORD" -legacy || \
-          openssl pkcs12 -in tls.pfx -nocerts -nodes -out tls.key \
-            -passin pass:"$PFX_CERT_PASSWORD"
-
-          # Sanity checks
-          if [[ ! -s tls.crt ]] || [[ ! -s tls.key ]]; then
-            echo "Error: Certificate or key file is empty"
-            exit 1
-          fi
-
-          # Verify certificate and key are valid
-          openssl x509 -in tls.crt -text -noout > /dev/null
-          openssl rsa -in tls.key -check > /dev/null 2>&1 || \
-          openssl ec -in tls.key -check > /dev/null 2>&1
-
-          # Create/update TLS secret
-          kubectl create secret tls frontend-tls \
-            --cert=tls.crt \
-            --key=tls.key \
-            --dry-run=client -o yaml | kubectl apply -f -
 
       - name: ⚙️ Set KUBECONFIG and check cluster
         shell: bash
@@ -152,4 +116,4 @@ jobs:
         if: always()
         shell: bash
         run: |
-          rm -f kubeconfig.yaml tls.pfx tls.crt tls.key
+          rm -f kubeconfig.yaml
