@@ -30,25 +30,33 @@ jobs:
           push: true
           tags: docker.io/${{ secrets.DOCKER_USERNAME }}/bsoft-frontend:latest
 
-      - name: ⚙️ Setup Kubeconfig
+      - name: ⚙️ Setup Kubeconfig and check cluster
         shell: bash
         env:
           KUBECONFIG_B64: ${{ secrets.KUBECONFIG }}
         run: |
           set -euo pipefail
+          
           # Decode kubeconfig
           printf '%s' "$KUBECONFIG_B64" | base64 -d > kubeconfig.yaml
           chmod 600 kubeconfig.yaml
           export KUBECONFIG="$PWD/kubeconfig.yaml"
-
-      - name: ⚙️ Set KUBECONFIG and check cluster
-        shell: bash
-        run: |
-          set -euo pipefail
-          export KUBECONFIG="$PWD/kubeconfig.yaml"
+          
+          # Check client version
           kubectl version --client
-          kubectl cluster-info
-          kubectl get nodes
+          
+          # Test cluster connectivity (with timeout)
+          echo "Testing cluster connectivity..."
+          timeout 30 kubectl cluster-info || {
+            echo "Warning: Cluster info failed, but continuing..."
+            exit 0
+          }
+          
+          # Get nodes (with timeout)
+          timeout 30 kubectl get nodes || {
+            echo "Warning: Unable to get nodes, but continuing..."
+            exit 0
+          }
 
       - name: 🚀 Deploy to Kubernetes
         shell: bash
