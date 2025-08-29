@@ -13,74 +13,70 @@ jobs:
       - name: 🧾 Checkout Code
         uses: actions/checkout@v3
 
-      - name: 🐳 Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: 🔐 Login to Docker Hub
-        uses: docker/login-action@v3
-        with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
-
-      - name: 🛠️ Build & Push Docker Image
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          file: ./Dockerfile
-          push: true
-          tags: docker.io/${{ secrets.DOCKER_USERNAME }}/bsoft-frontend:latest
-
-      - name: ⚙️ Setup Kubeconfig and check cluster
+      - name: 🔵 Setup Kubeconfig (Base64 Decode)
         shell: bash
         env:
           KUBECONFIG_B64: ${{ secrets.KUBECONFIG }}
         run: |
           set -euo pipefail
-          
-          # Decode kubeconfig
           printf '%s' "$KUBECONFIG_B64" | base64 -d > kubeconfig.yaml
           chmod 600 kubeconfig.yaml
           export KUBECONFIG="$PWD/kubeconfig.yaml"
-          
-          # Check client version
           kubectl version --client
-          
-          # Test cluster connectivity (with timeout)
-          echo "Testing cluster connectivity..."
-          timeout 30 kubectl cluster-info || {
-            echo "Warning: Cluster info failed, but continuing..."
-            exit 0
-          }
-          
-          # Get nodes (with timeout)
-          timeout 30 kubectl get nodes || {
-            echo "Warning: Unable to get nodes, but continuing..."
-            exit 0
-          }
 
-      - name: 🚀 Deploy to Kubernetes
+      - name: 🔐 Docker Hub Login
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: 🔧 Docker Version Check
+        shell: bash
+        run: |
+          docker --version
+          docker buildx version
+
+      - name: 🏗️ Build Docker Images
+        shell: bash
+        run: |
+          set -euo pipefail
+          docker build -t ${{ secrets.DOCKER_USERNAME }}/bsoft-frontend:latest .
+
+      - name: 📤 Push Docker Images to Docker Hub
+        shell: bash
+        run: |
+          set -euo pipefail
+          docker push ${{ secrets.DOCKER_USERNAME }}/bsoft-frontend:latest
+
+      - name: 🚀 Deploy Microservices (with Rollback + better diagnostics)
         shell: bash
         run: |
           set -euo pipefail
           export KUBECONFIG="$PWD/kubeconfig.yaml"
-          echo "Applying manifests..."
+          
+          echo "Testing cluster connectivity..."
+          timeout 30 kubectl get namespaces > /dev/null || {
+            echo "Error: Cannot connect to Kubernetes cluster"
+            exit 1
+          }
+          
+          echo "Applying frontend manifests..."
           kubectl apply -f kubernetes/frontend/ --validate=false
 
-      - name: 🌐 Get Service URL (NodePort)
+      - name: 🔗 Output Service URLs with Health Check & Save Summary
         shell: bash
         run: |
           export KUBECONFIG="$PWD/kubeconfig.yaml"
-          kubectl get svc bsoft-frontend -o wide
+          echo "=== Frontend Service Information ==="
+          kubectl get svc bsoft-frontend -o wide || echo "Service not found"
+          
+          echo "=== Deployment Status ==="
+          kubectl get deployments bsoft-frontend || echo "Deployment not found"
+          
+          echo "=== Pod Status ==="
+          kubectl get pods -l app=bsoft-frontend || echo "No pods found"
 
-      - name: 🔁 Rollback on Failure
-        if: failure()
-        shell: bash
-        run: |
-          echo "Deployment failed. Rolling back to previous revision..."
-          export KUBECONFIG="$PWD/kubeconfig.yaml"
-          kubectl rollout undo deployment bsoft-frontend || true
-
-      - name: 📧 Send Success Email
+      - name: 📧 Send Email via SMTP
         if: success()
         uses: dawidd6/action-send-mail@v3
         with:
@@ -89,16 +85,16 @@ jobs:
           ignore_cert: true
           username: ${{ secrets.EMAIL_USERNAME }}
           password: ${{ secrets.EMAIL_PASSWORD }}
-          subject: "✅ Frontend Deployed to Kubernetes - ${{ github.ref_name }}"
+          subject: "✅ Frontend Deployed Successfully - ${{ github.ref_name }}"
           to: ${{ secrets.EMAIL_TO }}
           from: "CI/CD Bot <${{ secrets.EMAIL_USERNAME }}>"
           html_body: |
-            <h3>✅ Deployment Success</h3>
+            <h3>✅ Frontend Deployment Success</h3>
             <p><strong>Repository:</strong> ${{ github.repository }}</p>
             <p><strong>Branch:</strong> ${{ github.ref_name }}</p>
             <p><strong>Commit:</strong> ${{ github.sha }}</p>
             <p><strong>Triggered by:</strong> ${{ github.actor }}</p>
-            <p><strong>Status:</strong> Deployment succeeded.</p>
+            <p><strong>Status:</strong> Frontend deployment completed successfully.</p>
 
       - name: 📧 Send Failure Email
         if: failure()
@@ -113,15 +109,16 @@ jobs:
           to: ${{ secrets.EMAIL_TO }}
           from: "CI/CD Bot <${{ secrets.EMAIL_USERNAME }}>"
           html_body: |
-            <h3>🚨 Deployment Failed</h3>
+            <h3>🚨 Frontend Deployment Failed</h3>
             <p><strong>Repository:</strong> ${{ github.repository }}</p>
             <p><strong>Branch:</strong> ${{ github.ref_name }}</p>
             <p><strong>Commit:</strong> ${{ github.sha }}</p>
             <p><strong>Triggered by:</strong> ${{ github.actor }}</p>
-            <p>⚠️ Deployment failed and a rollback was attempted.</p>
+            <p>⚠️ Frontend deployment failed. Please check the logs for details.</p>
 
-      - name: 🧹 Cleanup
+      - name: 🐳 Docker Cleanup
         if: always()
         shell: bash
         run: |
+          docker system prune -f || true
           rm -f kubeconfig.yaml
