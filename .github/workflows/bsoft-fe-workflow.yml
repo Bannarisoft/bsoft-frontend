@@ -30,46 +30,66 @@ jobs:
           push: true
           tags: docker.io/${{ secrets.DOCKER_USERNAME }}/bsoft-frontend:latest
 
-      - name: 🗝️ Create kubeconfig file from secret
-        run: |
-          echo "${{ secrets.KUBECONFIG }}" | base64 -d > kubeconfig.yaml
-          chmod 600 kubeconfig.yaml
-
-      - name: 🔍 Debug kubeconfig content
-        run: |
-          echo "=== Kubeconfig file content ==="
-          head -20 kubeconfig.yaml
-          echo "=== File size ==="
-          ls -la kubeconfig.yaml
-          echo "=== First few characters ==="
-          head -c 100 kubeconfig.yaml
+      - name: Decode PFX → PEM and create Kubernetes TLS Secret 📜
         shell: bash
+        env:
+          KUBECONFIG_B64: ${{ secrets.KUBECONFIG }}
+          PFX_CERT_BASE64: ${{ secrets.PFX_CERT_BASE64 }}
+          PFX_CERT_PASSWORD: ${{ secrets.PFX_CERT_PASSWORD }}
+        run: |
+          set -euo pipefail
+          # Decode kubeconfig
+          printf '%s' "$KUBECONFIG_B64" | base64 -d > kubeconfig.yaml
+          chmod 600 kubeconfig.yaml
+          export KUBECONFIG="$PWD/kubeconfig.yaml"
+
+          # Decode PFX → PEM
+          printf '%s' "$PFX_CERT_BASE64" | tr -d '\r' | base64 -d > tls.pfx
+          export PFX_CERT_PASSWORD
+          openssl pkcs12 -in tls.pfx -clcerts -nokeys -out tls.crt \
+            -passin env:PFX_CERT_PASSWORD -legacy
+          openssl pkcs12 -in tls.pfx -nocerts -nodes -out tls.key \
+            -passin env:PFX_CERT_PASSWORD -legacy
+
+          # Sanity checks
+          test -s tls.crt && test -s tls.key
+
+          # Create/update TLS secret
+          kubectl create secret tls frontend-tls \
+            --cert=tls.crt \
+            --key=tls.key \
+            --dry-run=client -o yaml | kubectl apply -f -
 
       - name: ⚙️ Set KUBECONFIG and check cluster
-        run: |
-          export KUBECONFIG=$PWD/kubeconfig.yaml
-          kubectl version
         shell: bash
+        run: |
+          set -euo pipefail
+          export KUBECONFIG="$PWD/kubeconfig.yaml"
+          kubectl version
+          kubectl cluster-info
+          kubectl get nodes
 
       - name: 🚀 Deploy to Kubernetes
-        run: |
-          export KUBECONFIG=$PWD/kubeconfig.yaml
-          kubectl apply -f kubernetes/frontend/ --validate=false
         shell: bash
+        run: |
+          set -euo pipefail
+          export KUBECONFIG="$PWD/kubeconfig.yaml"
+          echo "Applying manifests..."
+          kubectl apply -f kubernetes/frontend/ --validate=false
 
       - name: 🌐 Get Service URL (NodePort)
-        run: |
-          export KUBECONFIG=$PWD/kubeconfig.yaml
-          kubectl get svc bsoft-frontend -o wide
         shell: bash
+        run: |
+          export KUBECONFIG="$PWD/kubeconfig.yaml"
+          kubectl get svc bsoft-frontend -o wide
 
       - name: 🔁 Rollback on Failure
         if: failure()
+        shell: bash
         run: |
           echo "Deployment failed. Rolling back to previous revision..."
-          export KUBECONFIG=$PWD/kubeconfig.yaml
+          export KUBECONFIG="$PWD/kubeconfig.yaml"
           kubectl rollout undo deployment bsoft-frontend
-        shell: bash
 
       - name: 📧 Send Success Email
         if: success()
@@ -83,6 +103,7 @@ jobs:
           subject: "✅ Frontend Deployed to Kubernetes - ${{ github.ref_name }}"
           to: ${{ secrets.EMAIL_TO }}
           from: "CI/CD Bot <${{ secrets.EMAIL_USERNAME }}>"
+
           html_body: |
             <h3>✅ Deployment Success</h3>
             <p><strong>Repository:</strong> ${{ github.repository }}</p>
@@ -103,6 +124,7 @@ jobs:
           subject: "❌ Frontend Deployment Failed - ${{ github.ref_name }}"
           to: ${{ secrets.EMAIL_TO }}
           from: "CI/CD Bot <${{ secrets.EMAIL_USERNAME }}>"
+
           html_body: |
             <h3>🚨 Deployment Failed</h3>
             <p><strong>Repository:</strong> ${{ github.repository }}</p>
@@ -112,6 +134,6 @@ jobs:
             <p>⚠️ Deployment failed and a rollback was attempted.</p>
 
       - name: 🧹 Cleanup
-        run: |
-          rm -f kubeconfig.yaml
         shell: bash
+        run: |
+          rm -f kubeconfig.yaml tls.pfx tls.crt tls.key
