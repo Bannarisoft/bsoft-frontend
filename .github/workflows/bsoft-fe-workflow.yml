@@ -26,17 +26,17 @@ jobs:
           export KUBECONFIG="$PWD/kubeconfig.yaml"
           
           # Check client version
-          kubectl version --client
+          kubectl version --client --insecure-skip-tls-verify=true
           
           # Test cluster connectivity (with timeout)
           echo "Testing cluster connectivity..."
-          timeout 30 kubectl cluster-info || {
+          timeout 30 kubectl cluster-info --insecure-skip-tls-verify=true || {
             echo "Warning: Cluster info failed, but continuing..."
             exit 0
           }
           
           # Get nodes (with timeout)
-          timeout 30 kubectl get nodes || {
+          timeout 30 kubectl get nodes --insecure-skip-tls-verify=true || {
             echo "Warning: Unable to get nodes, but continuing..."
             exit 0
           }
@@ -67,20 +67,20 @@ jobs:
           echo "Applying manifests..."
           
           # Test kubectl connectivity first
-          if ! timeout 30 kubectl get namespaces > /dev/null 2>&1; then
+          if ! timeout 30 kubectl get namespaces --insecure-skip-tls-verify=true > /dev/null 2>&1; then
             echo "Error: Cannot connect to Kubernetes cluster"
             echo "Please check your KUBECONFIG secret and cluster connectivity"
             exit 1
           fi
           
           # Apply manifests with timeout
-          timeout 120 kubectl apply -f kubernetes/frontend/ --validate=false
+          timeout 120 kubectl apply -f kubernetes/frontend/ --validate=false --insecure-skip-tls-verify=true
 
       - name: 🌐 Get Service URL (NodePort)
         shell: bash
         run: |
           export KUBECONFIG="$PWD/kubeconfig.yaml"
-          timeout 30 kubectl get svc bsoft-frontend -o wide || {
+          timeout 30 kubectl get svc bsoft-frontend -o wide --insecure-skip-tls-verify=true || {
             echo "Warning: Unable to get service info"
             exit 0
           }
@@ -131,7 +131,7 @@ jobs:
         run: |
           echo "Deployment failed. Rolling back to previous revision..."
           export KUBECONFIG="$PWD/kubeconfig.yaml"
-          timeout 60 kubectl rollout undo deployment bsoft-frontend || {
+          timeout 60 kubectl rollout undo deployment bsoft-frontend --insecure-skip-tls-verify=true || {
             echo "Warning: Rollback failed or deployment doesn't exist"
             exit 0
           }
