@@ -35,15 +35,18 @@ jobs:
           echo "${{ secrets.KUBECONFIG }}" | base64 -d > kubeconfig.yaml
           chmod 600 kubeconfig.yaml
 
-      - name: 🔍 Debug kubeconfig content
+      - name: 📜 Decode PFX certificate & create Kubernetes TLS Secret
         run: |
-          echo "=== Kubeconfig file content ==="
-          head -20 kubeconfig.yaml
-          echo "=== File size ==="
-          ls -la kubeconfig.yaml
-          echo "=== First few characters ==="
-          head -c 100 kubeconfig.yaml
-        shell: bash
+          echo "${{ secrets.PFX_CERT_BASE64 }}" | base64 -d > tls.pfx
+          # Convert PFX -> PEM cert and key
+          openssl pkcs12 -in tls.pfx -clcerts -nokeys -out tls.crt -passin pass:${{ secrets.PFX_CERT_PASSWORD }}
+          openssl pkcs12 -in tls.pfx -nocerts -nodes -out tls.key -passin pass:${{ secrets.PFX_CERT_PASSWORD }}
+
+          export KUBECONFIG=$PWD/kubeconfig.yaml
+          kubectl create secret tls frontend-tls \
+            --cert=tls.crt \
+            --key=tls.key \
+            --dry-run=client -o yaml | kubectl apply -f -
 
       - name: ⚙️ Set KUBECONFIG and check cluster
         run: |
@@ -113,5 +116,5 @@ jobs:
 
       - name: 🧹 Cleanup
         run: |
-          rm -f kubeconfig.yaml
+          rm -f kubeconfig.yaml tls.pfx tls.crt tls.key
         shell: bash
