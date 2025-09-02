@@ -15,7 +15,7 @@ import {
   AdditionalCost,
   PurchaseDetails,
   PurchaseState,
-} from "../../../../types";
+} from  "../../../../types/types";
 import dayjs from "dayjs";
 import { RiDeleteBin6Line } from "react-icons/ri";
 import { MdOutlineLibraryAdd } from "react-icons/md";

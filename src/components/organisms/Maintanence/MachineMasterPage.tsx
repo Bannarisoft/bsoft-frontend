@@ -16,14 +16,19 @@ import {
   AdditionalSpec,
   CreateMachineInputs,
   SpecificationOption,
-} from "../../../maintanenceTypes";
+} from "../../../types/maintanenceTypes";
 import MainConfig from "../../../utils/main.api.json";
 import Config from "../../../utils/config.api.json";
 import FamConfig from "../../../utils/fam.api.json";
 import { useDataFetchHook } from "../../../hooks/useDataFetchHook";
 import { useRecoilValue } from "recoil";
 import { UserData } from "../../../utils/atoms";
-import { Apirequest } from "../../../utils/lib";
+import {
+  Apirequest,
+  isSubmitting,
+  startLoading,
+  stopLoading,
+} from "../../../utils/lib";
 import ErrorModal from "../../molecules/Master/Role/ErrorModal";
 import { useDebounce } from "../../../hooks/useDebounceHook";
 import SkeletonLoader from "../../molecules/AdminLayout/SkeletonLoader";
@@ -455,6 +460,7 @@ function MachineMasterPage() {
     }
   };
   const handleSubmit = async () => {
+    if (isSubmitting()) return;
     const requiredFields = [
       { key: "machineCode", label: "Machine Code" },
       { key: "machineName", label: "Machine Name" },
@@ -468,6 +474,7 @@ function MachineMasterPage() {
       { key: "selectedAsset", label: "Asset" },
     ];
 
+    // validate required fields
     const missingFields = requiredFields.filter(({ key }) => {
       const value = inputs[key as keyof CreateMachineInputs];
       return (
@@ -478,12 +485,22 @@ function MachineMasterPage() {
       );
     });
 
+    // validate specifications
     const specErrors = specList.filter(
       (item) =>
         item.specification?.id &&
         (!item.specValue || item.specValue.trim() === "")
     );
+
     if (missingFields.length > 0 || specErrors.length > 0) {
+      if (missingFields.length > 0) {
+        toast.error(
+          `Please fill required fields: ${missingFields
+            .map((f) => f.label)
+            .join(", ")}`
+        );
+      }
+
       if (specErrors.length > 0) {
         setSpecList((prev) =>
           prev.map((item) =>
@@ -492,6 +509,7 @@ function MachineMasterPage() {
               : { ...item, showError: false }
           )
         );
+        toast.error("Please provide all specification values.");
       }
 
       return;
@@ -499,28 +517,45 @@ function MachineMasterPage() {
 
     setSpecList((prev) => prev.map((item) => ({ ...item, showError: false })));
 
-    const machineId = editFlag ? await UpdateMachine() : await AddMachine();
-    if (!machineId) return;
-
-    if (!editFlag) {
-      const specsToPost = specList.filter(
-        (item) => item.specification?.id && item.specValue?.trim() !== ""
-      );
-
-      const addSpecs = specsToPost.map((item) => ({
-        specificationId: item.specification!.id,
-        machineId,
-        specificationValue: item.specValue ?? "",
-      }));
-
-      if (addSpecs.length > 0) {
-        await AddSpecification({ specifications: addSpecs });
+    startLoading();
+    try {
+      const machineId = editFlag ? await UpdateMachine() : await AddMachine();
+      if (!machineId) {
+        return;
       }
+
+      if (!editFlag) {
+        const specsToPost = specList.filter(
+          (item) => item.specification?.id && item.specValue?.trim() !== ""
+        );
+
+        if (specsToPost.length > 0) {
+          const addSpecs = specsToPost.map((item) => ({
+            specificationId: item.specification!.id,
+            machineId,
+            specificationValue: item.specValue ?? "",
+          }));
+
+          await AddSpecification({ specifications: addSpecs });
+        }
+      }
+
+      toast.success(
+        editFlag
+          ? "Machine updated successfully"
+          : "Machine created successfully"
+      );
+    } catch (err) {
+      console.error("Error in handleSubmit (Machine):", err);
+      toast.error("An error occurred while saving machine details");
+    } finally {
+      stopLoading();
     }
   };
 
   const AddMachine = async (): Promise<number | null> => {
     try {
+      startLoading();
       const body = {
         machineCode: inputs.machineCode?.trim()?.toUpperCase(),
         machineName: inputs.machineName
@@ -563,13 +598,17 @@ function MachineMasterPage() {
       }
     } catch (err) {
       console.log(err);
+      stopLoading();
       toast.error("Unexpected error occurred while adding machine.");
       return null;
+    } finally {
+      stopLoading();
     }
   };
 
   const UpdateMachine = async (): Promise<number | null> => {
     try {
+      startLoading();
       const machineId = inputs.id;
       const body = {
         id: machineId,
@@ -600,7 +639,7 @@ function MachineMasterPage() {
       if (response.statusCode === 200 || response.statusCode === 201) {
         toast.success(response.message);
         setOpen(false);
-
+        GetMachineMasterData();
         const validSpecs = specList.filter(
           (item) =>
             item.specification?.id &&
@@ -639,14 +678,16 @@ function MachineMasterPage() {
           setErrorModalOpen(true);
           setErrorMessages(response.errors);
         }
-        GetMachineMasterData();
         return null;
       }
     } catch (err) {
       console.error("UpdateMachine error:", err);
+      stopLoading();
       toast.error("Unexpected error occurred while updating machine.");
       GetMachineMasterData();
       return null;
+    } finally {
+      stopLoading();
     }
   };
 
@@ -658,6 +699,7 @@ function MachineMasterPage() {
     }[];
   }) => {
     try {
+      startLoading();
       const { endpoint, method } =
         MainConfig.MachineSpecification.AddSpecification;
       const response = await Apirequest(endpoint, method, body, "main").then(
@@ -665,8 +707,10 @@ function MachineMasterPage() {
       );
 
       if (response.statusCode === 200 || response.statusCode === 201) {
+        await GetAllGetSpecification(body.specifications[0].machineId);
       } else {
         toast.error(response.message);
+
         if (Array.isArray(response.errors) && response.errors.length > 0) {
           setErrorModalOpen(true);
           setErrorMessages(response.errors);
@@ -675,7 +719,10 @@ function MachineMasterPage() {
       }
     } catch (err) {
       console.error("AddSpecification error:", err);
+      startLoading();
       setLoading(false);
+    } finally {
+      stopLoading();
     }
   };
 
@@ -687,6 +734,7 @@ function MachineMasterPage() {
     }[];
   }) => {
     try {
+      startLoading();
       const { endpoint, method } =
         MainConfig.MachineSpecification.UpdateSpecification;
       const response = await Apirequest(endpoint, method, body, "main").then(
@@ -694,6 +742,7 @@ function MachineMasterPage() {
       );
 
       if (response.statusCode === 200 || response.statusCode === 201) {
+        await GetAllGetSpecification(body.specifications[0].machineId);
       } else {
         setErrorMessages(response.errors);
         setErrorModalOpen(true);
@@ -701,12 +750,15 @@ function MachineMasterPage() {
       }
     } catch (err) {
       console.error("UpdateSpecification error:", err);
+      stopLoading();
       setLoading(false);
     }
   };
 
   const handleEdit = (row: any) => {
     setEditFlag(true);
+    console.log(row);
+
     setOpen(true);
     setInputs({
       ...inputs,
@@ -813,6 +865,26 @@ function MachineMasterPage() {
       sortable: true,
       flex: 2,
       valueGetter: (value: any, row: any) => `${row?.machineGroupName || ""}`,
+    },
+    {
+      field: "production_Department",
+      headerName: "ProductionDepartment",
+      sortable: true,
+      flex: 2,
+      valueGetter: (value: any, row: any) =>
+        `${row?.productionDepartmentName || ""}`.replace(/\b\w/g, (char) =>
+          char.toUpperCase()
+        ),
+    },
+    {
+      field: "make",
+      headerName: "Make",
+      sortable: true,
+      flex: 2,
+      valueGetter: (value: any, row: any) =>
+        `${row?.specificationName || ""}`.replace(/\b\w/g, (char) =>
+          char.toUpperCase()
+        ),
     },
     {
       field: "isActive",

@@ -10,7 +10,12 @@ import GlobalSearch from "../../../molecules/AdminLayout/GlobalSearch";
 import { useDebounce } from "../../../../hooks/useDebounceHook";
 import { FiEdit } from "react-icons/fi";
 import { RiDeleteBin6Line } from "react-icons/ri";
-import { Apirequest } from "../../../../utils/lib";
+import {
+  Apirequest,
+  isSubmitting,
+  startLoading,
+  stopLoading,
+} from "../../../../utils/lib";
 import dayjs from "dayjs";
 import Config from "../../../../utils/fam.api.json";
 import NoDataFound from "../../../molecules/AdminLayout/NoDataFound";
@@ -271,45 +276,56 @@ function DepreciationGroup() {
     setSelectedBookType(getBookType);
   };
 
-  const handleSubmit = (e: React.MouseEvent<HTMLButtonElement>) => {
-    let temp: any = [];
-    Object.entries(depreciationInput).map(([key, value]) => {
-      if (key === "code" && value?.length < 1) {
-        temp.push(key);
-      } else if (key === "depreciationGroupName" && value?.length < 1) {
-        temp.push(key);
-      }
-      if (selectedBookType === null) {
-        temp.push("bookType");
-      }
-      if (selectedDepreciationMethod === null) {
-        temp.push("depreciationMethod");
-      }
-      if (selectedAssetGroup === null) {
-        temp.push("assetGroupId");
-      }
-      if (
-        !depreciationInput.usefulLife ||
-        Number(depreciationInput.usefulLife) <= 0
-      ) {
-        temp.push("usefulLife");
-      }
+  const handleSubmit = async (e: React.MouseEvent<HTMLButtonElement>) => {
+    let temp: string[] = [];
+    if (isSubmitting()) return;
+    startLoading();
 
-      if (
-        !depreciationInput.residualValue ||
-        Number(depreciationInput.residualValue) <= 0
+    Object.entries(depreciationInput).forEach(([key, value]) => {
+      if (key === "code" && (!value || value.toString().trim().length < 1)) {
+        temp.push(key);
+      } else if (
+        key === "depreciationGroupName" &&
+        (!value || value.toString().trim().length < 1)
       ) {
-        temp.push("residualValue");
+        temp.push(key);
       }
     });
+
+    if (selectedBookType === null) temp.push("bookType");
+    if (selectedDepreciationMethod === null) temp.push("depreciationMethod");
+    if (selectedAssetGroup === null) temp.push("assetGroupId");
+    if (
+      !depreciationInput.usefulLife ||
+      Number(depreciationInput.usefulLife) <= 0
+    )
+      temp.push("usefulLife");
+    if (
+      !depreciationInput.residualValue ||
+      Number(depreciationInput.residualValue) <= 0
+    )
+      temp.push("residualValue");
+
     setError(temp);
-    if (temp.length === 0 && editFlag) {
-      UpdateDepreciationGroup();
-    } else {
-      if (temp.length === 0) {
-        AddDepreciationGroup();
+
+    if (temp.length > 0) {
+      toast.error("Please fill all required fields");
+      stopLoading();
+      return;
+    }
+
+    try {
+      if (editFlag) {
+        await UpdateDepreciationGroup();
+      } else {
+        await AddDepreciationGroup();
         setLoading(true);
       }
+    } catch (err) {
+      console.error("Error in handleSubmit:", err);
+      toast.error("Failed to save depreciation group");
+    } finally {
+      stopLoading();
     }
   };
 
@@ -327,6 +343,7 @@ function DepreciationGroup() {
     };
 
     try {
+      startLoading();
       const { endpoint, method } = Config.Depreciation.AddDepreciationGroup;
       const response = await Apirequest(endpoint, method, body, "fam").then(
         (res) => res.data
@@ -348,6 +365,8 @@ function DepreciationGroup() {
       }
     } catch (err) {
       console.log(err);
+    } finally {
+      stopLoading();
     }
   };
 
@@ -367,6 +386,7 @@ function DepreciationGroup() {
       sortOrder: depreciationInput.sortOrder,
     };
     try {
+      startLoading();
       const { endpoint, method } = Config.Depreciation.UpdateDepreciationGroup;
       const response = await Apirequest(endpoint, method, body, "fam").then(
         (res) => res.data
@@ -385,6 +405,8 @@ function DepreciationGroup() {
     } catch (err) {
       GetDepreciationList();
       console.log(err);
+    } finally {
+      stopLoading();
     }
   };
   const handleBooktypeChange = (

@@ -1,5 +1,10 @@
-import React, { useEffect, useState } from "react";
-import { Apirequest } from "../../../utils/lib";
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import {
+  Apirequest,
+  isSubmitting,
+  startLoading,
+  stopLoading,
+} from "../../../utils/lib";
 import Config from "../../../../src/utils/config.api.json";
 import { Box } from "@mui/material";
 import dayjs from "dayjs";
@@ -8,7 +13,7 @@ import { RiDeleteBin6Line } from "react-icons/ri";
 import IconBreadcrumbs from "../../molecules/AdminLayout/BreadCrumbs";
 import { GoPlus } from "react-icons/go";
 import CreateNewCountry from "../../molecules/Master/CreateNewCountry";
-import { CompanyProps } from "../../../types";
+import { CompanyProps } from "../../../types/types";
 import DeleteConfirmation from "../../molecules/Master/DeleteConfirmation";
 import GlobalSearch from "../../molecules/AdminLayout/GlobalSearch";
 import { useDebounce } from "../../../hooks/useDebounceHook";
@@ -17,102 +22,14 @@ import { MuiButton, MuiTable } from "bsoft-base-elements";
 import { usePrivilegeCheck } from "../../../hooks/usePrivilegeCheck";
 import ErrorModal from "../../molecules/Master/Role/ErrorModal";
 import SkeletonLoader from "../../molecules/AdminLayout/SkeletonLoader";
+import { useFormDirtyCheck } from "../../../hooks/useFormDirtyCheck";
 import toast from "react-hot-toast";
 
 function CountryPageTable() {
   const [countryData, setCountryData] = useState<any[]>([]);
   const [pathname, setPathName] = useState<string>("");
   const permissions = usePrivilegeCheck(pathname);
-  const columns = [
-    {
-      field: "s_no",
-      headerName: "S.No",
-      minWidth: 150,
-      flex: 1,
-      sortable: true,
-      renderCell: (params: any) => {
-        return (
-          (page - 1) * size + (params.api.getAllRowIds().indexOf(params.id) + 1)
-        );
-      },
-    },
-    {
-      field: "country_code",
-      headerName: "Country Code",
-      flex: 1,
-      minWidth: 150,
-      valueGetter: (value: any, row: any) =>
-        `${row?.countryCode.toUpperCase() || ""}`,
-    },
-    {
-      field: "country_name",
-      headerName: "Country Name",
-      sortable: true,
-      flex: 2,
-      valueGetter: (value: any, row: any) =>
-        `${row?.countryName || ""}`.replace(/\b\w/g, (char) =>
-          char.toUpperCase()
-        ),
-    },
-    {
-      field: "isActive",
-      headerName: "Status",
-      flex: 1,
-      minWidth: 150,
-      valueGetter: (value: any, row: any) =>
-        `${row?.isActive ? "Active" : "Inactive"}`,
-    },
-    {
-      field: "createdAt",
-      headerName: "Created Date",
-      flex: 2,
-      minWidth: 150,
-      valueGetter: (value: any, row: any) =>
-        `${dayjs(row?.createdAt).format("DD-MM-YYYY")}`,
-    },
-    {
-      field: "createdByName",
-      headerName: "Created By",
-      sortable: true,
-      flex: 2,
-      minWidth: 150,
-      valueGetter: (value: any, row: any) => `${row?.createdByName ?? ""}`,
-    },
-    {
-      field: "actions",
-      headerName: "Actions",
-      flex: 1,
-      minWidth: 150,
-      sortable: false,
-      filterable: false,
-      renderCell: (params: any) => (
-        <Box
-          component={"div"}
-          display={"flex"}
-          alignItems={"center"}
-          gap={2}
-          height={"100%"}
-        >
-          {permissions.canUpdate && (
-            <FiEdit
-              fontSize={20}
-              color="black"
-              cursor={"pointer"}
-              onClick={() => handleEdit(params.row)}
-            />
-          )}
-          {permissions.canDelete && (
-            <RiDeleteBin6Line
-              fontSize={20}
-              color="red"
-              cursor={"pointer"}
-              onClick={() => handleDelete(params.row.id)}
-            />
-          )}
-        </Box>
-      ),
-    },
-  ];
+
   const [open, setOpen] = React.useState(false);
   const [countryInput, setCountryInput] = useState<CompanyProps>({
     countryCode: "",
@@ -120,8 +37,11 @@ function CountryPageTable() {
     id: 0,
     isActive: 1,
   });
-  const [error, setError] = useState<any[]>([]);
 
+  // Keep original row snapshot for edit mode
+  const originalRef = useRef<CompanyProps | null>(null);
+
+  const [error, setError] = useState<any[]>([]);
   const [page, setPage] = React.useState<number>(1);
   const [size, setSize] = React.useState<number>(15);
   const [count, setCount] = React.useState<number>(0);
@@ -133,63 +53,176 @@ function CountryPageTable() {
   const [loading, setLoading] = useState(true);
   const [errorModalOpen, setErrorModalOpen] = React.useState(false);
   const [errorMessages, setErrorMessages] = React.useState<string[]>([]);
+
+  const columns = useMemo(
+    () => [
+      {
+        field: "s_no",
+        headerName: "S.No",
+        minWidth: 150,
+        flex: 1,
+        sortable: true,
+        renderCell: (params: any) =>
+          (page - 1) * size +
+          (params.api.getAllRowIds().indexOf(params.id) + 1),
+      },
+      {
+        field: "country_code",
+        headerName: "Country Code",
+        flex: 1,
+        minWidth: 150,
+        valueGetter: (value: any, row: any) =>
+          `${row?.countryCode?.toUpperCase() || ""}`,
+      },
+      {
+        field: "country_name",
+        headerName: "Country Name",
+        sortable: true,
+        flex: 2,
+        valueGetter: (value: any, row: any) =>
+          `${row?.countryName || ""}`.replace(/\b\w/g, (char: string) =>
+            char.toUpperCase()
+          ),
+      },
+      {
+        field: "isActive",
+        headerName: "Status",
+        flex: 1,
+        minWidth: 150,
+        valueGetter: (value: any, row: any) =>
+          `${row?.isActive ? "Active" : "Inactive"}`,
+      },
+      {
+        field: "createdAt",
+        headerName: "Created Date",
+        flex: 2,
+        minWidth: 150,
+        valueGetter: (value: any, row: any) =>
+          `${dayjs(row?.createdAt).format("DD-MM-YYYY")}`,
+      },
+      {
+        field: "createdByName",
+        headerName: "Created By",
+        sortable: true,
+        flex: 2,
+        minWidth: 150,
+        valueGetter: (value: any, row: any) => `${row?.createdByName ?? ""}`,
+      },
+      {
+        field: "actions",
+        headerName: "Actions",
+        flex: 1,
+        minWidth: 150,
+        sortable: false,
+        filterable: false,
+        renderCell: (params: any) => (
+          <Box
+            component={"div"}
+            display={"flex"}
+            alignItems={"center"}
+            gap={2}
+            height={"100%"}
+          >
+            {permissions.canUpdate && (
+              <FiEdit
+                fontSize={20}
+                color="black"
+                cursor={"pointer"}
+                onClick={() => handleEdit(params.row)}
+              />
+            )}
+            {permissions.canDelete && (
+              <RiDeleteBin6Line
+                fontSize={20}
+                color="red"
+                cursor={"pointer"}
+                onClick={() => handleDelete(params.row.id)}
+              />
+            )}
+          </Box>
+        ),
+      },
+    ],
+    [page, size, permissions]
+  );
+
   const handleClickOpen = () => {
     setOpen(true);
-    setCountryInput({ ...countryInput, countryCode: "", countryName: "" });
+    setEditFlag(false);
+    setCountryInput({ countryCode: "", countryName: "", id: 0, isActive: 1 });
+    originalRef.current = null; // create mode
   };
 
   const handleClose = () => {
     setOpen(false);
-    setCountryInput({ ...countryInput, countryCode: "", countryName: "" });
+    setCountryInput({ countryCode: "", countryName: "", id: 0, isActive: 1 });
     setEditFlag(false);
     setError([]);
+    originalRef.current = null;
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    let { name, value } = e.target;
+    const { name, value } = e.target;
     const filteredValue =
       name === "countryCode" ? value.replace(/[^a-zA-Z0-9]/g, "") : value;
-    setCountryInput({ ...countryInput, [name]: filteredValue });
+    setCountryInput((prev) => ({ ...prev, [name]: filteredValue }));
     setError([]);
   };
 
   const handleSwitch = (e: React.ChangeEvent<HTMLInputElement>) => {
-    let { checked } = e.target;
-    checked
-      ? setCountryInput({ ...countryInput, isActive: 1 })
-      : setCountryInput({ ...countryInput, isActive: 0 });
+    const { checked } = e.target;
+    setCountryInput((prev) => ({ ...prev, isActive: checked ? 1 : 0 }));
   };
 
-  const handleSubmit = (e: React.MouseEvent<HTMLButtonElement>) => {
-    let temp: any = [];
-    Object.entries(countryInput).map(([key, value]) => {
-      if (key === "countryCode" && value?.length <= 2) {
-        temp.push(key);
-      } else if (key === "countryName" && value?.length < 4) {
-        temp.push(key);
-      }
-    });
+  // Simple form validity check
+  const isValid =
+    (countryInput.countryCode?.length ?? 0) > 2 &&
+    (countryInput.countryName?.length ?? 0) >= 4;
+
+  // Use custom hook to get dirty state + button disable flag
+  const { isDirty, saveDisabled } = useFormDirtyCheck<CompanyProps>(
+    countryInput,
+    originalRef.current,
+    isValid,
+    editFlag
+  );
+
+  const handleSubmit = async (e: React.MouseEvent<HTMLButtonElement>) => {
+    const temp: string[] = [];
+    if (isSubmitting()) return;
+
+    if ((countryInput.countryCode?.length ?? 0) <= 2) temp.push("countryCode");
+    if ((countryInput.countryName?.length ?? 0) < 4) temp.push("countryName");
 
     setError(temp);
+    if (temp.length > 0) {
+      toast.error("Please fill all required fields");
+      stopLoading();
+      return;
+    }
 
-    if (temp.length === 0 && editFlag) {
-      UpdateCountry();
-    } else {
-      if (temp.length === 0) {
-        AddCountry();
+    try {
+      if (editFlag) {
+        if (!isDirty) return;
+        await UpdateCountry();
+      } else {
+        await AddCountry();
         setLoading(false);
       }
+    } catch (err) {
+      console.error("Error in handleSubmit:", err);
+    } finally {
+      stopLoading();
     }
   };
 
   const AddCountry = async () => {
     try {
+      startLoading();
       const body = {
         ...countryInput,
-        countryCode: countryInput.countryCode?.trim().toUpperCase(),
-        countryName: countryInput.countryName
-          ?.trim()
-          .replace(/\b\w/g, (char) => char.toUpperCase()),
+        countryCode: countryInput.countryCode.trim().toUpperCase(),
+        countryName: countryInput.countryName.trim(),
       };
       const { endpoint, method } = Config.Countries.addCountry;
       const response = await Apirequest(endpoint, method, body).then(
@@ -210,19 +243,18 @@ function CountryPageTable() {
       }
     } catch (err) {
       console.log(err);
+    } finally {
+      stopLoading();
     }
   };
 
   const UpdateCountry = async () => {
     try {
+      startLoading();
       const body = {
         ...countryInput,
-        countryCode: countryInput.countryCode?.trim().toUpperCase(),
-        countryName: countryInput.countryName
-          ?.trim()
-          .replace(/\b\w/g, (char) => char.toUpperCase()),
-        id: countryInput.id,
-        isActive: countryInput.isActive,
+        countryCode: countryInput.countryCode.trim().toUpperCase(),
+        countryName: countryInput.countryName.trim(),
       };
       const { endpoint, method } = Config.Countries.updateCountry;
       const response = await Apirequest(endpoint, method, body).then(
@@ -233,6 +265,7 @@ function CountryPageTable() {
         toast.success(response.message);
         setOpen(false);
         setEditFlag(false);
+        originalRef.current = null;
         GetCountryList();
       } else {
         toast.error(response.message);
@@ -242,23 +275,27 @@ function CountryPageTable() {
         }
       }
     } catch (err) {
+      stopLoading();
       console.log(err);
     }
   };
 
+  // When editing: store a snapshot of original data in ref
   const handleEdit = (row: any) => {
     setEditFlag(true);
     setOpen(true);
-    setCountryInput({
-      countryCode: row?.countryCode,
-      countryName: row?.countryName,
-      id: row?.id,
-      isActive: row?.isActive,
-    });
+    const payload: CompanyProps = {
+      countryCode: row?.countryCode ?? "",
+      countryName: row?.countryName ?? "",
+      id: row?.id ?? 0,
+      isActive: row?.isActive ?? 1,
+    };
+    setCountryInput(payload);
+    originalRef.current = payload; // snapshot for dirty check
   };
 
   const handleDelete = (id: number) => {
-    setCountryInput({ ...countryInput, id: id });
+    setCountryInput((prev) => ({ ...prev, id }));
     setDeleteOpen(true);
   };
 
@@ -269,9 +306,7 @@ function CountryPageTable() {
 
   const DeleteCountry = async () => {
     try {
-      const body = {
-        id: countryInput.id,
-      };
+      const body = { id: countryInput.id };
       const { endpoint, method } = Config.Countries.deleteCountry;
       const response = await Apirequest(
         endpoint.replace("{id}", `${countryInput.id}`),
@@ -283,10 +318,11 @@ function CountryPageTable() {
         toast.success(response.message);
         setOpen(false);
         setEditFlag(false);
+        originalRef.current = null;
         GetCountryList();
       } else {
         toast.error(response.message);
-        setErrorMessages(response.errors);
+        if (Array.isArray(response.errors)) setErrorMessages(response.errors);
       }
     } catch (err) {
       console.log(err);
@@ -319,6 +355,7 @@ function CountryPageTable() {
 
   React.useEffect(() => {
     initFlag && search !== "" ? GetCountryList() : GetCountryList();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [debouncedSearchTerm, page, size]);
 
   useEffect(() => {
@@ -379,20 +416,14 @@ function CountryPageTable() {
             columns={columns}
             paginationMode="server"
             initialState={{
-              pagination: {
-                paginationModel: {
-                  pageSize: size,
-                },
-              },
+              pagination: { paginationModel: { pageSize: size } },
             }}
             rowCount={count}
             rowHeight={40}
             columnHeaderHeight={40}
             pageSizeOptions={[15, 30, 50]}
             disableRowSelectionOnClick
-            slots={{
-              noRowsOverlay: () => <NoDataFound />,
-            }}
+            slots={{ noRowsOverlay: () => <NoDataFound /> }}
             onPaginationModelChange={(newPage) => {
               setPage(newPage.page + 1);
               setSize(newPage.pageSize);
@@ -400,6 +431,7 @@ function CountryPageTable() {
           />
         )}
       </Box>
+
       <CreateNewCountry
         open={open}
         close={handleClose}
@@ -409,12 +441,15 @@ function CountryPageTable() {
         error={error}
         handleSwitch={handleSwitch}
         editFlag={editFlag}
+        disableSubmit={saveDisabled} // <-- from hook
       />
+
       <ErrorModal
         open={errorModalOpen}
         onClose={() => setErrorModalOpen(false)}
         errors={errorMessages}
       />
+
       <DeleteConfirmation
         open={deleteOpen}
         close={() => setDeleteOpen(false)}

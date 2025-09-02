@@ -1,5 +1,5 @@
 import React from "react";
-import { CreateMachineGroupUserProps } from "../../../maintanenceTypes";
+import { CreateMachineGroupUserProps } from "../../../types/maintanenceTypes";
 import {
   Autocomplete,
   Box,
@@ -19,6 +19,7 @@ import {
   MuiSwitch,
   MuiText,
 } from "bsoft-base-elements";
+import { isSubmitting } from "../../../utils/lib";
 const Transition = React.forwardRef(function Transition(
   props: TransitionProps & {
     children: React.ReactElement<any, any>;
@@ -43,7 +44,7 @@ const CreateMachineGroupUser = ({
   userIdData,
   handleSwitch,
   handleSubmit,
-  editFlag
+  editFlag,
 }: CreateMachineGroupUserProps) => {
   return (
     <React.Fragment>
@@ -115,7 +116,8 @@ const CreateMachineGroupUser = ({
             </Grid2>
             <Grid2 size={4}>
               <MuiText variant="h6" my={1} className="admin-label-title">
-                Maintenance Department Name <span className="mandatory-sign">*</span>
+                Maintenance Department Name{" "}
+                <span className="mandatory-sign">*</span>
               </MuiText>
               <Autocomplete
                 options={departmentData || []}
@@ -224,7 +226,11 @@ const CreateMachineGroupUser = ({
             >
               Cancel
             </MuiButton>
-            <MuiButton className="filled-icon-btn" onClick={handleSubmit}>
+            <MuiButton
+              className="filled-icon-btn"
+              disabled={isSubmitting()}
+              onClick={handleSubmit}
+            >
               Submit
             </MuiButton>
           </Box>

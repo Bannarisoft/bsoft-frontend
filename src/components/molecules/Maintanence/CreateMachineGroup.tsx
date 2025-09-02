@@ -17,7 +17,8 @@ import {
 } from "bsoft-base-elements";
 import React from "react";
 import { IoClose } from "react-icons/io5";
-import { CreatemachinegroupsProps } from "../../../maintanenceTypes";
+import { CreatemachinegroupsProps } from "../../../types/maintanenceTypes";
+import { isSubmitting } from "../../../utils/lib";
 const Transition = React.forwardRef(function Transition(
   props: TransitionProps & {
     children: React.ReactElement<any, any>;
@@ -219,7 +220,11 @@ const CreateMachineGroup = ({
             >
               Cancel
             </MuiButton>
-            <MuiButton className="filled-icon-btn" onClick={handleSubmit}>
+            <MuiButton
+              className="filled-icon-btn"
+              disableFocusRipple={isSubmitting()}
+              onClick={handleSubmit}
+            >
               Submit
             </MuiButton>
           </Box>

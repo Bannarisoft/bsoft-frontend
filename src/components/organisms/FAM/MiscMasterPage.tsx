@@ -7,7 +7,12 @@ import GlobalSearch from "../../molecules/AdminLayout/GlobalSearch";
 import { MuiButton, MuiTable } from "bsoft-base-elements";
 import { GoPlus } from "react-icons/go";
 import Config from "../../../../src/utils/fam.api.json";
-import { Apirequest } from "../../../utils/lib";
+import {
+  Apirequest,
+  isSubmitting,
+  startLoading,
+  stopLoading,
+} from "../../../utils/lib";
 import { useDebounce } from "../../../hooks/useDebounceHook";
 import { FiEdit } from "react-icons/fi";
 import { RiDeleteBin6Line } from "react-icons/ri";
@@ -213,6 +218,7 @@ function MiscMasterPage() {
     };
 
     try {
+      startLoading();
       const { endpoint, method } = Config.Misc.AddMisc;
       const response = await Apirequest(endpoint, method, body, "fam").then(
         (res) => res.data
@@ -233,6 +239,8 @@ function MiscMasterPage() {
       }
     } catch (err) {
       console.log(err);
+    } finally {
+      stopLoading();
     }
   };
 
@@ -246,6 +254,7 @@ function MiscMasterPage() {
       sortOrder: miscInput.sortOrder,
     };
     try {
+      startLoading();
       const { endpoint, method } = Config.Misc.UpdateMisc;
       const response = await Apirequest(endpoint, method, body, "fam").then(
         (res) => res.data
@@ -266,6 +275,8 @@ function MiscMasterPage() {
       }
     } catch (err) {
       console.log(err);
+    } finally {
+      stopLoading();
     }
   };
 
@@ -329,24 +340,47 @@ function MiscMasterPage() {
     setError([]);
   };
 
-  const handleSubmit = (e: React.MouseEvent<HTMLButtonElement>) => {
-    let temp: any = [];
-    Object.entries(miscInput).map(([key, value]) => {
-      if (key === "miscCode" && value?.length == 0) {
+  const handleSubmit = async (e: React.MouseEvent<HTMLButtonElement>) => {
+    let temp: string[] = [];
+    if (isSubmitting()) return;
+    startLoading();
+
+    Object.entries(miscInput).forEach(([key, value]) => {
+      if (
+        key === "miscCode" &&
+        (!value || value.toString().trim().length === 0)
+      ) {
         temp.push(key);
-      } else if (key === "description" && value?.length == 0) {
+      } else if (
+        key === "description" &&
+        (!value || value.toString().trim().length === 0)
+      ) {
         temp.push(key);
       }
     });
-    selectedMisc === null && temp.push("miscType");
+
+    if (selectedMisc === null) temp.push("miscType");
+
     setError(temp);
-    if (temp.length === 0 && editFlag) {
-      UpdateMisc();
-    } else {
-      if (temp.length === 0) {
-        AddMisc();
+
+    if (temp.length > 0) {
+      toast.error("Please fill all required fields");
+      stopLoading();
+      return;
+    }
+
+    try {
+      if (editFlag) {
+        await UpdateMisc();
+      } else {
+        await AddMisc();
         setLoading(true);
       }
+    } catch (err) {
+      console.error("Error in handleSubmit:", err);
+      toast.error("Failed to save misc");
+    } finally {
+      stopLoading();
     }
   };
 

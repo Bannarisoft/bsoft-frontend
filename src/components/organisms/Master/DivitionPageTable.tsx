@@ -3,13 +3,18 @@ import React, { useEffect, useState } from "react";
 import IconBreadcrumbs from "../../molecules/AdminLayout/BreadCrumbs";
 import GlobalSearch from "../../molecules/AdminLayout/GlobalSearch";
 import { GoPlus } from "react-icons/go";
-import { Apirequest } from "../../../utils/lib";
+import {
+  Apirequest,
+  isSubmitting,
+  startLoading,
+  stopLoading,
+} from "../../../utils/lib";
 import Config from "../../../utils/config.api.json";
 import { FiEdit } from "react-icons/fi";
 import { RiDeleteBin6Line } from "react-icons/ri";
 import { useDebounce } from "../../../hooks/useDebounceHook";
 import CreateNewDivition from "../../molecules/Master/CreateNewDivition";
-import { DivisionProps } from "../../../types";
+import { DivisionProps } from "../../../types/types";
 import NoDataFound from "../../molecules/AdminLayout/NoDataFound";
 import DeleteConfirmation from "../../molecules/Master/DeleteConfirmation";
 import { useRecoilValue } from "recoil";
@@ -146,9 +151,11 @@ const DivisionPageTable = () => {
     setError([]);
   };
 
-  const handleSubmit = (e: React.MouseEvent<HTMLButtonElement>) => {
-    let temp: any = [];
-    Object.entries(divisionInput).map(([key, value]) => {
+  const handleSubmit = async (e: React.MouseEvent<HTMLButtonElement>) => {
+    let temp: string[] = [];
+    if (isSubmitting()) return;
+
+    Object.entries(divisionInput).forEach(([key, value]) => {
       if (
         key === "shortName" &&
         (!value || typeof value !== "string" || value.trim().length < 2)
@@ -163,19 +170,32 @@ const DivisionPageTable = () => {
         console.log("Invalid name");
       }
     });
+
     setError(temp);
-    if (temp.length === 0 && editFlag) {
-      Updatedivision();
-    } else {
-      if (temp.length === 0) {
-        AddDivision();
+
+    if (temp.length > 0) {
+      toast.error("Please fill all required fields");
+      stopLoading();
+      return;
+    }
+
+    try {
+      if (editFlag) {
+        await Updatedivision();
+      } else {
+        await AddDivision();
         setLoading(false);
       }
+    } catch (err) {
+      console.error("Error in handleSubmit:", err);
+    } finally {
+      stopLoading();
     }
   };
 
   const AddDivision = async () => {
     try {
+      startLoading();
       const body = {
         shortName: divisionInput.shortName
           ?.trim()
@@ -212,11 +232,14 @@ const DivisionPageTable = () => {
       }
     } catch (err) {
       console.log(err);
+    } finally {
+      stopLoading();
     }
   };
 
   const Updatedivision = async () => {
     try {
+      startLoading();
       const body = {
         shortName: divisionInput.shortName
           ?.trim()
@@ -254,6 +277,8 @@ const DivisionPageTable = () => {
       }
     } catch (err) {
       console.log(err);
+    } finally {
+      stopLoading();
     }
   };
 

@@ -1,6 +1,6 @@
 import { Box } from "@mui/material";
 import { MuiText } from "bsoft-base-elements";
-import { MenuItemProps } from "../../../types";
+import { MenuItemProps } from "../../../types/types";
 
 export const MenuItem = ({ icon, text, onClick, endIcon }: MenuItemProps) => (
   <Box

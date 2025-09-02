@@ -18,11 +18,12 @@ import {
   MuiSwitch,
   MuiText,
 } from "bsoft-base-elements";
-import { CreateExternalProps } from "../../../../maintanenceTypes";
+import { CreateExternalProps } from "../../../../types/maintanenceTypes";
 
 import dayjs from "dayjs";
 
 import InputDatePicker from "../../../atoms/Datepicker";
+import { isSubmitting } from "../../../../utils/lib";
 
 const Transition = React.forwardRef(function Transition(
   props: TransitionProps & {
@@ -234,7 +235,8 @@ const CreateExternalRequest = ({
                 my={{ xs: 0.5, sm: 1, md: 1.5, lg: 1 }}
                 className="admin-label-title"
               >
-                Maintenance Department Name <span className="mandatory-sign">*</span>
+                Maintenance Department Name{" "}
+                <span className="mandatory-sign">*</span>
               </MuiText>
 
               <Autocomplete
@@ -597,7 +599,11 @@ const CreateExternalRequest = ({
             >
               Cancel
             </MuiButton>
-            <MuiButton className="filled-icon-btn" onClick={handleSubmit}>
+            <MuiButton
+              className="filled-icon-btn"
+              disabled={isSubmitting()}
+              onClick={handleSubmit}
+            >
               Submit
             </MuiButton>
           </Box>

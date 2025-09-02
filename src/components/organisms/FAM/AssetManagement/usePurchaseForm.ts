@@ -1,5 +1,5 @@
 import { useState, useCallback } from "react";
-import { AdditionalCost } from "../../../../types";
+import { AdditionalCost } from  "../../../../types/types";
 import { usePurchaseState } from "./usePurchaseState";
 
 export const usePurchaseForm = () => {

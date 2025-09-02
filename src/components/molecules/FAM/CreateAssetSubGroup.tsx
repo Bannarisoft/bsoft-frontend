@@ -19,6 +19,7 @@ import {
   MuiSwitch,
   MuiText,
 } from "bsoft-base-elements";
+import { isSubmitting } from "../../../utils/lib";
 interface GroupSubProps {
   code: string;
   subGroupName: string;
@@ -164,9 +165,9 @@ export default function CreateAssetSubGroup({
                 name="subGroupName"
                 autoComplete="off"
                 value={groupInput.subGroupName}
-                error={error.includes("groupName")}
+                error={error.includes("subGroupName")}
                 helperText={
-                  error.includes("groupName") && "please enter valid group name"
+                  error.includes("subGroupName") && "please enter valid sub group name"
                 }
                 onChange={handleChange}
                 InputProps={{
@@ -192,7 +193,8 @@ export default function CreateAssetSubGroup({
                 value={groupInput.subGroupPercentage}
                 error={error.includes("subGroupPercentage")}
                 helperText={
-                  error.includes("subGroupPercentage") && "please enter valid group name"
+                  error.includes("subGroupPercentage") &&
+                  "please enter valid group name"
                 }
                 onChange={handleChange}
               />
@@ -257,7 +259,11 @@ export default function CreateAssetSubGroup({
             >
               Cancel
             </MuiButton>
-            <MuiButton variant="contained" onClick={handleSubmit}>
+            <MuiButton
+              variant="contained"
+              disabled={isSubmitting()}
+              onClick={handleSubmit}
+            >
               Submit
             </MuiButton>
           </Box>

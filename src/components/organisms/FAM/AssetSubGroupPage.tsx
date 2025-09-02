@@ -11,7 +11,12 @@ import { useDebounce } from "../../../hooks/useDebounceHook";
 import dayjs from "dayjs";
 import { FiEdit } from "react-icons/fi";
 import { RiDeleteBin6Line } from "react-icons/ri";
-import { Apirequest } from "../../../utils/lib";
+import {
+  Apirequest,
+  isSubmitting,
+  startLoading,
+  stopLoading,
+} from "../../../utils/lib";
 import Config from "../../../../src/utils/fam.api.json";
 import ErrorModal from "../../molecules/Master/Role/ErrorModal";
 import DeleteConfirmation from "../../molecules/Master/DeleteConfirmation";
@@ -186,7 +191,9 @@ function AssetSubGroupPage() {
   const UpdateAssetGroup = async () => {
     const body: any = {
       code: groupInput.code?.trim()?.toUpperCase(),
-      subGroupName: groupInput.subGroupName?.trim().replace(/\b\w/g, (char) => char.toUpperCase()),
+      subGroupName: groupInput.subGroupName
+        ?.trim()
+        .replace(/\b\w/g, (char) => char.toUpperCase()),
       groupId: selectedSubGroup.id,
       subGroupPercentage: groupInput?.subGroupPercentage,
       sortOrder: groupInput.sortOrder,
@@ -197,6 +204,7 @@ function AssetSubGroupPage() {
       body.id = groupInput.id;
     }
     try {
+      startLoading();
       const { endpoint, method } = editFlag
         ? Config.AssetSubGroup.UpdateAssetGroup
         : Config.AssetSubGroup.AddAssetGroup;
@@ -225,6 +233,8 @@ function AssetSubGroupPage() {
     } catch (err) {
       GetAssetGroupList();
       console.log(err);
+    } finally {
+      stopLoading();
     }
   };
 
@@ -314,23 +324,31 @@ function AssetSubGroupPage() {
     setError([]);
   };
 
-  const handleSubmit = (e: React.MouseEvent<HTMLButtonElement>) => {
+  const handleSubmit = async (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+
+    if (isSubmitting()) return;
+
     let temp: string[] = [];
 
     Object.entries(groupInput).forEach(([key, value]) => {
-      if (key === "code" && value.trim().length < 1) {
-        temp.push(key);
-      } else if (key === "subGroupName" && value.trim().length < 1) {
-        temp.push(key);
-      }
-      if (selectedSubGroup === null) {
-        temp.push("assetSubGroupId");
-      }
+      if (key === "code" && value.trim().length < 1) temp.push(key);
+      if (key === "subGroupName" && value.trim().length < 1) temp.push(key);
     });
+
+    if (selectedSubGroup === null) temp.push("assetSubGroupId");
+
     setError(temp);
+
     if (temp.length === 0) {
-      setLoading(true);
-      UpdateAssetGroup();
+      try {
+        setLoading(true);
+        await UpdateAssetGroup();
+      } catch (error) {
+        console.error("Failed to update asset group:", error);
+      } finally {
+        setLoading(false);
+      }
     }
   };
 

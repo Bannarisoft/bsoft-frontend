@@ -27,10 +27,16 @@ import AssetWaranty from "./AssetWaranty";
 import AssetDisposal from "./AssetDisposal";
 import FamConfig from "../../../../utils/fam.api.json";
 import Config from "../../../../utils/config.api.json";
-import { Apirequest, parseDateString } from "../../../../utils/lib";
+import {
+  Apirequest,
+  isSubmitting,
+  parseDateString,
+  startLoading,
+  stopLoading,
+} from "../../../../utils/lib";
 import { useAssetWarranty } from "./useAssetWarranty";
 import dayjs from "dayjs";
-import { PurchaseDetails } from "../../../../types";
+import { PurchaseDetails } from "../../../../types/types";
 import Swal from "sweetalert2";
 import Link from "next/link";
 import { HiViewfinderCircle } from "react-icons/hi2";
@@ -595,6 +601,7 @@ function AssetDetailPage() {
   };
 
   const handleSpec = async () => {
+    if (isSubmitting()) return;
     try {
       if (!validateMandatorySpecs()) {
         return;
@@ -625,6 +632,7 @@ function AssetDetailPage() {
 
   const AddSpecification = async () => {
     try {
+      startLoading();
       const body = {
         assetId: Number(pathname),
         specifications: mandatorySpecs.map((spec: any) => ({
@@ -650,6 +658,8 @@ function AssetDetailPage() {
       }
     } catch (err) {
       console.log(err);
+    } finally {
+      stopLoading();
     }
   };
 
@@ -705,7 +715,9 @@ function AssetDetailPage() {
   };
 
   const handleSubmitDisposal = async () => {
+    if (isSubmitting()) return;
     try {
+      startLoading();
       if (!disposal.disposalId) {
         delete disposalPayload.id;
         const { endpoint, method } = FamConfig.AssetDisposal.AddDisposal;
@@ -752,6 +764,8 @@ function AssetDetailPage() {
       }
     } catch (err) {
       console.log(err);
+    } finally {
+      stopLoading();
     }
   };
 
@@ -799,7 +813,6 @@ function AssetDetailPage() {
         (res) => res.data
       );
       if (result.statusCode === 200 || result.statusCode === 201) {
-        console.log(result);
         toast.success("Document Saved successfully");
       } else {
         toast.error("Please upload valid document");
@@ -1368,6 +1381,7 @@ function AssetDetailPage() {
                     variant="contained"
                     color="primary"
                     onClick={handleSpec}
+                    disabled={isSubmitting()}
                     sx={{
                       border: "1px solid #3a8484!important",
                       background: "#fff !important",

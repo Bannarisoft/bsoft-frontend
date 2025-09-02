@@ -1,5 +1,5 @@
 import { useReducer, useCallback, useEffect, useState } from "react";
-import { AssetActionType, AssetState } from "../../../../types";
+import { AssetActionType, AssetState } from  "../../../../types/types";
 import {
   AssetCategory,
   AssetGroup,
@@ -8,11 +8,11 @@ import {
   ParentAsset,
   UOM,
   WorkingStatus,
-} from "../../../../types";
+} from  "../../../../types/types";
 import { NextResponse } from "next/server";
 import { Apirequest } from "../../../../utils/lib";
 import Config from "../../../../utils/fam.api.json";
-import { FileWithPath } from "react-dropzone/.";
+import { FileWithPath } from "react-dropzone/";
 import { useRecoilValue } from "recoil";
 import { UserData } from "../../../../utils/atoms";
 

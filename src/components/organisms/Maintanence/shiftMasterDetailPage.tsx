@@ -14,10 +14,15 @@ import CreateShiftMasterDetail from "../../molecules/Maintanence/CreateShiftMast
 import ConfigMain from "../../../utils/main.api.json";
 import ConfigFam from "../../../utils/fam.api.json";
 import { useDataFetchHook } from "../../../hooks/useDataFetchHook";
-import { ShiftDetailProps } from "../../../maintanenceTypes";
+import { ShiftDetailProps } from "../../../types/maintanenceTypes";
 import { useRecoilValue } from "recoil";
 import { UserData } from "../../../utils/atoms";
-import { Apirequest } from "../../../utils/lib";
+import {
+  Apirequest,
+  isSubmitting,
+  startLoading,
+  stopLoading,
+} from "../../../utils/lib";
 import dayjs from "dayjs";
 import { RiDeleteBin6Line } from "react-icons/ri";
 import { FiEdit } from "react-icons/fi";
@@ -293,45 +298,66 @@ const ShiftMasterDetailPage = () => {
     }
   }, [shiftData]);
 
-  const handleSubmit = (e: React.MouseEvent<HTMLButtonElement>) => {
+  const handleSubmit = async (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+
+    if (isSubmitting()) return;
+
     let temp: string[] = [];
 
     if (selectedShift === null) temp.push("shiftMasterId");
+
     if (
       !shiftDeatailInput.startTime ||
       !dayjs(shiftDeatailInput.startTime, "HH:mm:ss", true).isValid()
     ) {
       temp.push("startTime");
     }
+
     if (
       !shiftDeatailInput.endTime ||
       !dayjs(shiftDeatailInput.endTime, "HH:mm:ss", true).isValid()
     ) {
       temp.push("endTime");
     }
+
     if (!shiftDeatailInput.effectiveDate) temp.push("effectiveDate");
 
     if (
-      isNaN(shiftDeatailInput.breakDurationInMinutes) ||
+      shiftDeatailInput.breakDurationInMinutes === undefined ||
+      isNaN(Number(shiftDeatailInput.breakDurationInMinutes)) ||
       Number(shiftDeatailInput.breakDurationInMinutes) <= 0
     ) {
       temp.push("breakDuration");
     }
+
     if (selectedshiftSupervisor === null) temp.push("shiftSupervisorId");
 
     setError(temp);
 
-    if (temp.length === 0) {
+    if (temp.length > 0) {
+      console.error("Please fill all mandatory fields correctly.");
+      return;
+    }
+
+    try {
+      startLoading();
+
       if (editFlag) {
-        UpdateShiftDetail();
+        await UpdateShiftDetail();
       } else {
-        AddShiftDetail();
+        await AddShiftDetail();
       }
+    } catch (error) {
+      console.error("Error saving shift detail:", error);
+    } finally {
+      stopLoading();
     }
   };
 
   const AddShiftDetail = async () => {
     try {
+      startLoading();
       const body: any = {
         shiftMasterId: selectedShift?.id,
         unitId: userValue.unitId,
@@ -364,6 +390,8 @@ const ShiftMasterDetailPage = () => {
       }
     } catch (err) {
       console.log(err);
+    } finally {
+      stopLoading();
     }
   };
 
@@ -391,6 +419,7 @@ const ShiftMasterDetailPage = () => {
 
   const UpdateShiftDetail = async () => {
     try {
+      startLoading();
       const body: any = {
         shiftMasterId: selectedShift?.id,
         unitId: userValue.unitId,
@@ -427,6 +456,8 @@ const ShiftMasterDetailPage = () => {
       }
     } catch (err) {
       console.log(err);
+    } finally {
+      stopLoading();
     }
   };
 

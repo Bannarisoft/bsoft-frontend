@@ -17,6 +17,7 @@ import {
 } from "bsoft-base-elements";
 import React from "react";
 import { IoClose } from "react-icons/io5";
+import { isSubmitting } from "../../../utils/lib";
 
 export interface SpecificationProps {
   id: number;
@@ -208,7 +209,11 @@ function CreateSpecification({
             >
               Cancel
             </MuiButton>
-            <MuiButton variant="contained" onClick={handleSubmit}>
+            <MuiButton
+              variant="contained"
+              disabled={isSubmitting()}
+              onClick={handleSubmit}
+            >
               Submit
             </MuiButton>
           </Box>

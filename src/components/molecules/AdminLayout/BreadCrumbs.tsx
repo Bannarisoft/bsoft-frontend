@@ -2,7 +2,7 @@ import * as React from "react";
 import Breadcrumbs from "@mui/material/Breadcrumbs";
 import { MdNavigateNext } from "react-icons/md";
 import Link from "next/link";
-import { BreadCrumbProps } from "../../../types";
+import { BreadCrumbProps } from "../../../types/types";
 import { AiFillHome } from "react-icons/ai";
 import TextComponent from "../../atoms/Text";
 
@@ -23,7 +23,7 @@ export default function IconBreadcrumbs({
         separator={<MdNavigateNext fontSize="small" />}
         aria-label="breadcrumb"
         sx={{
-          fontFamily: "poppins !important"
+          fontFamily: "poppins !important",
         }}
       >
         <Link key="1" href="/maintanence/dashboard">

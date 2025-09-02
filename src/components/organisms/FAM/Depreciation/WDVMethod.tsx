@@ -11,6 +11,9 @@ import { MuiInputField, MuiText } from "bsoft-base-elements";
 import React, { useState } from "react";
 import {
   Apirequest,
+  isSubmitting,
+  startLoading,
+  stopLoading,
   StyledAutocomplete,
   StyledButton,
 } from "../../../../utils/lib";
@@ -41,60 +44,75 @@ function WDVMethod() {
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async () => {
+    if (isSubmitting()) return;
+
+    if (!selectedFinYear?.id) {
+      toast.error("Please select a financial year");
+      return;
+    }
+
     setLoading(true);
     try {
+      startLoading();
       const { endpoint, method } =
         FamConfig.Depreciation.WdvMethod.ViewStatement;
+
       const response = await Apirequest(
-        endpoint.replace(
-          "{finYear}",
-          selectedFinYear &&
-            selectedFinYear.id !== null &&
-            selectedFinYear.id !== undefined
-            ? selectedFinYear.id.toString()
-            : ""
-        ),
+        endpoint.replace("{finYear}", selectedFinYear.id.toString()),
         method,
         null,
         "fam"
       ).then((res) => res.data);
+
       const { isSuccess, message, data } = response;
       if (isSuccess) {
         setData(data);
-        setLoading(false);
       } else {
-        toast.error(message);
-        setLoading(false);
+        toast.error(message || "Failed to fetch WDV statement");
       }
     } catch (err) {
-      console.log(err);
+      console.error("Error fetching WDV statement:", err);
+      toast.error("Something went wrong while fetching the statement");
+    } finally {
       setLoading(false);
+      stopLoading();
     }
   };
 
   const handleGenerate = async () => {
+    if (isSubmitting()) return;
+
+    if (!selectedFinYear?.id) {
+      toast.error("Please select a financial year before generating");
+      return;
+    }
+
     setLoading(true);
     try {
+      startLoading();
       const { endpoint, method } =
         FamConfig.Depreciation.WdvMethod.GenerateStatement;
+
       const response = await Apirequest(
         endpoint,
         method,
-        {
-          finYearId: selectedFinYear?.id,
-        },
+        { finYearId: selectedFinYear.id },
         "fam"
       ).then((res) => res.data);
+
       const { statusCode, message } = response;
       if (statusCode === 200 || statusCode === 201) {
-        handleSubmit();
+        toast.success("Statement generated successfully");
+        await handleSubmit(); // Refresh data after generation
       } else {
-        toast.error(message);
-        setLoading(false);
+        toast.error(message || "Failed to generate statement");
       }
     } catch (err) {
-      console.log(err);
+      console.error("Error generating statement:", err);
+      toast.error("Something went wrong while generating the statement");
+    } finally {
       setLoading(false);
+      stopLoading();
     }
   };
 
@@ -271,6 +289,7 @@ function WDVMethod() {
                 border: "1px solid #2ac0a1",
               }}
               onClick={handleSubmit}
+              disabled={isSubmitting()}
             >
               View
             </StyledButton>
@@ -282,6 +301,7 @@ function WDVMethod() {
                 color: "#fff",
               }}
               onClick={handleGenerate}
+              disabled={isSubmitting()}
             >
               Save & Generate
             </StyledButton>

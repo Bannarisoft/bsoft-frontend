@@ -6,6 +6,9 @@ import UserConfig from "../../../../utils/config.api.json";
 import {
   Apirequest,
   DateFormatter,
+  isSubmitting,
+  startLoading,
+  stopLoading,
   StyledAutocomplete,
   StyledButton,
 } from "../../../../utils/lib";
@@ -308,14 +311,55 @@ const DepreciationPage = ({ pageName }: { pageName: string }) => {
       const response = await Apirequest(endpoint, method, null, "fam").then(
         (res) => res.data
       );
-      console.log(response.data);
       setReportTypes(response.data);
     } catch (err) {
       console.log(err);
     }
   };
 
+  // const handleSaveGenerate = async () => {
+  //   if (isSubmitting()) return;
+  //   const body = {
+  //     companyId: userValue.companyId,
+  //     unitId: selectedUnit?.id,
+  //     finYearId: selectedFinYear?.id,
+  //     depreciationType: selectedDepreciationType?.id,
+  //     depreciationPeriod: selectedReportType?.id,
+  //   };
+  //   try {
+  //     startLoading();
+  //     const { endpoint, method } = FamConfig.Depreciation.AddDepreciationDetail;
+  //     const response = await Apirequest(endpoint, method, body, "fam").then(
+  //       (res) => res.data
+  //     );
+  //     toast.error(response?.message || "Saved successfully!");
+  //     fetchDepreciationData();
+
+  //     setSelectedUnit(null);
+  //     setSelectedFinYear(null);
+  //     setSelectedReportType(null);
+  //   } catch (err: any) {
+  //     console.error("API Error:", err);
+  //     const message = err?.response?.data?.message || "Something went wrong!";
+  //     toast.error(message);
+  //   } finally {
+  //     stopLoading();
+  //   }
+  // };
   const handleSaveGenerate = async () => {
+    if (isSubmitting()) return;
+
+    const validationErrors: string[] = [];
+    if (!selectedUnit) validationErrors.push("unit");
+    if (!selectedFinYear) validationErrors.push("finYear");
+    if (!selectedDepreciationType) validationErrors.push("depreciationType");
+    if (!selectedReportType) validationErrors.push("reportType");
+
+    if (validationErrors.length > 0) {
+      console.error("Please select all required fields");
+      return;
+    }
+
     const body = {
       companyId: userValue.companyId,
       unitId: selectedUnit?.id,
@@ -323,23 +367,32 @@ const DepreciationPage = ({ pageName }: { pageName: string }) => {
       depreciationType: selectedDepreciationType?.id,
       depreciationPeriod: selectedReportType?.id,
     };
+
     try {
+      startLoading();
+
       const { endpoint, method } = FamConfig.Depreciation.AddDepreciationDetail;
       const response = await Apirequest(endpoint, method, body, "fam").then(
         (res) => res.data
       );
-      toast.error(response?.message || "Saved successfully!");
-      fetchDepreciationData();
 
-      setSelectedUnit(null);
-      setSelectedFinYear(null);
-      setSelectedReportType(null);
+      if (response.statusCode === 200 || response.statusCode === 201) {
+        toast.success(response?.message);
+        fetchDepreciationData();
+        setSelectedUnit(null);
+        setSelectedFinYear(null);
+        setSelectedReportType(null);
+      } else {
+        toast.error(response?.message);
+        response.error(response.errors);
+      }
     } catch (err: any) {
       console.error("API Error:", err);
-      const message = err?.response?.data?.message || "Something went wrong!";
-      toast.error(message);
+    } finally {
+      stopLoading();
     }
   };
+
   useEffect(() => {
     fetchFinancialYears();
     fetchReportPeriod();
@@ -746,6 +799,7 @@ const DepreciationPage = ({ pageName }: { pageName: string }) => {
               </StyledButton>
               <StyledButton
                 variant="contained"
+                disabled={isSubmitting()}
                 sx={{
                   background:
                     "linear-gradient(45deg, #188a71 30%, #2ac0a1 90%) !important",

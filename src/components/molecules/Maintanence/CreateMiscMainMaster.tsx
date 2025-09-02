@@ -13,7 +13,8 @@ import {
   MuiSwitch,
   MuiText,
 } from "bsoft-base-elements";
-import { CreateMiscMainPropTypes } from "../../../maintanenceTypes";
+import { CreateMiscMainPropTypes } from "../../../types/maintanenceTypes";
+import { isSubmitting } from "../../../utils/lib";
 
 const Transition = React.forwardRef(function Transition(
   props: TransitionProps & {
@@ -185,7 +186,11 @@ function CreateMiscMain({
             >
               Cancel
             </MuiButton>
-            <MuiButton variant="contained" onClick={handleSubmit}>
+            <MuiButton
+              variant="contained"
+              disabled={isSubmitting()}
+              onClick={handleSubmit}
+            >
               Submit
             </MuiButton>
           </Box>

@@ -23,10 +23,16 @@ import React, { useEffect, useState } from "react";
 import { GoPlus } from "react-icons/go";
 import MainConfig from "../../../../utils/main.api.json";
 import Config from "../../../../utils/config.api.json";
-import { Apirequest, DateFormatter } from "../../../../utils/lib";
+import {
+  Apirequest,
+  DateFormatter,
+  isSubmitting,
+  startLoading,
+  stopLoading,
+} from "../../../../utils/lib";
 import { useDataFetchHook } from "../../../../hooks/useDataFetchHook";
 import { useDebounce } from "../../../../hooks/useDebounceHook";
-import { RequestProps } from "../../../../maintanenceTypes";
+import { RequestProps } from "../../../../types/maintanenceTypes";
 import { useRecoilValue } from "recoil";
 import { UserData } from "../../../../utils/atoms";
 import { FiEdit } from "react-icons/fi";
@@ -512,65 +518,67 @@ function ExternalPage() {
     }
   }, [debouncedOldVendorId]);
 
-  const handleSubmit = (e: React.MouseEvent<HTMLButtonElement>) => {
-    let temp: any = [];
-    Object.entries(externalInput).map(([key, value]) => {
+  const handleSubmit = async (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+
+    if (isSubmitting()) return;
+
+    let temp: string[] = [];
+
+    Object.entries(externalInput).forEach(([key, value]) => {
       if (
         key === "oldVendorId" &&
-        typeof value == "string" &&
-        value?.length == 0
+        (!value || (typeof value === "string" && value.trim().length === 0))
       ) {
         temp.push(key);
-      } else if (
+      }
+      if (
         key === "estimatedServiceCost" &&
-        typeof value == "string" &&
-        (value?.length == 0 || parseFloat(value) <= 0)
+        (!value || parseFloat(value as string) <= 0)
       ) {
         temp.push(key);
-      } else if (
+      }
+      if (
         key === "estimatedSpareCost" &&
-        typeof value == "string" &&
-        (value?.length == 0 || parseFloat(value) <= 0)
+        (!value || parseFloat(value as string) <= 0)
       ) {
         temp.push(key);
-      }
-      if (selectedDepartment === null) {
-        temp.push("maintenanceTypeId");
-      }
-      if (selectedMaintenanceType === null) {
-        temp.push("departmentId");
-      }
-      if (selectedServiceType === null) {
-        temp.push("serviceTypeId");
-      }
-      if (selectedServiceLocation === null) {
-        temp.push("serviceLocationId");
-      }
-      // if (selectedDispatch === null) {
-      //   temp.push("modeOfDispatchId");
-      // }
-      if (selectedmachine === null) {
-        temp.push("machineId");
-      }
-      if (selectedMaintenanceType === null) {
-        temp.push("maintenanceTypeId");
-      }
-      if (selectedSpares === null) {
-        temp.push("sparesTypeId");
       }
     });
+
+    if (!selectedDepartment) temp.push("departmentId");
+    if (!selectedMaintenanceType) temp.push("maintenanceTypeId");
+    if (!selectedServiceType) temp.push("serviceTypeId");
+    if (!selectedServiceLocation) temp.push("serviceLocationId");
+    // if (!selectedDispatch) temp.push("modeOfDispatchId");
+    if (!selectedmachine) temp.push("machineId");
+    if (!selectedSpares) temp.push("sparesTypeId");
+
     setError(temp);
-    if (temp.length === 0 && editFlag) {
-      UpdateExternalRequest();
-    } else {
-      if (temp.length === 0) {
-        AddExternalRequest();
+
+    if (temp.length > 0) {
+      console.error("Please fill all mandatory fields correctly.");
+      return;
+    }
+
+    try {
+      startLoading();
+
+      if (editFlag) {
+        await UpdateExternalRequest();
+      } else {
+        await AddExternalRequest();
       }
+    } catch (error) {
+      console.error("Error saving external request:", error);
+    } finally {
+      stopLoading();
     }
   };
 
   const AddExternalRequest = async () => {
     try {
+      startLoading();
       const body: any = {
         requestTypeId:
           requestTypeData && requestTypeData.length > 0
@@ -615,11 +623,14 @@ function ExternalPage() {
       }
     } catch (err) {
       console.log(err);
+    } finally {
+      stopLoading();
     }
   };
 
   const UpdateExternalRequest = async () => {
     try {
+      startLoading();
       const body: any = {
         requestTypeId:
           requestTypeData && requestTypeData.length > 0
@@ -671,6 +682,8 @@ function ExternalPage() {
     } catch (err) {
       GetExternalRequest();
       console.log(err);
+    } finally {
+      startLoading();
     }
   };
   const formatDateForInput = (dateStr: string | undefined) => {
@@ -1143,14 +1156,14 @@ function ExternalPage() {
                                   Close
                                 </MuiButton>
                               )}
-                              {permissions.canUpdate && (
+                              {/* {permissions.canUpdate && (
                                 <FiEdit
                                   fontSize={20}
                                   color="#3a8484"
                                   cursor={"pointer"}
                                   onClick={() => handleEdit(row)}
                                 />
-                              )}
+                              )} */}
                             </Box>
                           </TableCell>
                         </TableRow>

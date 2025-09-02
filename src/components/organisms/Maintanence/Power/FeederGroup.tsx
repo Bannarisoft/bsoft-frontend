@@ -8,7 +8,7 @@ import NoDataFound from "../../../molecules/AdminLayout/NoDataFound";
 import { FiEdit } from "react-icons/fi";
 import { RiDeleteBin6Line } from "react-icons/ri";
 import CreateFeederGroup from "../../../molecules/Maintanence/Power/CreateFeederGroup";
-import { feedergroupsProps } from "../../../../maintanenceTypes";
+import { feedergroupsProps } from "../../../../types/maintanenceTypes";
 import { useRecoilValue } from "recoil";
 import { UserData } from "../../../../utils/atoms";
 import { useDebounce } from "../../../../hooks/useDebounceHook";
@@ -16,9 +16,15 @@ import { usePrivilegeCheck } from "../../../../hooks/usePrivilegeCheck";
 import DeleteConfirmation from "../../../molecules/Master/DeleteConfirmation";
 import MainConfig from "../../../../utils/main.api.json";
 import SkeletonLoader from "../../../molecules/AdminLayout/SkeletonLoader";
-import { Apirequest } from "../../../../utils/lib";
+import {
+  Apirequest,
+  isSubmitting,
+  startLoading,
+  stopLoading,
+} from "../../../../utils/lib";
 import ErrorModal from "../../../molecules/Master/Role/ErrorModal";
 import toast from "react-hot-toast";
+import { start } from "repl";
 
 function FeederGroup() {
   const [pathname, setPathName] = useState<string>("");
@@ -204,28 +210,41 @@ function FeederGroup() {
       : setFeedergroupInput({ ...feedergroupInput, isActive: 0 });
   };
 
-  const handleSubmit = (e: React.MouseEvent<HTMLButtonElement>) => {
-    let temp: any = [];
-    Object.entries(feedergroupInput).map(([key, value]) => {
-      if (key === "feederGroupCode" && value?.length == 0) {
+  const handleSubmit = async (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+
+    if (isSubmitting()) return;
+
+    let temp: string[] = [];
+
+    Object.entries(feedergroupInput).forEach(([key, value]) => {
+      if (key === "feederGroupCode" && (!value || value.trim().length === 0)) {
         temp.push(key);
-      } else if (key === "feederGroupName" && value?.length == 0) {
+      }
+      if (key === "feederGroupName" && (!value || value.trim().length === 0)) {
         temp.push(key);
       }
     });
+
     setError(temp);
 
-    if (temp.length === 0 && editFlag) {
-      UpdateFeederGroup();
-    } else {
-      if (temp.length === 0) {
-        AddFeederGroup();
+    if (temp.length === 0) {
+      try {
+        startLoading();
+        if (editFlag) {
+          await UpdateFeederGroup();
+        } else {
+          await AddFeederGroup();
+        }
+      } finally {
+        stopLoading();
       }
     }
   };
 
   const AddFeederGroup = async () => {
     try {
+      startLoading();
       const body: any = {
         feederGroupCode: feedergroupInput.feederGroupCode
           ?.trim()
@@ -257,11 +276,14 @@ function FeederGroup() {
       }
     } catch (err) {
       console.log(err);
+    } finally {
+      stopLoading();
     }
   };
 
   const UpdateFeederGroup = async () => {
     try {
+      startLoading();
       const body: any = {
         feederGroupCode: feedergroupInput.feederGroupCode
           ?.trim()
@@ -291,6 +313,8 @@ function FeederGroup() {
       }
     } catch (err) {
       console.log(err);
+    } finally {
+      stopLoading();
     }
   };
 

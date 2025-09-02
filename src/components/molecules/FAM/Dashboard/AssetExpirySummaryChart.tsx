@@ -91,8 +91,8 @@ const AssetExpirySummaryChart: React.FC<Props> = ({ data, onDrilldownFetch }) =>
       data: s.data,
       type: 'line',
       stack: 'Total',
-      areaStyle: {},       
-      smooth: true,            
+      areaStyle: {},
+      smooth: true,
       emphasis: { focus: 'series' },
     })),
   }), [currentCategories, currentSeries]);

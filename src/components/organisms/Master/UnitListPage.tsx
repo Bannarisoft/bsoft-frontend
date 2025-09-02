@@ -7,9 +7,15 @@ import NoDataFound from "../../molecules/AdminLayout/NoDataFound";
 import Config from "../../../utils/config.api.json";
 import { FiEdit } from "react-icons/fi";
 import { RiDeleteBin6Line } from "react-icons/ri";
-import { Apirequest, emailRegex } from "../../../utils/lib";
+import {
+  Apirequest,
+  emailRegex,
+  isSubmitting,
+  startLoading,
+  stopLoading,
+} from "../../../utils/lib";
 import CreateUnit from "../../molecules/Master/CreateUnit";
-import { UnitInputTypes } from "../../../types";
+import { UnitInputTypes } from "../../../types/types";
 import { useDebounce } from "../../../hooks/useDebounceHook";
 import { useRecoilValue } from "recoil";
 import { UserData } from "../../../utils/atoms";
@@ -164,64 +170,100 @@ function UnitListPage() {
     setErrors([]);
   };
 
-  const handleSubmit = (e: React.MouseEvent<HTMLButtonElement>) => {
+  const handleSubmit = async (e: React.MouseEvent<HTMLButtonElement>) => {
     let temp: string[] = [];
+    if (isSubmitting()) return;
+    startLoading();
 
-    Object.entries(unitInput).map(([key, value]) => {
-      if (key === "unitName" && value.length <= 3) {
+    Object.entries(unitInput).forEach(([key, value]) => {
+      if (key === "unitName" && (!value || value.toString().length <= 3)) {
         temp.push(key);
-      } else if (key === "oldUnitId" && value.length === 0) {
+      } else if (
+        key === "oldUnitId" &&
+        (!value || value.toString().length === 0)
+      ) {
         temp.push(key);
-      } else if (key === "shortName" && value.length <= 1) {
+      } else if (
+        key === "shortName" &&
+        (!value || value.toString().length <= 1)
+      ) {
         temp.push(key);
-      } else if (key === "unitHeadName" && value.length <= 3) {
+      } else if (
+        key === "unitHeadName" &&
+        (!value || value.toString().length <= 3)
+      ) {
         temp.push(key);
-      } else if (key === "pincode" && value?.length < 6) {
+      } else if (key === "pincode" && (!value || value.toString().length < 6)) {
         temp.push(key);
-      } else if (key === "contact" && value.length !== 10) {
+      } else if (
+        key === "contact" &&
+        (!value || value.toString().length !== 10)
+      ) {
         temp.push(key);
       } else if (
         key === "alternateContact" &&
-        value.length !== 0 &&
-        value.length !== 10
+        value &&
+        value.toString().length !== 10
       ) {
         temp.push(key);
-      } else if (key === "address1" && value.length === 0) {
+      } else if (
+        key === "address1" &&
+        (!value || value.toString().length === 0)
+      ) {
         temp.push(key);
-      } else if (key === "contactName" && value.length <= 3) {
+      } else if (
+        key === "contactName" &&
+        (!value || value.toString().length <= 3)
+      ) {
         temp.push(key);
-      } else if (key === "designation" && value.length <= 3) {
+      } else if (
+        key === "designation" &&
+        (!value || value.toString().length <= 3)
+      ) {
         temp.push(key);
-      } else if (key === "email" && !emailRegex.test(value)) {
+      } else if (
+        key === "email" &&
+        (!value || !emailRegex.test(value.toString()))
+      ) {
         temp.push(key);
-      } else if (key === "phone" && value.length !== 10) {
+      } else if (
+        key === "phone" &&
+        (!value || value.toString().length !== 10)
+      ) {
         temp.push(key);
       }
     });
-    if (selectedCountry === null) {
-      temp.push("country");
-    }
-    if (selectedState === null) {
-      temp.push("state");
-    }
-    if (selectedCity === null) {
-      temp.push("city");
-    }
-    if (selectedDivision === null) {
-      temp.push("division");
-    }
+
+    if (selectedCountry === null) temp.push("country");
+    if (selectedState === null) temp.push("state");
+    if (selectedCity === null) temp.push("city");
+    if (selectedDivision === null) temp.push("division");
+
     setErrors(temp);
-    if (temp.length === 0 && editFlag) {
-      UpdateUnit();
-    } else {
-      if (temp.length === 0) {
-        AddUnit();
+
+    if (temp.length > 0) {
+      toast.error("Please fill all required fields");
+      stopLoading();
+      return;
+    }
+
+    try {
+      if (editFlag) {
+        await UpdateUnit();
+      } else {
+        await AddUnit();
         setLoading(false);
       }
+    } catch (err) {
+      toast.error("Failed to save unit");
+    } finally {
+      stopLoading();
     }
   };
+
   const UpdateUnit = async () => {
     try {
+      startLoading();
       const body = {
         updateUnitDto: {
           id: unitInput.id,
@@ -276,11 +318,14 @@ function UnitListPage() {
       setLoading(false);
     } catch (err) {
       console.log(err);
+    } finally {
+      stopLoading();
     }
   };
 
   const AddUnit = async () => {
     try {
+      startLoading();
       const body = {
         unitName: unitInput.unitName
           ?.trim()
@@ -329,6 +374,8 @@ function UnitListPage() {
       }
     } catch (err) {
       console.log(err);
+    } finally {
+      stopLoading();
     }
   };
 
@@ -379,7 +426,7 @@ function UnitListPage() {
         endpoint.replace(`{countryId}`, id ? id.toString() : ""),
         method
       ).then((res) => res.data);
-      setStateData(result.data.data);
+      setStateData(result.data);
       return result;
     } catch (err) {
       console.log(err);
@@ -394,8 +441,8 @@ function UnitListPage() {
         endpoint.replace(`{stateId}`, id ? id.toString() : ""),
         method
       ).then((res) => res.data);
-      setCityData(result.data.data);
-      return result.data.data;
+      setCityData(result.data);
+      return result.data;
     } catch (err) {
       console.log(err);
       setCityData([]);
@@ -503,7 +550,6 @@ function UnitListPage() {
   const handleDelete = (id: number) => {
     setUnitInput({ ...unitInput, id: id });
     setDeleteOpen(true);
-    console.log("Deleted user with ID:", id);
   };
 
   const handleConfirmDelete = async () => {

@@ -146,8 +146,6 @@ function PhysicalVerification() {
       fileName = `${base}.xlsx`;
     }
 
-    console.log(fileName);
-
     return new File([blob], fileName, {
       type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
     });

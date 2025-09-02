@@ -1,0 +1,64 @@
+{
+  "PartyGroup": {
+    "PartyGroupList": {
+      "endpoint": "api/PartyGroup?PageNumber={page}&PageSize={size}&SearchTerm={search}",
+      "method": "GET"
+    },
+    "AddPartyGroup": {
+      "endpoint": "api/PartyGroup",
+      "method": "POST"
+    },
+    "UpdatePartyGroup": { "endpoint": "api/PartyGroup", "method": "PUT" },
+    "DeletePartyGroup": {
+      "endpoint": "api/PartyGroup?id={id}",
+      "method": "DELETE"
+    },
+    "GroupPartyParent": {
+      "endpoint": "api/PartyGroup/Parent/by-name",
+      "method": "GET"
+    },
+    "GetPartyGroupById": { "endpoint": "api/PartyGroup/{id}", "method": "GET" }
+  },
+  "ItemImageUpload": {
+    "UploadImage": {
+      "endpoint": "api/PartyMaster/upload-document",
+      "method": "POST"
+    },
+    "DeleteImage": {
+      "endpoint": "api/PartyMaster/delete-document",
+      "method": "DELETE"
+    }
+  },
+  "PartyMisc": {
+    "endpoint": "api/MiscMaster/by-name?MiscTypeCode={type}",
+    "method": "GET"
+  },
+  "PartyGroupLoad": {
+    "endpoint": "api/PartyMaster/load?groupTypeIds={ids}",
+    "method": "GET"
+  },
+  "PartyMaster": {
+    "endpoint": "api/PartyMaster/by-name?partyTypeIds={ids}",
+    "method": "GET",
+    "AddParty": {
+      "endpoint": "api/PartyMaster",
+      "method": "POST"
+    },
+    "UpdateParty": {
+      "endpoint": "api/PartyMaster",
+      "method": "PUT"
+    },
+    "GetPartyList": {
+      "endpoint": "api/PartyMaster?PageNumber={page}&PageSize={size}&SearchTerm={search}",
+      "method": "GET"
+    },
+    "GetPartyById": {
+      "endpoint": "api/PartyMaster/{partyId}",
+      "method": "GET"
+    },
+    "DeleteParty": {
+      "endpoint": "api/PartyMaster/{id}",
+      "method": "DELETE"
+    }
+  }
+}

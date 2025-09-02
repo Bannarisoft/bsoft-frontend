@@ -8,10 +8,16 @@ import { FiEdit } from "react-icons/fi";
 import { RiDeleteBin6Line } from "react-icons/ri";
 import { DataGrid } from "@mui/x-data-grid";
 import NoDataFound from "../../molecules/AdminLayout/NoDataFound";
-import { Apirequest, emailRegex } from "../../../utils/lib";
+import {
+  Apirequest,
+  emailRegex,
+  isSubmitting,
+  startLoading,
+  stopLoading,
+} from "../../../utils/lib";
 import Config from "../../../../src/utils/config.api.json";
 import { useDebounce } from "../../../hooks/useDebounceHook";
-import { UserInputTypes } from "../../../types";
+import { UserInputTypes } from "../../../types/types";
 import { useRecoilValue } from "recoil";
 import { UserData } from "../../../utils/atoms";
 import DeleteConfirmation from "../../molecules/Master/DeleteConfirmation";
@@ -358,7 +364,7 @@ function UserPageList() {
     setInitFlag(true);
   }, []);
 
-  const handleSubmit = (e: React.MouseEvent<HTMLButtonElement>) => {
+  const handleSubmit = async (e: React.MouseEvent<HTMLButtonElement>) => {
     const validationRules: {
       [key in keyof UserInputTypes]: (value: any) => boolean;
     } = {
@@ -382,7 +388,9 @@ function UserPageList() {
       entity: (value: string) => true,
     };
 
-    const tempErrors: string[] = [];
+    let tempErrors: string[] = [];
+    if (isSubmitting()) return;
+    startLoading();
 
     Object.entries(userInput).forEach(([key, value]) => {
       const validationRule = validationRules[key as keyof UserInputTypes];
@@ -392,32 +400,40 @@ function UserPageList() {
     });
 
     if (!isAdmin) {
-      if (!selectedUnit || selectedUnit.length === 0) {
+      if (!selectedUnit || selectedUnit.length === 0)
         tempErrors.push("selectedUnit");
-      }
-      if (!selectedUserDepartmentId || selectedUserDepartmentId.length === 0) {
+      if (!selectedUserDepartmentId || selectedUserDepartmentId.length === 0)
         tempErrors.push("userDepartmentId");
-      }
-      if (!selectedCompany || selectedCompany.length === 0) {
+      if (!selectedCompany || selectedCompany.length === 0)
         tempErrors.push("companyId");
-      }
-      if (!selectedEntity) {
-        tempErrors.push("entity");
-      }
+      if (!selectedEntity) tempErrors.push("entity");
     }
+
+    setError(tempErrors);
+
     if (tempErrors.length > 0) {
-      setError(tempErrors);
-    } else {
+      toast.error("Please fill all required fields");
+      stopLoading();
+      return;
+    }
+
+    try {
       if (editFlag) {
-        UpdateUser();
+        await UpdateUser();
       } else {
-        AddUser();
+        await AddUser();
       }
+    } catch (err) {
+      console.error("Error in handleSubmit:", err);
+      toast.error("Failed to save user");
+    } finally {
+      stopLoading();
     }
   };
 
   const AddUser = async () => {
     try {
+      startLoading();
       const body = {
         firstName: userInput.firstName?.trim(),
         lastName: userInput.lastName?.trim(),
@@ -460,6 +476,8 @@ function UserPageList() {
       console.error("Error in AddUser:", err);
       setErrorMessages(["An unexpected error occurred. Please try again."]);
       setErrorModalOpen(true);
+    } finally {
+      stopLoading();
     }
   };
 
@@ -491,6 +509,7 @@ function UserPageList() {
     };
 
     try {
+      startLoading();
       const { endpoint, method } = Config.User.updateuser;
       const result = await Apirequest(endpoint, method, body).then(
         (res) => res.data
@@ -508,6 +527,8 @@ function UserPageList() {
     } catch (err) {
       console.error("Error in UpdateUser:", err);
       GetUserList();
+    } finally {
+      stopLoading();
     }
   };
 

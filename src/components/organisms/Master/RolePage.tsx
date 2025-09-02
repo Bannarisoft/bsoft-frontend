@@ -16,12 +16,22 @@ import { FaMinusCircle } from "react-icons/fa";
 import RoleInformation from "../../molecules/Master/Role/RoleInformation";
 import RoleMenu from "../../molecules/Master/Role/RoleMenu";
 import RolePrevillages from "../../molecules/Master/Role/RolePrevillages";
-import { PrevillagesProps, RolemenuProps, RoleProps } from "../../../types";
-import { Apirequest } from "../../../utils/lib";
+import {
+  PrevillagesProps,
+  RolemenuProps,
+  RoleProps,
+} from "../../../types/types";
+import {
+  Apirequest,
+  isSubmitting,
+  startLoading,
+  stopLoading,
+} from "../../../utils/lib";
 import Config from "../../../utils/config.api.json";
 import Swal from "sweetalert2";
 import { useRouter } from "next/navigation";
 import { MuiButton, MuiText } from "bsoft-base-elements";
+import toast from "react-hot-toast";
 
 function RolePage() {
   const [expanded, setExpanded] = React.useState<string | false>("panel1");
@@ -227,22 +237,20 @@ function RolePage() {
   }, [selectedParentMenu]);
 
   const handleChipClick = (chipId: number) => {
-    let temp = Array.isArray(selectedChips) ? [...selectedChips] : [];
-    const isAlreadySelected = temp.some((chip) => chip.id === chipId);
-
-    let updatedChips = [...temp];
     const chipToToggle = chipData.find((chip) => chip.id === chipId);
-
     if (!chipToToggle) return;
+
+    let updatedChips = [...selectedChips];
+    const isAlreadySelected = updatedChips.some((chip) => chip.id === chipId);
 
     if (isAlreadySelected) {
       const removeChildChips = (parentId: number) => {
         const childChips = chipData.filter(
           (chip) => chip.parentId === parentId
         );
-        childChips.forEach((childChip) => {
-          removeChildChips(childChip.id);
-        });
+
+        childChips.forEach((childChip) => removeChildChips(childChip.id));
+
         updatedChips = updatedChips.filter(
           (chip) => !childChips.some((childChip) => childChip.id === chip.id)
         );
@@ -254,27 +262,33 @@ function RolePage() {
     } else {
       updatedChips.push(chipToToggle);
 
-      let parentId = chipToToggle.parentId;
-      while (parentId) {
+      let parentId: number | null | undefined = chipToToggle.parentId;
+      while (parentId !== null && parentId !== undefined) {
         const parentChip = chipData.find((chip) => chip.id === parentId);
-        if (
-          parentChip &&
-          !updatedChips.some((chip) => chip.id === parentChip.id)
-        ) {
+        if (!parentChip) break;
+
+        if (!updatedChips.some((chip) => chip.id === parentChip.id)) {
           updatedChips.push(parentChip);
         }
-        parentId = parentChip ? parentChip.parentId : null;
+
+        parentId = parentChip.parentId;
       }
     }
 
-    const filterMenu = updatedChips.filter((menu: any) => menu.menuUrl !== "");
-    setRoleTableData(filterMenu);
-    setSelectedChips(updatedChips);
+    // const isTypeTab = updatedChips.filter((i: any) => i.type === "tab");
+
+    const filterMenu = updatedChips.filter(
+      (menu: any) => menu.menuUrl?.trim() !== "" || menu.type === "tab"
+    );
+
+    setRoleTableData([...filterMenu]);
+    setSelectedChips([...updatedChips]);
 
     if (updatedChips.length > 0 && error.includes("roleChildren")) {
       setError((prev) => prev.filter((e) => e !== "roleChildren"));
     }
   };
+
   const handleSwitch = (
     e: React.ChangeEvent<HTMLInputElement>,
     id: number,
@@ -301,6 +315,7 @@ function RolePage() {
 
   const AddMenuPrivileges = async () => {
     try {
+      startLoading();
       const { endpoint, method } = Config.RoleEntitlements.roleEntitlements;
       const result = await Apirequest(endpoint, method, RolePayload);
 
@@ -326,6 +341,8 @@ function RolePage() {
     } catch (err) {
       console.error("Error in API request:", err);
       throw err;
+    } finally {
+      stopLoading();
     }
   };
 
@@ -403,6 +420,9 @@ function RolePage() {
 
   const handleSubmit = async () => {
     let validationErrors: string[] = [];
+    if (isSubmitting()) return;
+    startLoading();
+
     if (!roleInput.id) {
       validationErrors.push("roleId");
     }
@@ -418,10 +438,12 @@ function RolePage() {
     if (Object.keys(switchState).length === 0) {
       validationErrors.push("roleMenuPrivileges");
     }
+
     setError(validationErrors);
 
     if (validationErrors.length > 0) {
-      console.log("Validation errors:", validationErrors);
+      toast.error("Please fill all required fields");
+      stopLoading();
       return;
     }
 
@@ -429,6 +451,9 @@ function RolePage() {
       await AddMenuPrivileges();
     } catch (err) {
       console.error("Error submitting data:", err);
+      toast.error("Failed to submit data");
+    } finally {
+      stopLoading();
     }
   };
 

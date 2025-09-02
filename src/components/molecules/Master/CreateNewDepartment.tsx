@@ -6,13 +6,14 @@ import Slide from "@mui/material/Slide";
 import { TransitionProps } from "@mui/material/transitions";
 import { Autocomplete, Box, FormGroup, Grid2 } from "@mui/material";
 import { IoClose } from "react-icons/io5";
-import { CreateDepartmentPropTypes } from "../../../types";
+import { CreateDepartmentPropTypes } from "../../../types/types";
 import {
   MuiButton,
   MuiInputField,
   MuiSwitch,
   MuiText,
 } from "bsoft-base-elements";
+import { isSubmitting } from "../../../utils/lib";
 
 const Transition = React.forwardRef(function Transition(
   props: TransitionProps & {
@@ -186,7 +187,7 @@ const CreateNewDepartment = ({
             >
               Cancel
             </MuiButton>
-            <MuiButton className="filled-icon-btn" onClick={handleSubmit}>
+            <MuiButton className="filled-icon-btn" disabled={isSubmitting()} onClick={handleSubmit}>
               Submit
             </MuiButton>
           </Box>

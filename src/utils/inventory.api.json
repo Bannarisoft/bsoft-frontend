@@ -1,0 +1,186 @@
+{
+  "HsnCode": {
+    "HsnCodeList": {
+      "endpoint": "api/HSNMaster?PageNumber={page}&PageSize={size}&SearchTerm={search}",
+      "method": "GET"
+    },
+    "AddHsnCode": {
+      "endpoint": "api/HSNMaster/create",
+      "method": "POST"
+    },
+    "UpdateHsnCode": {
+      "endpoint": "api/HSNMaster/update/{id}",
+      "method": "PUT"
+    },
+    "DeleteHsnCode": {
+      "endpoint": "api/HSNMaster/delete/{id}",
+      "method": "DELETE"
+    },
+    "GetHsnCodeById": {
+      "endpoint": "api/HSNMaster/{id}",
+      "method": "GET"
+    },
+    "GetHsnCodeByName": {
+      "endpoint": "api/HSNMaster/by-name",
+      "method": "GET"
+    }
+  },
+  "InventoryMisc": {
+    "endpoint": "api/MiscMaster/by-name?MiscTypeCode={type}",
+    "method": "GET",
+    "MiscTypeMaster": {
+      "endpoint": "api/MiscTypeMaster/by-name?name={name}",
+      "method": "GET"
+    },
+    "MiscMasterDesc": {
+      "endpoint": "api/MiscMaster/by-name?MiscTypeDesc={desc}",
+      "method": "GET"
+    }
+  },
+  "Template": {
+    "GetTemplate": {
+      "endpoint": "api/templates/search",
+      "method": "GET"
+    }
+  },
+  "ItemImageUpload": {
+    "UploadImage": {
+      "endpoint": "api/ItemMaster/upload-logo",
+      "method": "POST"
+    },
+    "DeleteImage": {
+      "endpoint": "api/ItemMaster/delete-logo",
+      "method": "DELETE"
+    }
+  },
+  "ItemGroup": {
+    "ItemGroupList": {
+      "endpoint": "api/ItemGroup?PageNumber={page}&PageSize={size}&SearchTerm={searchTerm}",
+      "method": "GET"
+    },
+    "GetByGroup": {
+      "endpoint": "api/ItemGroup/by-name",
+      "method": "GET"
+    },
+    "AddItemGroup": {
+      "endpoint": "api/ItemGroup",
+      "method": "POST"
+    },
+    "UpdateItemGroup": {
+      "endpoint": "api/ItemGroup",
+      "method": "PUT"
+    },
+    "DeleteItemGroup": {
+      "endpoint": "api/ItemGroup?id={id}",
+      "method": "DELETE"
+    }
+  },
+  "ItemCategory": {
+    "ItemCategoryList": {
+      "endpoint": "api/ItemCategory?PageNumber={page}&PageSize={size}&SearchTerm={searchTerm}",
+      "method": "GET"
+    },
+    "GetByCategory": {
+      "endpoint": "api/ItemCategory/by-name",
+      "method": "GET"
+    },
+    "AddCategory": {
+      "endpoint": "api/ItemCategory",
+      "method": "POST"
+    },
+    "UpdateCategory": {
+      "endpoint": "api/ItemCategory",
+      "method": "PUT"
+    },
+    "DeleteCategory": {
+      "endpoint": "api/ItemCategory?id={id}",
+      "method": "DELETE"
+    }
+  },
+  "ItemMaster": {
+    "AddItem": {
+      "endpoint": "api/ItemMaster",
+      "method": "POST"
+    },
+    "UpdateItem": {
+      "endpoint": "api/ItemMaster",
+      "method": "PUT"
+    },
+    "ItemList": {
+      "endpoint": "api/ItemMaster?pageNumber={page}&pageSize={size}&search={search}&onlyActive=true&itemGroupId={itemGroup}&itemCategoryId={itemCategory}",
+      "method": "GET"
+    },
+    "GetItem": {
+      "endpoint": "api/ItemMaster/{id}",
+      "method": "GET"
+    }
+  },
+  "Uom": {
+    "endpoint": "api/UOM?PageNumber={page}&PageSize={size}&SearchTerm={searchTerm}",
+    "method": "GET",
+    "UomType": {
+      "endpoint": "api/MiscMaster/by-name?name={name}&MiscTypeCode={type}",
+      "method": "GET"
+    },
+    "Misc": {
+      "endpoint": "api/MiscMaster/by-name?MiscTypeCode={type}",
+      "method": "GET"
+    },
+    "AddUom": {
+      "endpoint": "api/UOM",
+      "method": "POST"
+    },
+    "UpdateUom": {
+      "endpoint": "api/UOM",
+      "method": "PUT"
+    },
+    "DeleteUom": {
+      "endpoint": "api/UOM/{id}",
+      "method": "DELETE"
+    },
+    "GetUomName": {
+      "endpoint": "api/UOM/by-name",
+      "method": "GET"
+    }
+  },
+  "UOMConversion": {
+    "endpoint": "api/UOMConversion?PageNumber={page}&PageSize={size}&SearchTerm={searchTerm}",
+    "method": "GET",
+    "GetUomConversion": {
+      "endpoint": "api/UOM/by-name",
+      "method": "GET"
+    },
+    "AddUomConversion": {
+      "endpoint": "api/UOMConversion",
+      "method": "POST"
+    },
+    "UpdateUomConversion": {
+      "endpoint": "api/UOMConversion",
+      "method": "PUT"
+    },
+    "DeleteUomConversion": {
+      "endpoint": "api/UOMConversion/{id}",
+      "method": "DELETE"
+    }
+  },
+  "PutawayRule": {
+    "endpoint": "api/PutAwayRule?PageNumber={page}&PageSize={size}&SearchTerm={searchTerm}",
+    "method": "GET",
+    "AddPutawayRule": {
+      "endpoint": "api/PutAwayRule",
+      "method": "POST"
+    },
+    "UpdatePutawayRule": {
+      "endpoint": "api/PutAwayRule",
+      "method": "PUT"
+    },
+    "GetPutawayRuleid": {
+      "endpoint": "api/PutAwayRule/{id}",
+      "method": "GET"
+    },
+    "DeletePutawayRule": {
+      "endpoint": "api/PutAwayRule?id={id}",
+      "method": "DELETE"
+    }
+  }
+}

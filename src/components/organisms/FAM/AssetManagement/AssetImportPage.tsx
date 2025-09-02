@@ -8,7 +8,12 @@ import { FaTrashCan } from "react-icons/fa6";
 import { useDropzone } from "react-dropzone";
 import { useRecoilValue } from "recoil";
 import { UserData } from "../../../../utils/atoms";
-import { Apirequest } from "../../../../utils/lib";
+import {
+  Apirequest,
+  isSubmitting,
+  startLoading,
+  stopLoading,
+} from "../../../../utils/lib";
 import Config from "../../../../utils/fam.api.json";
 import Image from "next/image";
 import CreateGif from "../../../../../public/assets/images/create-animation.gif";
@@ -46,13 +51,14 @@ function AssetImportPage() {
   };
   const handleFileUpload = async (file: any) => {
     if (!file || !userInput.companyId || !userInput.unitId) return;
-
+    if (isSubmitting()) return;
     const formData = new FormData();
     formData.append("file", file);
     formData.append("companyId", userInput.companyId);
     formData.append("unitId", userInput.unitId);
     setLoading(true);
     try {
+      startLoading();
       const { endpoint, method } = Config.AssetMasterGeneral.ExelUpload;
       const response = await Apirequest(endpoint, method, formData, "fam").then(
         (res) => res.data
@@ -66,6 +72,8 @@ function AssetImportPage() {
       setExcelFile(null);
     } catch (err) {
       console.error("Upload failed:", err);
+    } finally {
+      stopLoading();
     }
   };
   const { getRootProps, getInputProps } = useDropzone({

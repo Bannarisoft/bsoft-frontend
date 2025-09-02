@@ -1,6 +1,6 @@
 import { Snackbar, SnackbarCloseReason } from "@mui/material";
 import React from "react";
-import { SnackbarPropTypes } from "../../types";
+import { SnackbarPropTypes } from "../../types/types";
 import { IoIosClose } from "react-icons/io";
 
 function SnackbarComponent({ open, close, message }: SnackbarPropTypes) {

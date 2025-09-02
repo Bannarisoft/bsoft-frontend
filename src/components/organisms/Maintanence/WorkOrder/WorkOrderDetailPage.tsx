@@ -31,6 +31,9 @@ import CheckLists from "./CheckLists";
 import SparesUsed from "./SparesUsed";
 import {
   Apirequest,
+  isSubmitting,
+  startLoading,
+  stopLoading,
   StyledAutocomplete,
   StyledButton,
 } from "../../../../utils/lib";
@@ -42,7 +45,7 @@ import FamConfig from "../../../../utils/fam.api.json";
 import dayjs, { Dayjs } from "dayjs";
 import { useRecoilValue } from "recoil";
 import { UserData } from "../../../../utils/atoms";
-import { SpareRow } from "../../../../maintanenceTypes";
+import { SpareRow } from "../../../../types/maintanenceTypes";
 import { DateTimePicker, LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import Swal from "sweetalert2";
@@ -124,7 +127,7 @@ function WorkOrderDetailPage({ workOrderId }: { workOrderId?: string }) {
   };
   const router = useRouter();
   const [type, setType] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const [isSubmittings, setIsSubmittings] = useState<boolean>(false);
   const [statusOptions, setStatusOptions] = useState(statusOption);
   const [mainTime, setMainTime] = useState("");
   const [errorModalOpen, setErrorModalOpen] = useState(false);
@@ -607,13 +610,15 @@ function WorkOrderDetailPage({ workOrderId }: { workOrderId?: string }) {
   };
 
   const handleSaveChanges = async () => {
+    if (isSubmitting()) return;
+    setIsSubmittings(true);
+
     if (type.toLowerCase() === "preventive" && status === "done") {
       if (!selectedDate.mainStart || !selectedDate.mainEnd) {
         setMaintanenceErr(true);
+        setIsSubmittings(false);
         return;
-      } else {
-        setMaintanenceErr(false);
-      }
+      } else setMaintanenceErr(false);
     }
 
     if (
@@ -622,44 +627,40 @@ function WorkOrderDetailPage({ workOrderId }: { workOrderId?: string }) {
       !selectedDate.endDate
     ) {
       toast.error("Stop the maintanence time to close this work order");
+      setIsSubmittings(false);
       return;
     }
 
     if (type.toLowerCase() !== "preventive" && status === "done") {
       if (!selectedDate.mainStart || !selectedDate.mainEnd) {
         setMaintanenceErr(true);
+        setIsSubmittings(false);
         return;
-      } else {
-        setMaintanenceErr(false);
-      }
+      } else setMaintanenceErr(false);
     }
-    const foundStatus: any = statusOptions.find(
-      (list: any) => status === list?.value
-    );
-
-    setIsSubmitting(true);
 
     const checkItemType = rows.some((item) => !item?.type);
-
     if (checkItemType) {
       toast.error("Please select item type");
-      setIsSubmitting(false);
+      setIsSubmittings(false);
       return;
     }
 
     try {
+      startLoading();
+
+      const foundStatus: any = statusOptions.find(
+        (list: any) => status === list?.value
+      );
       const workOrderData: any = {
         workOrder: {
           id: Number(workOrderId),
           companyId: Number(userValue.companyId),
           unitId: Number(userValue.unitId),
           workOrderDocNo: WorkOrderDetailData?.workOrderDocNo,
-          statusId: foundStatus?.id
-            ? foundStatus?.id
-            : WorkOrderDetailData?.statusId,
+          statusId: foundStatus?.id || WorkOrderDetailData?.statusId,
           rootCauseId: selectedCause?.id,
           remarks: remarks,
-          image: "string",
           downTimeStart: selectedDate.startDate
             ? dayjs(selectedDate.startDate).toISOString()
             : WorkOrderDetailData?.downTimeStart,
@@ -691,9 +692,9 @@ function WorkOrderDetailPage({ workOrderId }: { workOrderId?: string }) {
               itemName: row?.item?.itemName,
               storeTypeId: row.type?.id,
               availableQty: row.availableQty,
-              usedQty: row.usedQty === "" ? 0 : Number(row.usedQty),
-              scarpQty: row.scrapQty === "" ? 0 : Number(row.scrapQty),
-              toSubStoreQty: row.toSubStore === "" ? 0 : Number(row.toSubStore),
+              usedQty: Number(row.usedQty || 0),
+              scarpQty: Number(row.scrapQty || 0),
+              toSubStoreQty: Number(row.toSubStore || 0),
               image: row.image,
               rate: row?.rate,
               departmentId: dept,
@@ -702,7 +703,7 @@ function WorkOrderDetailPage({ workOrderId }: { workOrderId?: string }) {
             workOrderId: Number(workOrderId),
             checkListId: item.checklistId || item.checkListId,
             isCompleted: item.isCompleted ? 1 : 0,
-            description: item.description || "string",
+            description: item.description || "",
           })),
           woSchedule: [
             {
@@ -718,59 +719,34 @@ function WorkOrderDetailPage({ workOrderId }: { workOrderId?: string }) {
       };
 
       if (selectedDate.mainStart && selectedDate.mainEnd) {
-        if (
-          Array.isArray(WorkOrderDetailData?.woSchedule) &&
-          WorkOrderDetailData?.woSchedule.length === 0
-        ) {
-          const timerData = {
-            woSchedule: {
-              workOrderId: workOrderId,
-              startTime: selectedDate.mainStart,
-              endTime: selectedDate.mainEnd,
-              isCompleted: status === "done" ? 1 : 0,
-              statusId: foundStatus?.id
-                ? foundStatus?.id
-                : WorkOrderDetailData?.statusId,
-            },
-          };
-          await Apirequest(
-            MainConfig.WorkOrder.CreateTimer.endpoint,
-            MainConfig.WorkOrder.CreateTimer.method,
-            timerData,
-            "main"
-          ).then((res) => res.data);
-        } else {
-          const timerData = {
-            woSchedule: {
-              workOrderId: workOrderId,
-              startTime: selectedDate.mainStart,
-              endTime: selectedDate.mainEnd,
-              isCompleted: status === "done" ? 1 : 0,
-              statusId: foundStatus?.id
-                ? foundStatus?.id
-                : WorkOrderDetailData?.statusId,
-            },
-          };
-          await Apirequest(
-            MainConfig.WorkOrder.UpdateTimer.endpoint,
-            MainConfig.WorkOrder.UpdateTimer.method,
-            timerData,
-            "main"
-          ).then((res) => res.data);
-        }
+        const timerData = {
+          woSchedule: {
+            workOrderId,
+            startTime: selectedDate.mainStart,
+            endTime: selectedDate.mainEnd,
+            isCompleted: status === "done" ? 1 : 0,
+            statusId: foundStatus?.id || WorkOrderDetailData?.statusId,
+          },
+        };
+
+        const timerEndpoint =
+          WorkOrderDetailData?.woSchedule?.length === 0
+            ? MainConfig.WorkOrder.CreateTimer
+            : MainConfig.WorkOrder.UpdateTimer;
+
+        await Apirequest(
+          timerEndpoint.endpoint,
+          timerEndpoint.method,
+          timerData,
+          "main"
+        );
       }
 
-      if (WorkOrderDetailData.requestId) {
-        if (workOrderData.workOrder) {
-          workOrderData.workOrder.requestId = WorkOrderDetailData.requestId;
-        }
-      }
-      if (WorkOrderDetailData.preventiveScheduleId) {
-        if (workOrderData.workOrder) {
-          workOrderData.workOrder.preventiveScheduleId =
-            WorkOrderDetailData.preventiveScheduleId;
-        }
-      }
+      if (WorkOrderDetailData.requestId)
+        workOrderData.workOrder.requestId = WorkOrderDetailData.requestId;
+      if (WorkOrderDetailData.preventiveScheduleId)
+        workOrderData.workOrder.preventiveScheduleId =
+          WorkOrderDetailData.preventiveScheduleId;
 
       const { endpoint, method } = MainConfig.WorkOrder.UpdateWorkOrder;
       const response = await Apirequest(
@@ -785,13 +761,9 @@ function WorkOrderDetailPage({ workOrderId }: { workOrderId?: string }) {
           title: response.message,
           icon: "success",
           confirmButtonText: "okay",
-          customClass: {
-            title: "custom-title",
-          },
+          customClass: { title: "custom-title" },
         }).then((res) => {
-          if (res.isConfirmed) {
-            router.push(`/maintanence/work-order`);
-          }
+          if (res.isConfirmed) router.push(`/maintanence/work-order`);
         });
       } else {
         setErrorMessages(response.errors);
@@ -803,9 +775,10 @@ function WorkOrderDetailPage({ workOrderId }: { workOrderId?: string }) {
       }
     } catch (error) {
       toast.error("An error occurred while updating the work order.");
-      console.log(error);
+      console.error(error);
     } finally {
-      setIsSubmitting(false);
+      setIsSubmittings(false);
+      stopLoading();
     }
   };
 
@@ -1066,7 +1039,6 @@ function WorkOrderDetailPage({ workOrderId }: { workOrderId?: string }) {
     const { woSchedule } = WorkOrderDetailData;
 
     if (!Array.isArray(woSchedule)) {
-      console.log("Invalid woSchedule format");
       setMainTime("-");
       return;
     }
@@ -1561,21 +1533,23 @@ function WorkOrderDetailPage({ workOrderId }: { workOrderId?: string }) {
               </Alert>
             )}
           </Grid>
-          <Grid item xs={12} md={8} mb={1}>
-            <FormGroup>
-              <FormControlLabel
-                sx={{ width: "fit-content" }}
-                control={
-                  <Checkbox
-                    defaultChecked
-                    checked={sameTime}
-                    onChange={handleSameTime}
-                  />
-                }
-                label="Same as Maintenance Time"
-              />
-            </FormGroup>
-          </Grid>
+          {typeof type === "string" && type.toLowerCase() !== "breakdown" && (
+            <Grid item xs={12} md={8} mb={1}>
+              <FormGroup>
+                <FormControlLabel
+                  sx={{ width: "fit-content" }}
+                  control={
+                    <Checkbox
+                      defaultChecked
+                      checked={sameTime}
+                      onChange={handleSameTime}
+                    />
+                  }
+                  label="Same as Maintenance Time"
+                />
+              </FormGroup>
+            </Grid>
+          )}
         </Grid>
         <Divider sx={{ mb: 2, mt: 0 }} />
 
@@ -1788,11 +1762,11 @@ function WorkOrderDetailPage({ workOrderId }: { workOrderId?: string }) {
             </StyledButton>
             <StyledButton
               variant="contained"
-              startIcon={isSubmitting ? null : <FiSave size={18} />}
+              startIcon={isSubmittings ? null : <FiSave size={18} />}
               sx={{
                 borderRadius: 2,
               }}
-              disabled={isSubmitting || editFlag}
+              disabled={isSubmittings || editFlag || isSubmitting()}
               onClick={handleSaveChanges}
             >
               Save Changes

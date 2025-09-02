@@ -1,6 +1,6 @@
 import Link from "next/link";
 import React from "react";
-import { ButtonTypes } from "../../types";
+import { ButtonTypes } from "../../types/types";
 
 function NavigationLink(props: ButtonTypes) {
   const { title, redirectLink } = props;

@@ -6,7 +6,12 @@ import { MuiButton, MuiTable } from "bsoft-base-elements";
 import { GoPlus } from "react-icons/go";
 import SkeletonLoader from "../../molecules/AdminLayout/SkeletonLoader";
 import NoDataFound from "../../molecules/AdminLayout/NoDataFound";
-import { Apirequest } from "../../../utils/lib";
+import {
+  Apirequest,
+  isSubmitting,
+  startLoading,
+  stopLoading,
+} from "../../../utils/lib";
 import Config from "../../../utils/config.api.json";
 import { useDebounce } from "../../../hooks/useDebounceHook";
 import { GridColDef } from "@mui/x-data-grid";
@@ -14,7 +19,7 @@ import dayjs from "dayjs";
 import { FiEdit } from "react-icons/fi";
 import { RiDeleteBin6Line } from "react-icons/ri";
 import CreateNewMenu from "../../molecules/Master/CreateNewMenu";
-import { MenuPropsType } from "../../../types";
+import { MenuPropsType } from "../../../types/types";
 import { useDataFetchHook } from "../../../hooks/useDataFetchHook";
 import DeleteConfirmation from "../../molecules/Master/DeleteConfirmation";
 import toast from "react-hot-toast";
@@ -41,6 +46,7 @@ const UserMenuListPage = () => {
     id: 0,
     sortOrder: 0,
     isActive: 1,
+    menuType: "",
   });
   const [menuData, setMenuData] = useState<any>([]);
   const [selectedValue, setSelectedValue] = useState<{
@@ -68,6 +74,7 @@ const UserMenuListPage = () => {
       id: 0,
       sortOrder: 0,
       isActive: 1,
+      menuType: "",
     });
     setSelectedValue({
       selectedModule: null,
@@ -87,6 +94,7 @@ const UserMenuListPage = () => {
       id: 0,
       sortOrder: 0,
       isActive: 1,
+      menuType: "",
     });
     setSelectedValue({
       selectedModule: null,
@@ -224,22 +232,44 @@ const UserMenuListPage = () => {
     },
   ];
 
-  const handleSubmit = (e: React.MouseEvent<HTMLButtonElement>) => {
-    let temp: any = [];
-    Object.entries(menuInput).map(([key, value]) => {
-      if (key === "menuName" && value?.length < 1) {
+  const handleSubmit = async (e: React.MouseEvent<HTMLButtonElement>) => {
+    let temp: string[] = [];
+    if (isSubmitting()) return;
+    startLoading();
+
+    Object.entries(menuInput).forEach(([key, value]) => {
+      if (
+        key === "menuName" &&
+        (!value || value.toString().trim().length < 1)
+      ) {
         temp.push(key);
       }
     });
+
     if (!selectedValue.selectedModule) temp.push("moduleId");
     // if (!selectedValue.parentId) temp.push("parentId");
+
     setErrors(temp);
 
-    AddMenu();
+    if (temp.length > 0) {
+      toast.error("Please fill all required fields");
+      stopLoading();
+      return;
+    }
+
+    try {
+      await AddMenu();
+    } catch (err) {
+      console.error("Error submitting menu:", err);
+      toast.error("Failed to save menu");
+    } finally {
+      stopLoading();
+    }
   };
 
   const AddMenu = async () => {
     try {
+      startLoading();
       const body: any = {
         menuName: menuInput.menuName,
         moduleId: selectedValue.selectedModule?.id || null,
@@ -248,6 +278,7 @@ const UserMenuListPage = () => {
         parentId: selectedValue.parentId?.id ?? 0,
         sortOrder: menuInput.sortOrder,
         isActive: menuInput.isActive,
+        type: menuInput.menuType
       };
 
       if (editFlag) {
@@ -269,6 +300,8 @@ const UserMenuListPage = () => {
       }
     } catch (err) {
       console.log(err);
+    } finally {
+      stopLoading();
     }
   };
 
@@ -283,6 +316,7 @@ const UserMenuListPage = () => {
       menuUrl: row.menuUrl,
       sortOrder: row.sortOrder,
       id: row.id,
+      menuType: row.type
     });
 
     const getModule = moduleData?.find((mod: any) => mod.id === row.moduleId);

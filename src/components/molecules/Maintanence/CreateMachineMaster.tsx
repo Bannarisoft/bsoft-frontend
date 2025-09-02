@@ -16,13 +16,13 @@ import {
   AdditionalSpec,
   CreateMachineMasterProps,
   SpecificationOption,
-} from "../../../maintanenceTypes";
+} from "../../../types/maintanenceTypes";
 import { DatePicker, LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import dayjs from "dayjs";
 import { useRecoilValue } from "recoil";
 import { UserData } from "../../../utils/atoms";
-import { DateFormatter } from "../../../utils/lib";
+import { DateFormatter, isSubmitting } from "../../../utils/lib";
 import { StyledAutocomplete } from "../../../utils/lib";
 import { MdOutlineLibraryAdd } from "react-icons/md";
 import { RiDeleteBin6Line } from "react-icons/ri";
@@ -62,17 +62,8 @@ export default function CreateMachineMaster({
         open={open}
         TransitionComponent={Transition}
         keepMounted
+        fullScreen
         aria-describedby="alert-dialog-slide-description"
-        fullWidth={true}
-        fullScreen={true}
-        maxWidth="md"
-        sx={{
-          "& .MuiPaper-root": {
-            // width: "70rem",
-            borderRadius: "8px",
-            maxWidth: "none !important",
-          },
-        }}
       >
         <Box className="popup-header-wrapper">
           <h2 className="dialog-header">
@@ -355,17 +346,35 @@ export default function CreateMachineMaster({
                   </MuiText>
                   <StyledAutocomplete
                     options={inputs.assetData || []}
-                    value={inputs.selectedAsset}
+                    value={inputs.selectedAsset || null}
                     onChange={(event, value: any) =>
                       handleAutocomplete(value, "asset")
                     }
-                    getOptionLabel={(option: any) => option.assetName || ""}
-                    isOptionEqualToValue={(option: any, value: any) =>
-                      option.id === value.id
+                    getOptionLabel={(option: any) =>
+                      typeof option === "string"
+                        ? option
+                        : option?.assetName ?? ""
                     }
-                    id="country-autocomplete"
+                    isOptionEqualToValue={(option: any, value: any) =>
+                      option?.id === value?.id
+                    }
+                    filterOptions={(options, state) =>
+                      options.filter((option: any) =>
+                        option?.assetName
+                          ?.toLowerCase()
+                          .includes(state.inputValue.toLowerCase())
+                      )
+                    }
+                    id="asset-autocomplete"
                     fullWidth
                     size="small"
+                    renderOption={(props, option: any) => (
+                      <li {...props} key={option.id}>
+                        {" "}
+                        {/* ✅ unique key */}
+                        {option.assetName}
+                      </li>
+                    )}
                     renderInput={(params) => (
                       <MuiInputField {...params} name="group" />
                     )}
@@ -740,7 +749,11 @@ export default function CreateMachineMaster({
             >
               Cancel
             </MuiButton>
-            <MuiButton variant="contained" onClick={handleSubmit}>
+            <MuiButton
+              variant="contained"
+              disabled={isSubmitting()}
+              onClick={handleSubmit}
+            >
               Submit
             </MuiButton>
           </Box>

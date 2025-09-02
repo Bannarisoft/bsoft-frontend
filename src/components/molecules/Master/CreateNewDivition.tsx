@@ -9,7 +9,7 @@ import {
 } from "@mui/material";
 import React from "react";
 import { IoClose } from "react-icons/io5";
-import { CreateDivisionPropTypes } from "../../../types";
+import { CreateDivisionPropTypes } from "../../../types/types";
 import { TransitionProps } from "@mui/material/transitions";
 import {
   MuiButton,
@@ -17,6 +17,7 @@ import {
   MuiSwitch,
   MuiText,
 } from "bsoft-base-elements";
+import { isSubmitting } from "../../../utils/lib";
 
 const Transition = React.forwardRef(function Transition(
   props: TransitionProps & {
@@ -148,7 +149,11 @@ const CreateNewDivition = ({
             >
               Cancel
             </MuiButton>
-            <MuiButton className="filled-icon-btn" onClick={handleSubmit}>
+            <MuiButton
+              className="filled-icon-btn"
+              disabled={isSubmitting()}
+              onClick={handleSubmit}
+            >
               Submit
             </MuiButton>
           </Box>

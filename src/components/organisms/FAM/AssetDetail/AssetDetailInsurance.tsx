@@ -13,7 +13,13 @@ import React, { useEffect, useState } from "react";
 import AddInsurancePop from "./AddInsurancePop";
 import dayjs from "dayjs";
 import Config from "../../../../utils/fam.api.json";
-import { Apirequest, parseDateString } from "../../../../utils/lib";
+import {
+  Apirequest,
+  isSubmitting,
+  parseDateString,
+  startLoading,
+  stopLoading,
+} from "../../../../utils/lib";
 import Swal from "sweetalert2";
 import { FaEdit } from "react-icons/fa";
 import { RiDeleteBinFill } from "react-icons/ri";
@@ -117,17 +123,28 @@ function AssetDetailInsurance({
     setInsuranceInputs({ ...insuranceInputs, [name]: value });
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
+    if (isSubmitting()) return;
+
     let temp: any = [];
-    Object.entries(insuranceInputs).map(([key, value]: any) => {
+
+    Object.entries(insuranceInputs).forEach(([key, value]: any) => {
       if (value === "" || value === null) {
         temp.push(key);
       }
     });
+
     setErrors(temp);
-    if (temp?.length === 0) {
-      AddInsurance();
-      setLoading(true);
+
+    if (temp.length === 0) {
+      try {
+        setLoading(true);
+        await AddInsurance();
+      } catch (error) {
+        console.error(error);
+      } finally {
+        setLoading(false);
+      }
     }
   };
 
@@ -155,6 +172,7 @@ function AssetDetailInsurance({
       body["id"] = insuranceId;
     }
     try {
+      startLoading();
       const { endpoint, method } = editFlag
         ? Config.AssetWarranty.UpdateInsurance
         : Config.AssetWarranty.AddInsurance;
@@ -192,6 +210,8 @@ function AssetDetailInsurance({
     } catch (err) {
       setLoading(false);
       console.log(err);
+    } finally {
+      stopLoading();
     }
   };
 

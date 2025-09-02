@@ -20,12 +20,18 @@ import GlobalSearch from "../../../molecules/AdminLayout/GlobalSearch";
 import React, { useEffect, useRef, useState } from "react";
 import { GoPlus } from "react-icons/go";
 import MainConfig from "../../../../utils/main.api.json";
-import { Apirequest, DateFormatter } from "../../../../utils/lib";
+import {
+  Apirequest,
+  DateFormatter,
+  isSubmitting,
+  startLoading,
+  stopLoading,
+} from "../../../../utils/lib";
 import { useDataFetchHook } from "../../../../hooks/useDataFetchHook";
 import { useDebounce } from "../../../../hooks/useDebounceHook";
 import CreateInternalRequest from "../../../molecules/Maintanence/Internal/CreateInternal";
 import Config from "../../../../utils/config.api.json";
-import { RequestProps } from "../../../../maintanenceTypes";
+import { RequestProps } from "../../../../types/maintanenceTypes";
 import { useRecoilValue } from "recoil";
 import { UserData } from "../../../../utils/atoms";
 import { FiEdit } from "react-icons/fi";
@@ -298,31 +304,40 @@ function InternalPage() {
     "main"
   );
 
-  const handleSubmit = (e: React.MouseEvent<HTMLButtonElement>) => {
-    let temp: any = [];
-    Object.entries(internalInput).map(([key, value]) => {
-      if (selectedDepartment === null) {
-        temp.push("maintenanceTypeId");
-      }
-      if (selectedMaintenanceType === null) {
-        temp.push("departmentId");
-      }
-      if (selectedmachine === null) {
-        temp.push("machineId");
-      }
-    });
+  const handleSubmit = async (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    if (isSubmitting()) return;
+    let temp: string[] = [];
+
+    if (selectedDepartment === null) temp.push("departmentId");
+    if (selectedMaintenanceType === null) temp.push("maintenanceTypeId");
+    if (selectedmachine === null) temp.push("machineId");
+
     setError(temp);
-    if (temp.length === 0 && editFlag) {
-      UpdateInternalRequest();
-    } else {
-      if (temp.length === 0) {
-        AddInternalRequest();
+
+    if (temp.length > 0) {
+      console.error("Please fill all mandatory fields.");
+      return;
+    }
+
+    try {
+      startLoading();
+
+      if (editFlag) {
+        await UpdateInternalRequest();
+      } else {
+        await AddInternalRequest();
       }
+    } catch (error) {
+      console.error("Error saving internal request:", error);
+    } finally {
+      stopLoading();
     }
   };
 
   const AddInternalRequest = async () => {
     try {
+      startLoading();
       const body: any = {
         requestTypeId:
           requestTypeData && requestTypeData.length > 0
@@ -368,11 +383,14 @@ function InternalPage() {
     } catch (err) {
       console.log(err);
       GetInternalRequest(false);
+    } finally {
+      stopLoading();
     }
   };
 
   const UpdateInternalRequest = async () => {
     try {
+      startLoading();
       const body: any = {
         maintenanceTypeId: selectedMaintenanceType?.id,
         machineId: selectedmachine?.id,
@@ -420,6 +438,8 @@ function InternalPage() {
     } catch (err) {
       GetInternalRequest(false);
       console.log(err);
+    } finally {
+      stopLoading();
     }
   };
 
@@ -606,7 +626,7 @@ function InternalPage() {
           <GlobalSearch
             placeholder="search"
             width={300}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(e: any) => setSearch(e.target.value)}
           />
           <Box className="d-flex-center" gap={2}>
             {permissions.canAdd && (
@@ -853,14 +873,14 @@ function InternalPage() {
                                   Close
                                 </MuiButton>
                               )}
-                              {permissions.canUpdate && (
+                              {/* {permissions.canUpdate && (
                                 <FiEdit
                                   fontSize={20}
                                   color="#00796b"
                                   style={{ cursor: "pointer" }}
                                   onClick={() => handleEdit(row)}
                                 />
-                              )}
+                              )} */}
                             </Box>
                           </TableCell>
                         </TableRow>

@@ -13,7 +13,7 @@ import React, { useMemo, useState } from "react";
 import { FiUploadCloud, FiChevronDown, FiChevronUp } from "react-icons/fi";
 import { LuCircleFadingPlus, LuTrash2 } from "react-icons/lu";
 import { TbClipboardList } from "react-icons/tb";
-import { SparesUsedProps } from "../../../../maintanenceTypes";
+import { SparesUsedProps } from"../../../../types/maintanenceTypes";
 import { IoIosCloseCircleOutline } from "react-icons/io";
 
 const VisuallyHiddenInput = styled("input")({

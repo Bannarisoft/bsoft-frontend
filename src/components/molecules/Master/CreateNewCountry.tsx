@@ -4,7 +4,7 @@ import DialogActions from "@mui/material/DialogActions";
 import DialogContent from "@mui/material/DialogContent";
 import Slide from "@mui/material/Slide";
 import { TransitionProps } from "@mui/material/transitions";
-import { CreateCountryPropTypes } from "../../../types";
+import { CreateCountryPropTypes } from "../../../types/types";
 import { Box, FormGroup, Grid2 } from "@mui/material";
 import { IoClose } from "react-icons/io5";
 import {
@@ -13,15 +13,18 @@ import {
   MuiSwitch,
   MuiText,
 } from "bsoft-base-elements";
+import { isSubmitting } from "../../../utils/lib";
 
 const Transition = React.forwardRef(function Transition(
-  props: TransitionProps & {
-    children: React.ReactElement<any, any>;
-  },
+  props: TransitionProps & { children: React.ReactElement<any, any> },
   ref: React.Ref<unknown>
 ) {
   return <Slide direction="up" ref={ref} {...props} />;
 });
+
+type Props = CreateCountryPropTypes & {
+  disableSubmit: boolean; // Coming from parent: whether to disable Submit button
+};
 
 export default function CreateNewCountry({
   open,
@@ -32,7 +35,8 @@ export default function CreateNewCountry({
   error,
   handleSwitch,
   editFlag,
-}: CreateCountryPropTypes) {
+  disableSubmit,
+}: Props) {
   return (
     <React.Fragment>
       <Dialog
@@ -58,6 +62,7 @@ export default function CreateNewCountry({
             color="#fff"
           />
         </Box>
+
         <DialogContent>
           <Grid2 container spacing={2}>
             <Grid2 size={4}>
@@ -68,22 +73,19 @@ export default function CreateNewCountry({
                 fullWidth
                 variant="outlined"
                 size="small"
-                InputProps={{
-                  inputProps: {
-                    maxLength: 8,
-                  },
-                }}
-                disabled={editFlag}
+                InputProps={{ inputProps: { maxLength: 8 } }}
+                disabled={editFlag} // lock during edit
                 autoComplete="off"
                 error={error.includes("countryCode")}
                 helperText={
-                  error.includes("countryCode") && "Invalid country code lenght"
+                  error.includes("countryCode") && "Invalid country code length"
                 }
-                value={countryInput.countryCode.toUpperCase()}
+                value={(countryInput.countryCode || "").toUpperCase()}
                 name="countryCode"
                 onChange={handleChange}
               />
             </Grid2>
+
             <Grid2 size={8}>
               <MuiText variant="h6" my={1} className="admin-label-title">
                 Country Name <span className="mandatory-sign">*</span>
@@ -95,22 +97,19 @@ export default function CreateNewCountry({
                 size="small"
                 name="countryName"
                 autoComplete="off"
-                value={countryInput.countryName}
+                value={countryInput.countryName || ""}
                 error={error.includes("countryName")}
                 helperText={
                   error.includes("countryName") &&
-                  "please enter valid country name"
+                  "Please enter valid country name"
                 }
                 onChange={handleChange}
-                InputProps={{
-                  inputProps: {
-                    maxLength: 50,
-                  },
-                }}
+                InputProps={{ inputProps: { maxLength: 50 } }}
               />
             </Grid2>
           </Grid2>
         </DialogContent>
+
         <DialogActions
           sx={{
             borderTop: "1px solid #f1f1f1",
@@ -119,26 +118,19 @@ export default function CreateNewCountry({
             pr: "22px",
           }}
         >
-          <FormGroup
-            sx={{
-              pl: 2,
-            }}
-          >
+          <FormGroup sx={{ pl: 2 }}>
             <MuiSwitch
               checked={countryInput.isActive === 1}
               onChange={handleSwitch}
               label="Status"
             />
           </FormGroup>
+
           <Box
             display={"flex"}
             alignItems={"center"}
             gap={2}
-            sx={{
-              button: {
-                minWidth: "70px !important",
-              },
-            }}
+            sx={{ button: { minWidth: "70px !important" } }}
           >
             <MuiButton
               className="dialog-cancel-btn"
@@ -147,7 +139,11 @@ export default function CreateNewCountry({
             >
               Cancel
             </MuiButton>
-            <MuiButton className="filled-icon-btn" onClick={handleSubmit}>
+            <MuiButton
+              className="filled-icon-btn"
+              onClick={handleSubmit}
+              disabled={disableSubmit || isSubmitting()} // Prevents clicks until valid & dirty (or just valid in create mode)
+            >
               Submit
             </MuiButton>
           </Box>

@@ -2,7 +2,7 @@ import React from "react";
 import {
   CreateCostCenterProps,
   CreateworkCenterProps,
-} from "../../../maintanenceTypes";
+} from "../../../types/maintanenceTypes";
 import {
   Autocomplete,
   Box,
@@ -23,6 +23,7 @@ import {
 } from "bsoft-base-elements";
 import InputDatePicker from "../../atoms/Datepicker";
 import dayjs from "dayjs";
+import { isSubmitting } from "../../../utils/lib";
 
 const Transition = React.forwardRef(function Transition(
   props: TransitionProps & {
@@ -193,7 +194,8 @@ const CreateCostCenter = ({
             </Grid2>
             <Grid2 size={4}>
               <MuiText variant="h6" my={1} className="admin-label-title">
-                Responsible Person Name <span className="mandatory-sign">*</span>
+                Responsible Person Name{" "}
+                <span className="mandatory-sign">*</span>
               </MuiText>
 
               <Autocomplete
@@ -311,7 +313,11 @@ const CreateCostCenter = ({
             >
               Cancel
             </MuiButton>
-            <MuiButton className="filled-icon-btn" onClick={handleSubmit}>
+            <MuiButton
+              className="filled-icon-btn"
+              disabled={isSubmitting()}
+              onClick={handleSubmit}
+            >
               Submit
             </MuiButton>
           </Box>

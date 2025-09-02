@@ -1,0 +1,16 @@
+{
+  "CommonApi": {
+    "GstInfo": {
+      "endpoint": "api/GST/gstin/{gst}",
+      "method": "GET"
+    }
+  },
+  "PurchaseMisc": {
+    "endpoint": "api/MiscMaster/by-name?MiscTypeCode={type}",
+    "method": "GET"
+  },
+  "PurchaseIndent": {
+    "endpoint": "api/PurchaseIndent?PageNumber={page}&PageSize={size}&SearchTerm={searchTerm}",
+    "method": "GET"
+  }
+}

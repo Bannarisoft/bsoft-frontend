@@ -12,7 +12,7 @@ import { StyledAutocomplete, StyledButton } from "../../../../utils/lib";
 import { MuiInputField, MuiText } from "bsoft-base-elements";
 import React from "react";
 import { LuCircleFadingPlus, LuTrash2, LuClock } from "react-icons/lu";
-import { TechnicianProps, TechnicianRow } from "../../../../maintanenceTypes";
+import { TechnicianProps, TechnicianRow } from"../../../../types/maintanenceTypes";
 
 function Technicians({
   custodianData,

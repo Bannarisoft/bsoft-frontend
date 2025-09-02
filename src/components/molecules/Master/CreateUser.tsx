@@ -13,7 +13,7 @@ import {
 import { TransitionProps } from "@mui/material/transitions";
 import React, { useState } from "react";
 import { IoClose, IoEyeOffOutline } from "react-icons/io5";
-import { CreateUserProps } from "../../../types";
+import { CreateUserProps } from "../../../types/types";
 import {
   MuiButton,
   MuiInputField,
@@ -23,6 +23,7 @@ import {
 import { FaRegEye } from "react-icons/fa6";
 import { useRecoilValue } from "recoil";
 import { UserData } from "../../../utils/atoms";
+import { isSubmitting } from "../../../utils/lib";
 
 const Transition = React.forwardRef(function Transition(
   props: TransitionProps & {
@@ -158,6 +159,8 @@ export default function CreateUser({
                       value={userInput.userName}
                       onChange={handleChange}
                     />
+
+                    
                   </FormControl>
                 </Grid2>
               </Grid2>
@@ -557,7 +560,7 @@ export default function CreateUser({
             >
               Cancel
             </MuiButton>
-            <MuiButton className="filled-icon-btn" onClick={handleSubmit}>
+            <MuiButton className="filled-icon-btn" disabled={isSubmitting()} onClick={handleSubmit}>
               Submit
             </MuiButton>
           </Box>

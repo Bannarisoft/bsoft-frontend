@@ -3,7 +3,7 @@ import Link from "next/link";
 import ImageComponent from "../../atoms/Image";
 import Sun from "../../../../public/assets/images/sun.png";
 import Moon from "../../../../public/assets/images/moon.png";
-import { ThemeToggleProps } from "../../../types";
+import { ThemeToggleProps } from "../../../types/types";
 
 export const ThemeToggle = ({ mode, toggleTheme }: ThemeToggleProps) => (
   <Box

@@ -11,7 +11,12 @@ import NoDataFound from "../../molecules/AdminLayout/NoDataFound";
 import { FiEdit } from "react-icons/fi";
 import { RiDeleteBin6Line } from "react-icons/ri";
 import dayjs from "dayjs";
-import { Apirequest } from "../../../utils/lib";
+import {
+  Apirequest,
+  isSubmitting,
+  startLoading,
+  stopLoading,
+} from "../../../utils/lib";
 import Config from "../../../../src/utils/fam.api.json";
 import config from "../../../utils/config.api.json";
 import CreateLocation, {
@@ -190,26 +195,44 @@ function LocationPage() {
     setSearch(e.target.value);
   };
 
-  const handleSubmit = (e: React.MouseEvent<HTMLButtonElement>) => {
-    let temp: any = [];
-    Object.entries(locationInput).map(([key, value]) => {
-      if (key === "code" && value?.length < 2) {
+  const handleSubmit = async (e: React.MouseEvent<HTMLButtonElement>) => {
+    let temp: string[] = [];
+    if (isSubmitting()) return;
+    startLoading();
+
+    Object.entries(locationInput).forEach(([key, value]) => {
+      if (key === "code" && (!value || value.toString().trim().length < 2)) {
         temp.push(key);
-      } else if (key === "locationName" && value?.length < 1) {
+      } else if (
+        key === "locationName" &&
+        (!value || value.toString().trim().length < 1)
+      ) {
         temp.push(key);
-      }
-      if (selectedDepartment === null) {
-        temp.push("departmentId");
       }
     });
+
+    if (selectedDepartment === null) temp.push("departmentId");
+
     setError(temp);
-    if (temp.length === 0 && editFlag) {
-      UpdateLocation();
-    } else {
-      if (temp.length === 0) {
-        AddLocation();
+
+    if (temp.length > 0) {
+      toast.error("Please fill all required fields");
+      stopLoading();
+      return;
+    }
+
+    try {
+      if (editFlag) {
+        await UpdateLocation();
+      } else {
+        await AddLocation();
         setLoading(true);
       }
+    } catch (err) {
+      console.error("Error in handleSubmit:", err);
+      toast.error("Failed to save location");
+    } finally {
+      stopLoading();
     }
   };
   const AddLocation = async () => {
@@ -224,6 +247,7 @@ function LocationPage() {
       unitId: userValue.unitId,
     };
     try {
+      startLoading();
       const { endpoint, method } = Config.Location.AddLocation;
       const response = await Apirequest(endpoint, method, body, "fam").then(
         (res) => res.data
@@ -243,6 +267,8 @@ function LocationPage() {
       }
     } catch (err) {
       console.log(err);
+    } finally {
+      stopLoading();
     }
   };
   const UpdateLocation = async () => {
@@ -260,6 +286,7 @@ function LocationPage() {
     };
 
     try {
+      startLoading();
       const { endpoint, method } = Config.Location.UpdateLocation;
       const response = await Apirequest(endpoint, method, body, "fam").then(
         (res) => res.data
@@ -281,12 +308,13 @@ function LocationPage() {
       }
     } catch (err) {
       console.log(err);
+    } finally {
+      stopLoading();
     }
   };
   const handleDelete = (id: number) => {
     setLocationInput({ ...locationInput, id: id });
     setDeleteOpen(true);
-    console.log("Deleted user with ID:", id);
   };
   const handleConfirmDelete = async () => {
     DeleteLocation();
@@ -419,16 +447,6 @@ function LocationPage() {
     GetLocationList();
     GetDepartment();
   }, []);
-
-  const skeletonRows = Array.from({ length: 10 }).map((_, rowIndex) => (
-    <tr key={rowIndex}>
-      {[0, 1, 2, 3, 4, 5, 6].map((colIndex) => (
-        <td key={colIndex}>
-          <Skeleton variant="text" width={"95%"} height={50} />
-        </td>
-      ))}
-    </tr>
-  ));
   return (
     <>
       <Box

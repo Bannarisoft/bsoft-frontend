@@ -1,5 +1,5 @@
 import React from "react";
-import { CreateGeneratorConsumptionpage } from "../../../../maintanenceTypes";
+import { CreateGeneratorConsumptionpage } from "../../../../types/maintanenceTypes";
 import {
   Autocomplete,
   Box,
@@ -16,6 +16,7 @@ import { IoClose } from "react-icons/io5";
 import { DesktopTimePicker, LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import dayjs from "dayjs";
+import { isSubmitting } from "../../../../utils/lib";
 
 const Transition = React.forwardRef(function Transition(
   props: TransitionProps & {
@@ -374,7 +375,11 @@ const CreateGeneratorConsumption = ({
             >
               Cancel
             </MuiButton>
-            <MuiButton className="filled-icon-btn" onClick={handleSubmit}>
+            <MuiButton
+              className="filled-icon-btn"
+              disabled={isSubmitting()}
+              onClick={handleSubmit}
+            >
               Submit
             </MuiButton>
           </Box>

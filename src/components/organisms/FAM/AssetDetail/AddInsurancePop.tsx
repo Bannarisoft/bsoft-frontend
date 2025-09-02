@@ -16,7 +16,7 @@ import { DatePicker, LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import dayjs from "dayjs";
 import { AssetInsuranceInputTypes } from "./AssetDetailInsurance";
-import { DateFormatter } from "../../../../utils/lib";
+import { DateFormatter, isSubmitting } from "../../../../utils/lib";
 
 const Transition = React.forwardRef(function Transition(
   props: TransitionProps & {
@@ -395,6 +395,7 @@ export default function AddInsurancePop(props: AddInsurancePropTypes) {
                 background: "#3a8484!important",
               }}
               onClick={handleSubmit}
+              disabled={isSubmitting()}
             >
               Submit
             </MuiButton>

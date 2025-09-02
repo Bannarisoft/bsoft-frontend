@@ -12,8 +12,13 @@ import MainConfig from "../../../utils/main.api.json";
 import NoDataFound from "../../molecules/AdminLayout/NoDataFound";
 import dayjs from "dayjs";
 import { FiEdit } from "react-icons/fi";
-import { activityProps } from "../../../maintanenceTypes";
-import { Apirequest } from "../../../utils/lib";
+import { activityProps } from "../../../types/maintanenceTypes";
+import {
+  Apirequest,
+  isSubmitting,
+  startLoading,
+  stopLoading,
+} from "../../../utils/lib";
 import { useDebounce } from "../../../hooks/useDebounceHook";
 import { useDataFetchHook } from "../../../hooks/useDataFetchHook";
 import CreateActivityMaster from "../../molecules/Maintanence/CreateActivityMaster";
@@ -228,54 +233,64 @@ function ActivityMasterPage() {
     }
   };
 
-  const handleSubmit = (e: React.MouseEvent<HTMLButtonElement>) => {
+  const handleSubmit = async (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    if (isSubmitting()) return;
+    startLoading();
     let temp: string[] = [];
-    Object.entries(activityInput).map(([key, value]) => {
+    Object.entries(activityInput).forEach(([key, value]) => {
       if (
         key === "activityName" &&
-        typeof value == "string" &&
-        value?.length == 0
+        (!value || (typeof value === "string" && value.trim().length === 0))
       ) {
         temp.push(key);
       } else if (
         key === "description" &&
-        typeof value == "string" &&
-        value?.length == 0
+        (!value || (typeof value === "string" && value.trim().length === 0))
       ) {
         temp.push(key);
       } else if (
         key === "estimatedDuration" &&
-        (value === 0 || value.toString().length < 1)
+        (!value || value === 0 || value.toString().length < 1)
       ) {
         temp.push(key);
       }
     });
 
-    if (selectedDepartment === null) {
+    if (!selectedDepartment) {
       temp.push("departmentId");
     }
-    if (selectedActivityType === null) {
+    if (!selectedActivityType) {
       temp.push("activityType");
     }
-    if (!selectedMachineGroup.some((item) => item)) {
+    if (!selectedMachineGroup || selectedMachineGroup.length === 0) {
       temp.push("machineGroup");
     }
 
     setError(temp);
 
     if (temp.length === 0) {
-      if (editFlag) {
-        UpdateActivity();
-      } else {
-        AddActivty();
+      try {
+        if (editFlag) {
+          await UpdateActivity();
+        } else {
+          await AddActivty();
+        }
+      } catch (error) {
+        console.error("Submit failed:", error);
+        toast.error("Something went wrong. Please try again.");
+      } finally {
+        stopLoading();
       }
     } else {
+      stopLoading();
       toast.error("Please fill all mandatory fields.");
     }
   };
 
   const AddActivty = async () => {
     try {
+      startLoading();
       const body: any = {
         createActivityMasterDto: {
           activityName: activityInput.activityName
@@ -316,11 +331,14 @@ function ActivityMasterPage() {
       }
     } catch (err) {
       console.log(err);
+    } finally {
+      stopLoading();
     }
   };
 
   const UpdateActivity = async () => {
     try {
+      startLoading();
       const body: any = {
         updateActivityMaster: {
           activityId: activityInput.id,
@@ -363,6 +381,8 @@ function ActivityMasterPage() {
       }
     } catch (err) {
       console.error("Error updating activity:", err);
+    } finally {
+      stopLoading();
     }
   };
 

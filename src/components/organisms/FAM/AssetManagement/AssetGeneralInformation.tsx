@@ -4,7 +4,7 @@ import React from "react";
 import { FileWithPath, useDropzone } from "react-dropzone";
 import { FaTrashCan } from "react-icons/fa6";
 import { HiOutlineUpload } from "react-icons/hi";
-import { AssetState } from "../../../../types";
+import { AssetState } from  "../../../../types/types";
 import { useRecoilValue } from "recoil";
 import { UserData } from "../../../../utils/atoms";
 import Config from "../../../../utils/fam.api.json";
@@ -76,7 +76,6 @@ function AssetGeneralInformation(props: AssetGeneralInformationProps) {
         unitName: userValue.unitName,
       };
       const result = await Apirequest(endpoint, method, payload, "fam");
-      console.log("Delete response:", result);
       if (result.status === 200) {
         handleAutoComplete(null, "assetImage");
         handleAutoComplete(null, "assetImageFile");

@@ -8,7 +8,12 @@ import { GoPlus } from "react-icons/go";
 import { FiEdit } from "react-icons/fi";
 import { RiDeleteBin6Line } from "react-icons/ri";
 import dayjs from "dayjs";
-import { Apirequest } from "../../../utils/lib";
+import {
+  Apirequest,
+  isSubmitting,
+  startLoading,
+  stopLoading,
+} from "../../../utils/lib";
 import NoDataFound from "../../molecules/AdminLayout/NoDataFound";
 import Config from "../../../../src/utils/fam.api.json";
 import CreateAssetSubCategory from "../../molecules/FAM/CreateAssetSubCategory";
@@ -224,25 +229,45 @@ function AssetSubCategoryPage() {
     setError([]);
   };
 
-  const handleSubmit = (e: React.MouseEvent<HTMLButtonElement>) => {
-    let temp: any = [];
-    Object.entries(subCategoryInput).map(([key, value]) => {
-      if (key === "subcategoryName" && value?.length < 1) {
+  const handleSubmit = async (e: React.MouseEvent<HTMLButtonElement>) => {
+    let temp: string[] = [];
+    if (isSubmitting()) return;
+    startLoading();
+
+    Object.entries(subCategoryInput).forEach(([key, value]) => {
+      if (
+        key === "subcategoryName" &&
+        (!value || value.toString().trim().length < 1)
+      ) {
         temp.push(key);
       }
     });
-    selectedCategory === null && temp.push("category");
+
+    if (selectedCategory === null) temp.push("category");
+
     setError(temp);
 
-    if (temp.length === 0 && editFlag) {
-      UpdateSubCategory();
-    } else {
-      if (temp.length === 0) {
-        AddSubCategory();
+    if (temp.length > 0) {
+      toast.error("Please fill all required fields");
+      stopLoading();
+      return;
+    }
+
+    try {
+      if (editFlag) {
+        await UpdateSubCategory();
+      } else {
+        await AddSubCategory();
         setLoading(true);
       }
+    } catch (err) {
+      console.error("Error in handleSubmit:", err);
+      toast.error("Failed to save subcategory");
+    } finally {
+      stopLoading();
     }
   };
+
   const AddSubCategory = async () => {
     const body = {
       subCategoryName: subCategoryInput.subcategoryName
@@ -253,6 +278,7 @@ function AssetSubCategoryPage() {
     };
 
     try {
+      startLoading();
       const { endpoint, method } = Config.SubCategory.AddAssetSubCategory;
       const response = await Apirequest(endpoint, method, body, "fam").then(
         (res) => res.data
@@ -277,6 +303,8 @@ function AssetSubCategoryPage() {
       }
     } catch (err) {
       console.log(err);
+    } finally {
+      stopLoading();
     }
   };
 
@@ -292,6 +320,7 @@ function AssetSubCategoryPage() {
       isActive: subCategoryInput.isActive,
     };
     try {
+      startLoading();
       const { endpoint, method } = Config.SubCategory.UpdateAssetsubCategory;
       const response = await Apirequest(endpoint, method, body, "fam").then(
         (res) => res.data
@@ -317,6 +346,8 @@ function AssetSubCategoryPage() {
     } catch (err) {
       GetSubCategoryList();
       console.log(err);
+    } finally {
+      stopLoading();
     }
   };
 

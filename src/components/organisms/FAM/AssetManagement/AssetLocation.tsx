@@ -16,7 +16,6 @@ function AssetLocation(props: AssetLocationPropTypes) {
   const { locationState, handleLocationAutoComplete, errors, loadingStates } = props;
   const userValue = useRecoilValue(UserData);
 
-  // console.log(userValue)
 
   return (
     <Grid2 container spacing={2}>

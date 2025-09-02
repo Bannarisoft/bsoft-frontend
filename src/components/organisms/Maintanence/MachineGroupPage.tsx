@@ -12,9 +12,14 @@ import NoDataFound from "../../molecules/AdminLayout/NoDataFound";
 import dayjs from "dayjs";
 import { FiEdit } from "react-icons/fi";
 import { RiDeleteBin6Line } from "react-icons/ri";
-import { machinegroupsProps } from "../../../maintanenceTypes";
+import { machinegroupsProps } from "../../../types/maintanenceTypes";
 import DeleteConfirmation from "../../molecules/Master/DeleteConfirmation";
-import { Apirequest } from "../../../utils/lib";
+import {
+  Apirequest,
+  isSubmitting,
+  startLoading,
+  stopLoading,
+} from "../../../utils/lib";
 import { useDebounce } from "../../../hooks/useDebounceHook";
 import CreateMachineGroup from "../../molecules/Maintanence/CreateMachineGroup";
 import { useDataFetchHook } from "../../../hooks/useDataFetchHook";
@@ -155,7 +160,12 @@ function MachineGroupPage() {
   const handleClickOpen = () => {
     setOpen(true);
     setEditFlag(false);
-    setMachinegroupInput({ ...machinegroupInput, groupName: "", isActive: 1 ,powerSource:1});
+    setMachinegroupInput({
+      ...machinegroupInput,
+      groupName: "",
+      isActive: 1,
+      powerSource: 1,
+    });
     setError([]);
     setSelectedManufacturer(null);
     selectedDepartment && setSelectedDepartment(null);
@@ -176,8 +186,11 @@ function MachineGroupPage() {
 
   const AddMaintanence = async () => {
     try {
+      startLoading();
       const body: any = {
-        groupName: machinegroupInput.groupName?.trim().replace(/\b\w/g, (char) => char.toUpperCase()),
+        groupName: machinegroupInput.groupName
+          ?.trim()
+          .replace(/\b\w/g, (char) => char.toUpperCase()),
         manufacturer: selectedManufacturer.id,
         departmentId: selectedDepartment.id,
         unitId: userValue.unitId,
@@ -209,13 +222,17 @@ function MachineGroupPage() {
       // GetMachineGroupList();
     } catch (err) {
       console.log(err);
+      stopLoading();
     }
   };
 
   const UpdateMaintanence = async () => {
     try {
+      startLoading();
       const body: any = {
-        groupName: machinegroupInput.groupName?.trim().replace(/\b\w/g, (char) => char.toUpperCase()),
+        groupName: machinegroupInput.groupName
+          ?.trim()
+          .replace(/\b\w/g, (char) => char.toUpperCase()),
         manufacturer: selectedManufacturer.id,
         departmentId: selectedDepartment.id,
         id: machinegroupInput.id,
@@ -243,6 +260,7 @@ function MachineGroupPage() {
       }
     } catch (err) {
       console.log(err);
+      startLoading();
     }
   };
   const handleSwitch = (
@@ -281,23 +299,44 @@ function MachineGroupPage() {
       console.log(err);
     }
   };
-  const handleSubmit = (e: React.MouseEvent<HTMLButtonElement>) => {
-    let temp: any = [];
-    Object.entries(machinegroupInput).map(([key, value]) => {
-      if (key === "groupName" && value?.length == 0) {
+  const handleSubmit = async (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    if (isSubmitting()) return;
+
+    let temp: string[] = [];
+
+    // Validation
+    Object.entries(machinegroupInput).forEach(([key, value]) => {
+      if (
+        key === "groupName" &&
+        (!value || value?.toString().trim().length === 0)
+      ) {
         temp.push(key);
-      } else if (selectedManufacturer === null) {
-        temp.push("manufacturer");
       }
     });
-    if (selectedDepartment === null) temp.push("departmentId");
+
+    if (!selectedManufacturer) temp.push("manufacturer");
+    if (!selectedDepartment) temp.push("departmentId");
+
     setError(temp);
-    if (temp.length === 0 && editFlag) {
-      UpdateMaintanence();
-    } else {
-      if (temp.length === 0) {
-        AddMaintanence();
+
+    if (temp.length > 0) return;
+
+    try {
+      startLoading();
+
+      if (editFlag) {
+        await UpdateMaintanence();
+      } else {
+        await AddMaintanence();
       }
+      setMachinegroupInput({ ...machinegroupInput, groupName: "" });
+      setSelectedManufacturer(null);
+      setSelectedDepartment(null);
+    } catch (err: any) {
+      console.error("API Error:", err);
+    } finally {
+      stopLoading();
     }
   };
 
@@ -410,7 +449,6 @@ function MachineGroupPage() {
 
   const GetMachineGroupList = async () => {
     try {
-      setLoading(true);
       const response = await Apirequest(
         MainConfig.MachineGroup.GetMachineGroup.endpoint
           .replace("{page}", page.toString())

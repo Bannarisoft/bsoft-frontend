@@ -7,8 +7,13 @@ import GlobalSearch from "../../molecules/AdminLayout/GlobalSearch";
 import { GoPlus } from "react-icons/go";
 import CreateNewCity from "../../molecules/Master/CreateNewCity";
 import config from "../../../utils/config.api.json";
-import { Apirequest } from "../../../utils/lib";
-import { CityProps } from "../../../types";
+import {
+  Apirequest,
+  isSubmitting,
+  startLoading,
+  stopLoading,
+} from "../../../utils/lib";
+import { CityProps } from "../../../types/types";
 import { FiEdit } from "react-icons/fi";
 import { RiDeleteBin6Line } from "react-icons/ri";
 import DeleteConfirmation from "../../molecules/Master/DeleteConfirmation";
@@ -165,39 +170,51 @@ const CityPageTable = () => {
     setCityInput({ ...cityInput, [name]: filteredValue });
     setError([]);
   };
-  const handleSubmit = (e: React.MouseEvent<HTMLButtonElement>) => {
+  const handleSubmit = async (e: React.MouseEvent<HTMLButtonElement>) => {
     let temp: any = [];
+    if (isSubmitting()) return;
+
     Object.entries(cityInput).map(([key, value]) => {
       if (
         key === "cityCode" &&
         (!value || typeof value !== "string" || value.trim().length < 2)
       ) {
         temp.push(key);
-        console.log("Invalid cityCode");
       } else if (
         key === "cityName" &&
         (!value || typeof value !== "string" || value.trim().length < 4)
       ) {
         temp.push(key);
-        console.log("Invalid cityName");
       } else if (key === "stateId" && (!value || value === 0)) {
         temp.push(key);
-        console.log("Invalid id");
       }
     });
+
     setError(temp);
-    if (temp.length === 0 && editFlag) {
-      UpdateCity();
-    } else {
-      if (temp.length === 0) {
-        AddCity();
-        setSelectedState(null);
-        setLoading(false);
+
+    if (temp.length === 0) {
+      try {
+        if (editFlag) {
+          await UpdateCity();
+        } else {
+          await AddCity();
+          setSelectedState(null);
+          setLoading(false);
+        }
+      } catch (err) {
+        console.error("Error in handleSubmit:", err);
+      } finally {
+        stopLoading();
       }
+    } else {
+      toast.error("Please fill all required fields");
+      stopLoading();
     }
   };
+
   const AddCity = async () => {
     try {
+      startLoading();
       const body = {
         ...cityInput,
         cityCode: cityInput.cityCode?.trim().toUpperCase(),
@@ -231,6 +248,8 @@ const CityPageTable = () => {
       }
     } catch (err) {
       console.log(err);
+    } finally {
+      stopLoading();
     }
   };
   const handleSwitch = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -242,6 +261,7 @@ const CityPageTable = () => {
 
   const UpdateCity = async () => {
     try {
+      startLoading();
       const body = {
         ...cityInput,
         cityCode: cityInput.cityCode?.trim().toUpperCase(),
@@ -275,6 +295,8 @@ const CityPageTable = () => {
       }
     } catch (err) {
       console.log(err);
+    } finally {
+      startLoading();
     }
   };
   const handleEdit = (row: any) => {
@@ -319,7 +341,9 @@ const CityPageTable = () => {
         setEditFlag(false);
         GetCityList();
       } else {
-        toast.error(response.message || "Something went wrong, please try again later");
+        toast.error(
+          response.message || "Something went wrong, please try again later"
+        );
         if (Array.isArray(response.errors) && response.errors.length > 0) {
           setErrorModalOpen(true);
           setErrorMessages(response.errors);

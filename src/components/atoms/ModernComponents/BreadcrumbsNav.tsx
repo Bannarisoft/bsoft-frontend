@@ -32,7 +32,7 @@ export default function BreadcrumbsNav({
         </Link>
       );
     } else {
-      const href = "/" + pathArr.slice(0, idx + 1).join("/");
+      const href = "/" + pathArr.slice(1, idx + 1).join("/");
       const isLast = idx === pathArr.length - 1;
       const label = prettify(segment);
 

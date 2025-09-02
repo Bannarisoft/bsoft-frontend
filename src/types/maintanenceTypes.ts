@@ -790,3 +790,90 @@ export interface GeneratorConsumption {
   unitId: number;
   [key: string]: string | number;
 }
+
+
+export interface HsnRow {
+  id: number;
+  typeId: number;
+  type: string;
+  hsnCode: string;
+  description: string;
+  gstCategoryName: string;
+  gstPercentage: number;
+  cgstPercentage: number;
+  sgstPercentage: number;
+  igstPercentage: number;
+  validFrom: string;
+  isActive: boolean;
+  isDeleted?: boolean;
+  createdBy?: number;
+  createdDate?: string;
+  createdByName?: string;
+  createdIP?: string;
+  modifiedBy?: number;
+  modifiedDate?: string;
+  modifiedByName?: string;
+  modifiedIP?: string;
+}
+export interface HsnForm {
+  id: number;
+  type: string;
+  typeId: number | "";
+  hsnCode: string;
+  description: string;
+  gstCategoryId: number | "";
+  gstCategoryName: string;
+  gstPercentage: number | "";
+  cgstPercentage: number | "";
+  sgstPercentage: number | "";
+  igstPercentage: number | "";
+  validFrom: string;
+  isActive: boolean;
+}
+
+export type HsnErrorField =
+  | "type"
+  | "hsnCode"
+  | "description"
+  | "gstCategoryName"
+  | "gstPercentage"
+  | "validFrom"
+  | "isActive";
+
+export interface ApiListResponse<T> {
+  statusCode: number;
+  data: T[];
+  totalCount: number;
+  pageNumber: number;
+  pageSize: number;
+  message?: string;
+  errors?: string[];
+}
+export interface HsnCategoryOption {
+  id: number;
+  code: string;
+  description?: string;
+}
+
+export interface HsnTypeOption {
+  id: number;
+  code: string;
+  description?: string;
+}
+
+
+export interface CreateHsnCodeProps {
+  open: boolean;
+  close: () => void;
+  editFlag?: boolean;
+  form: HsnForm;
+  errorFields: HsnErrorField[];
+  onChange: (name: keyof HsnForm, value: any) => void;
+  onDateChange: (iso: string) => void;
+  onSwitch: (checked: boolean) => void;
+  onSubmit: () => void;
+  gstCategories?: HsnCategoryOption[] | { data: HsnCategoryOption[] } | null;
+  hsnSacTypes?: HsnTypeOption[] | { data: HsnTypeOption[] } | null;
+  submitDisabled?: boolean;
+}
+

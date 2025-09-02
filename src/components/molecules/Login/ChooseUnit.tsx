@@ -17,7 +17,7 @@ import { MuiText } from "bsoft-base-elements";
 import Config from "../../../../src/utils/config.api.json";
 import { useRouter } from "next/navigation";
 import Cookies from "js-cookie";
-import { Profile } from "../../../types";
+import { Profile } from "../../../types/types";
 
 const ProfileCard: React.FC<{
   profile: Profile;
@@ -188,6 +188,7 @@ const ChooseUnit: React.FC = () => {
           variant="h6"
           className="login-header"
           sx={{ textShadow: "1px 1px 1px #3a8484" }}
+          fontFamily={"poppins !important"}
         >
           SELECT UNIT
         </MuiText>

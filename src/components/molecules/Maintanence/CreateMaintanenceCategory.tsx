@@ -16,7 +16,8 @@ import {
 } from "bsoft-base-elements";
 import React from "react";
 import { IoClose } from "react-icons/io5";
-import { CreateMaintanenceCategoryProps } from "../../../maintanenceTypes";
+import { CreateMaintanenceCategoryProps } from "../../../types/maintanenceTypes";
+import { isSubmitting } from "../../../utils/lib";
 
 const Transition = React.forwardRef(function Transition(
   props: TransitionProps & {
@@ -142,7 +143,11 @@ const CreateMaintanenceCategory = ({
             >
               Cancel
             </MuiButton>
-            <MuiButton className="filled-icon-btn" onClick={handleSubmit}>
+            <MuiButton
+              className="filled-icon-btn"
+              disabled={isSubmitting()}
+              onClick={handleSubmit}
+            >
               Submit
             </MuiButton>
           </Box>

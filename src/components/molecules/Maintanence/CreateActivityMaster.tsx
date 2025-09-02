@@ -18,7 +18,8 @@ import {
 } from "bsoft-base-elements";
 import React from "react";
 import { IoClose } from "react-icons/io5";
-import { CreateActivityProps } from "../../../maintanenceTypes";
+import { CreateActivityProps } from "../../../types/maintanenceTypes";
+import { isSubmitting } from "../../../utils/lib";
 const Transition = React.forwardRef(function Transition(
   props: TransitionProps & {
     children: React.ReactElement<any, any>;
@@ -122,7 +123,8 @@ const CreateActivityMaster = ({
             </Grid2>
             <Grid2 size={4}>
               <MuiText variant="h6" my={1} className="admin-label-title">
-                Maintenance Department Name <span className="mandatory-sign">*</span>
+                Maintenance Department Name{" "}
+                <span className="mandatory-sign">*</span>
               </MuiText>
               <Autocomplete
                 options={departmentData || []}
@@ -170,8 +172,7 @@ const CreateActivityMaster = ({
                 type="number"
                 variant="outlined"
                 size="small"
-                inputProps={{ maxLength: 3
-                 }}
+                inputProps={{ maxLength: 3 }}
                 name="estimatedDuration"
                 multiline
                 value={activityinput.estimatedDuration}
@@ -305,7 +306,11 @@ const CreateActivityMaster = ({
             >
               Cancel
             </MuiButton>
-            <MuiButton className="filled-icon-btn" onClick={handleSubmit}>
+            <MuiButton
+              className="filled-icon-btn"
+              disabled={isSubmitting()}
+              onClick={handleSubmit}
+            >
               Submit
             </MuiButton>
           </Box>

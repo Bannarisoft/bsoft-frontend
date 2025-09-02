@@ -6,11 +6,16 @@ import { GoPlus } from "react-icons/go";
 import NoDataFound from "../../molecules/AdminLayout/NoDataFound";
 import { FiEdit } from "react-icons/fi";
 import { RiDeleteBin6Line } from "react-icons/ri";
-import { Apirequest } from "../../../utils/lib";
+import {
+  Apirequest,
+  isSubmitting,
+  startLoading,
+  stopLoading,
+} from "../../../utils/lib";
 import Config from "../../../utils/config.api.json";
 import { useDebounce } from "../../../hooks/useDebounceHook";
 import CreateNewCurrency from "../../molecules/Master/CreateNewCurrency";
-import { CurrencyProps } from "../../../types";
+import { CurrencyProps } from "../../../types/types";
 import DeleteConfirmation from "../../molecules/Master/DeleteConfirmation";
 import { MuiButton, MuiTable } from "bsoft-base-elements";
 import { usePrivilegeCheck } from "../../../hooks/usePrivilegeCheck";
@@ -148,35 +153,49 @@ const CurrencyPageTable = () => {
     setOpen(true);
   };
 
-  const handleSubmit = (e: React.MouseEvent<HTMLButtonElement>) => {
-    let temp: any = [];
-    Object.entries(currencyInput).map(([key, value]) => {
+  const handleSubmit = async (e: React.MouseEvent<HTMLButtonElement>) => {
+    let temp: string[] = [];
+    if (isSubmitting()) return;
+
+    Object.entries(currencyInput).forEach(([key, value]) => {
       if (
         key === "code" &&
         (!value || typeof value !== "string" || value.trim().length < 2)
       ) {
         temp.push(key);
-        console.log("Invalid code");
       } else if (
         key === "name" &&
         (!value || typeof value !== "string" || value.trim().length < 4)
       ) {
         temp.push(key);
-        console.log("Invalid Name");
       }
     });
+
     setError(temp);
-    if (temp.length === 0 && editFlag) {
-      UpdateCurrency();
-    } else {
-      if (temp.length === 0) {
-        AddCurrency();
+
+    if (temp.length > 0) {
+      toast.error("Please fill all required fields");
+      stopLoading();
+      return;
+    }
+
+    try {
+      if (editFlag) {
+        await UpdateCurrency();
+      } else {
+        await AddCurrency();
         setLoading(false);
       }
+    } catch (err) {
+      console.error("Error in handleSubmit:", err);
+    } finally {
+      stopLoading();
     }
   };
+
   const AddCurrency = async () => {
     try {
+      startLoading();
       const body = {
         ...currencyInput,
         code: currencyInput.code?.trim().toUpperCase(),
@@ -205,10 +224,13 @@ const CurrencyPageTable = () => {
       }
     } catch (err) {
       console.log(err);
+    } finally {
+      stopLoading();
     }
   };
   const UpdateCurrency = async () => {
     try {
+      startLoading();
       const body = {
         ...currencyInput,
         code: currencyInput.code?.trim().toUpperCase(),
@@ -237,12 +259,13 @@ const CurrencyPageTable = () => {
       }
     } catch (err) {
       console.log(err);
+    } finally {
+      stopLoading();
     }
   };
   const handleDelete = (id: number) => {
     setCurrencyInput({ ...currencyInput, id: id });
     setDeleteOpen(true);
-    console.log("Deleted user with ID:", id);
   };
   const handleConfirmDelete = async () => {
     DeleteCurrency();

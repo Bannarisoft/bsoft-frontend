@@ -1,4 +1,5 @@
 import { AiOutlineSchedule, AiOutlineThunderbolt } from "react-icons/ai";
+import { CiMoneyCheck1 } from "react-icons/ci";
 import { FaQuestionCircle } from "react-icons/fa";
 import { GoDatabase } from "react-icons/go";
 import { HiOutlineChartBarSquare } from "react-icons/hi2";
@@ -23,6 +24,7 @@ export const getIconByMenuItem = (menuItem: any) => {
   if (menuNameLower.includes("master")) return <GoDatabase size={18} />;
   if (menuNameLower.includes("management")) return <VscCodeOss size={18} />;
   if (menuNameLower.includes("dashboard")) return <MdOutlineDashboard size={18} />;
+  if (menuNameLower.includes("transac")) return <CiMoneyCheck1 size={20} />;
   if (menuNameLower.includes("power"))
     return <AiOutlineThunderbolt size={18} />;
   return <FaQuestionCircle size={18} />;

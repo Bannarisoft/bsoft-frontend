@@ -8,7 +8,12 @@ import { MuiButton, MuiTable } from "bsoft-base-elements";
 import { GoPlus } from "react-icons/go";
 import { useDebounce } from "../../../hooks/useDebounceHook";
 import Config from "../../../../src/utils/fam.api.json";
-import { Apirequest } from "../../../utils/lib";
+import {
+  Apirequest,
+  isSubmitting,
+  startLoading,
+  stopLoading,
+} from "../../../utils/lib";
 import NoDataFound from "../../molecules/AdminLayout/NoDataFound";
 import { FiEdit } from "react-icons/fi";
 import { RiDeleteBin6Line } from "react-icons/ri";
@@ -182,6 +187,7 @@ function AssetGroupPage() {
     };
 
     try {
+      startLoading();
       const { endpoint, method } = Config.AssetGroup.AddAssetGroup;
       const response = await Apirequest(endpoint, method, body, "fam").then(
         (res) => res.data
@@ -202,6 +208,8 @@ function AssetGroupPage() {
       }
     } catch (err) {
       console.log(err);
+    } finally {
+      stopLoading();
     }
   };
 
@@ -217,6 +225,7 @@ function AssetGroupPage() {
       groupPercentage: groupInput.groupPercentage,
     };
     try {
+      startLoading();
       const { endpoint, method } = Config.AssetGroup.UpdateAssetGroup;
       const response = await Apirequest(endpoint, method, body, "fam").then(
         (res) => res.data
@@ -238,6 +247,8 @@ function AssetGroupPage() {
     } catch (err) {
       GetAssetGroupList();
       console.log(err);
+    } finally {
+      stopLoading();
     }
   };
 
@@ -301,24 +312,41 @@ function AssetGroupPage() {
     setError([]);
   };
 
-  const handleSubmit = (e: React.MouseEvent<HTMLButtonElement>) => {
+  const handleSubmit = async (e: React.MouseEvent<HTMLButtonElement>) => {
     let temp: string[] = [];
+    if (isSubmitting()) return;
+    startLoading();
 
     Object.entries(groupInput).forEach(([key, value]) => {
-      if (key === "code" && value.trim().length < 1) {
+      if (key === "code" && (!value || value.toString().trim().length < 1)) {
         temp.push(key);
-      } else if (key === "groupName" && value.trim().length < 1) {
+      } else if (
+        key === "groupName" &&
+        (!value || value.toString().trim().length < 1)
+      ) {
         temp.push(key);
       }
     });
+
     setError(temp);
-    if (temp.length === 0) {
-      setLoading(true);
+
+    if (temp.length > 0) {
+      toast.error("Please fill all required fields");
+      stopLoading();
+      return;
+    }
+
+    try {
       if (editFlag) {
-        UpdateAssetGroup();
+        await UpdateAssetGroup();
       } else {
-        AddAssetGroup();
+        await AddAssetGroup();
       }
+    } catch (err) {
+      console.error("Error in handleSubmit:", err);
+      toast.error("Failed to save asset group");
+    } finally {
+      stopLoading();
     }
   };
 

@@ -18,7 +18,8 @@ import {
   MuiSwitch,
   MuiText,
 } from "bsoft-base-elements";
-import { CreateInternalProps } from "../../../../maintanenceTypes";
+import { CreateInternalProps } from "../../../../types/maintanenceTypes";
+import { isSubmitting } from "../../../../utils/lib";
 
 const Transition = React.forwardRef(function Transition(
   props: TransitionProps & {
@@ -176,7 +177,8 @@ const CreateInternalRequest = ({
                 my={{ xs: 0.5, sm: 1, md: 1, lg: 1 }}
                 className="admin-label-title"
               >
-                Maintenance Department Name <span className="mandatory-sign">*</span>
+                Maintenance Department Name{" "}
+                <span className="mandatory-sign">*</span>
               </MuiText>
 
               <Autocomplete
@@ -267,7 +269,11 @@ const CreateInternalRequest = ({
             >
               Cancel
             </MuiButton>
-            <MuiButton className="filled-icon-btn" onClick={handleSubmit}>
+            <MuiButton
+              className="filled-icon-btn"
+              disabled={isSubmitting()}
+              onClick={handleSubmit}
+            >
               Submit
             </MuiButton>
           </Box>

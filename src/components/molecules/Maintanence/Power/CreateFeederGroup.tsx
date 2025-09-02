@@ -1,5 +1,5 @@
 import React from "react";
-import { CreateFeederGroupPropType } from "../../../../maintanenceTypes";
+import { CreateFeederGroupPropType } from "../../../../types/maintanenceTypes";
 import {
   Box,
   Dialog,
@@ -17,6 +17,7 @@ import {
   MuiText,
 } from "bsoft-base-elements";
 import { TransitionProps } from "@mui/material/transitions";
+import { isSubmitting } from "../../../../utils/lib";
 const Transition = React.forwardRef(function Transition(
   props: TransitionProps & {
     children: React.ReactElement<any, any>;
@@ -150,7 +151,11 @@ const CreateFeederGroup = ({
             >
               Cancel
             </MuiButton>
-            <MuiButton className="filled-icon-btn" onClick={handleSubmit}>
+            <MuiButton
+              className="filled-icon-btn"
+              disabled={isSubmitting()}
+              onClick={handleSubmit}
+            >
               Submit
             </MuiButton>
           </Box>

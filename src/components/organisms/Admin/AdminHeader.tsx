@@ -36,7 +36,7 @@ import Swal from "sweetalert2";
 import { MuiText } from "bsoft-base-elements";
 import { RiLockPasswordLine, RiUserCommunityLine } from "react-icons/ri";
 import { FaAngleDown, FaAngleUp } from "react-icons/fa6";
-import { Profile } from "../../../types";
+import { Profile } from "../../../types/types";
 import { MenuItem } from "../../molecules/AdminLayout/MenuItem";
 import Link from "next/link";
 import { VscFileSubmodule } from "react-icons/vsc";

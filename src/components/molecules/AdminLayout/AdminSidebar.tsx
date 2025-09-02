@@ -2,10 +2,9 @@ import React, { useEffect, useState } from "react";
 import { Box, ListItem, Typography, Tooltip } from "@mui/material";
 import { usePathname } from "next/navigation";
 import SideMenuButton from "../../atoms/SideMenuButton";
-import { useTheme } from "@mui/material/styles";
 import { useRecoilState, useRecoilValue } from "recoil";
 import { mobileSidebarState, toggleSidebar } from "../../../utils/atoms";
-import { MenuItem } from "../../../types";
+import { MenuItem } from "../../../types/types";
 import { motion } from "framer-motion";
 import { getIconByMenuItem } from "./IconsPack";
 
@@ -16,15 +15,11 @@ interface AdminSidebarProps {
 const AdminSidebar: React.FC<AdminSidebarProps> = ({ modules }) => {
   const [openSection, setOpenSection] = useState<number | null>(null);
   const pathname = usePathname();
-  const theme = useTheme();
 
   const isSidebarToggled = useRecoilValue(toggleSidebar);
   const [mobileSidebar, setMobileSidebar] = useRecoilState(mobileSidebarState);
   const [hoveredItem, setHoveredItem] = useState<number | null>(null);
 
-  const primaryColor = "#3a8484";
-  const primaryLighter = "#4ba3a3";
-  const primaryDarker = "#2e6b6b";
   const accentColor = "#d8ff02";
 
   const handleToggle = (id: number) => {
@@ -89,29 +84,29 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ modules }) => {
     };
   }, []);
 
-  // const itemVariants = {
-  //   initial: { scale: 1 },
-  //   hover: {
-  //     scale: 1.035,
-  //     transition: {
-  //       type: "spring",
-  //       stiffness: 500,
-  //       damping: 20,
-  //     },
-  //   },
-  // };
+  const itemVariants = {
+    initial: { scale: 1 },
+    hover: {
+      scale: 1.035,
+      transition: {
+        type: "spring",
+        stiffness: 500,
+        damping: 20,
+      },
+    },
+  };
 
-  // const moduleVariants = {
-  //   hidden: { opacity: 0, y: 20 },
-  //   visible: (i: number) => ({
-  //     opacity: 1,
-  //     y: 0,
-  //     transition: {
-  //       delay: i * 0.1,
-  //       duration: 0.5,
-  //     },
-  //   }),
-  // };
+  const moduleVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: (i: number) => ({
+      opacity: 1,
+      y: 0,
+      transition: {
+        delay: i * 0.1,
+        duration: 0.5,
+      },
+    }),
+  };
 
   return (
     <Box
@@ -145,7 +140,7 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ modules }) => {
             custom={index}
             initial="hidden"
             animate="visible"
-            // variants={moduleVariants}
+            variants={moduleVariants}
           >
             <Box
               mb={{ xs: 2, sm: 2.5, md: 3 }}
@@ -194,6 +189,7 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ modules }) => {
                   {module.moduleName}
                 </Typography>
               )}
+
               <Box
                 sx={{
                   "& .active-tree": {
@@ -205,11 +201,13 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ modules }) => {
                   const active = isActive(item.menuUrl, item.childMenus);
                   const hasActiveChild = isChildActive(item.childMenus);
                   const isHovered = hoveredItem === item.id;
+
                   const menuIcon = getIconByMenuItem(item);
+
                   return (
                     <motion.div
                       key={item.id}
-                      // variants={itemVariants}
+                      variants={itemVariants}
                       initial="initial"
                       whileHover="hover"
                       onMouseEnter={() => setHoveredItem(item.id)}

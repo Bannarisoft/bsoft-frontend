@@ -11,7 +11,12 @@ import { useDebounce } from "../../../hooks/useDebounceHook";
 import dayjs from "dayjs";
 import { FiEdit } from "react-icons/fi";
 import { RiDeleteBin6Line } from "react-icons/ri";
-import { Apirequest } from "../../../utils/lib";
+import {
+  Apirequest,
+  isSubmitting,
+  startLoading,
+  stopLoading,
+} from "../../../utils/lib";
 import FamConfig from "../../../utils/fam.api.json";
 import CreateSpecification, {
   SpecificationProps,
@@ -29,7 +34,6 @@ const SpecificationMaster = () => {
   useEffect(() => {
     setInitFlag(true);
     const currentPath = window.location.pathname.split("/bsoft").at(-1) || "";
-    console.log(currentPath);
     setPathName(currentPath);
   }, []);
   const [page, setPage] = React.useState<number>(1);
@@ -183,24 +187,42 @@ const SpecificationMaster = () => {
     setSelectedAssetGroup(getAssetGroup);
   };
 
-  const handleSubmit = (e: React.MouseEvent<HTMLButtonElement>) => {
-    let temp: any = [];
-    Object.entries(specificationInput).map(([key, value]) => {
-      if (key === "specificationName" && value?.length < 1) {
+  const handleSubmit = async (e: React.MouseEvent<HTMLButtonElement>) => {
+    let temp: string[] = [];
+    if (isSubmitting()) return;
+    startLoading();
+
+    Object.entries(specificationInput).forEach(([key, value]) => {
+      if (
+        key === "specificationName" &&
+        (!value || value.toString().trim().length < 1)
+      ) {
         temp.push(key);
-      } else if (selectedAssetGroup === null) {
-        temp.push("assetGroup");
       }
     });
 
+    if (selectedAssetGroup === null) temp.push("assetGroup");
+
     setError(temp);
-    if (temp.length === 0 && editFlag) {
-      UpdateUom();
-    } else {
-      if (temp.length === 0) {
-        AddSpecificaation();
+
+    if (temp.length > 0) {
+      toast.error("Please fill all required fields");
+      stopLoading();
+      return;
+    }
+
+    try {
+      if (editFlag) {
+        await UpdateSpecificaation();
+      } else {
+        await AddSpecificaation();
         setLoading(true);
       }
+    } catch (err) {
+      console.error("Error in handleSubmit:", err);
+      toast.error("Failed to save specification");
+    } finally {
+      stopLoading();
     }
   };
 
@@ -213,6 +235,7 @@ const SpecificationMaster = () => {
       isDefault: specificationInput.isDefault,
     };
     try {
+      startLoading();
       const { endpoint, method } = FamConfig.Specificaton.AddSpecification;
       const response = await Apirequest(endpoint, method, body, "fam").then(
         (res) => res.data
@@ -233,9 +256,11 @@ const SpecificationMaster = () => {
       }
     } catch (err) {
       console.log(err);
+    } finally {
+      stopLoading();
     }
   };
-  const UpdateUom = async () => {
+  const UpdateSpecificaation = async () => {
     const body = {
       specificationName: specificationInput.specificationName
         ?.trim()
@@ -246,6 +271,7 @@ const SpecificationMaster = () => {
       isActive: specificationInput.isActive,
     };
     try {
+      startLoading();
       const { endpoint, method } = FamConfig.Specificaton.UpdateSpecification;
       const response = await Apirequest(endpoint, method, body, "fam").then(
         (res) => res.data
@@ -266,6 +292,8 @@ const SpecificationMaster = () => {
       }
     } catch (err) {
       console.log(err);
+    } finally {
+      stopLoading();
     }
   };
 

@@ -1,5 +1,5 @@
 import React from "react";
-import { CreateworkCenterProps } from "../../../maintanenceTypes";
+import { CreateworkCenterProps } from "../../../types/maintanenceTypes";
 import {
   Autocomplete,
   Box,
@@ -18,6 +18,7 @@ import {
   MuiSwitch,
   MuiText,
 } from "bsoft-base-elements";
+import { isSubmitting } from "../../../utils/lib";
 
 const Transition = React.forwardRef(function Transition(
   props: TransitionProps & {
@@ -195,7 +196,11 @@ const CreateWorkCenter = ({
             >
               Cancel
             </MuiButton>
-            <MuiButton className="filled-icon-btn" onClick={handleSubmit}>
+            <MuiButton
+              className="filled-icon-btn"
+              disabled={isSubmitting()}
+              onClick={handleSubmit}
+            >
               Submit
             </MuiButton>
           </Box>

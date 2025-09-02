@@ -5,7 +5,12 @@ import GlobalSearch from "../../molecules/AdminLayout/GlobalSearch";
 import { MuiButton, MuiTable } from "bsoft-base-elements";
 import { GoPlus } from "react-icons/go";
 import MainConfig from "../../../utils/main.api.json";
-import { Apirequest } from "../../../utils/lib";
+import {
+  Apirequest,
+  isSubmitting,
+  startLoading,
+  stopLoading,
+} from "../../../utils/lib";
 import { useDebounce } from "../../../hooks/useDebounceHook";
 import SkeletonLoader from "../../molecules/AdminLayout/SkeletonLoader";
 import { useDataFetchHook } from "../../../hooks/useDataFetchHook";
@@ -15,7 +20,7 @@ import { FiEdit } from "react-icons/fi";
 import { RiDeleteBin6Line } from "react-icons/ri";
 import CreateMachineGroupUser from "../../molecules/Maintanence/CreateMachineGroupUser";
 import Config from "../../../utils/config.api.json";
-import { MachineGroupsUserProps } from "../../../maintanenceTypes";
+import { MachineGroupsUserProps } from "../../../types/maintanenceTypes";
 import ErrorModal from "../../molecules/Master/Role/ErrorModal";
 import DeleteConfirmation from "../../molecules/Master/DeleteConfirmation";
 import { usePrivilegeCheck } from "../../../hooks/usePrivilegeCheck";
@@ -195,28 +200,43 @@ const MachineGroupUser = () => {
       }
     });
   };
-  const handleSubmit = (e: React.MouseEvent<HTMLButtonElement>) => {
+  const handleSubmit = async (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+
+    if (isSubmitting()) return; // Prevent multiple submissions
+
     let temp: string[] = [];
 
-    if (selectedDepartment === null) {
-      temp.push("departmentId");
-    }
-    if (selectedUser === null) temp.push("user");
-    if (selectedMachineGroup === null) temp.push("machineGroupId");
+    // Validate required fields
+    if (!selectedDepartment) temp.push("departmentId");
+    if (!selectedUser) temp.push("user");
+    if (!selectedMachineGroup) temp.push("machineGroupId");
 
     setError(temp);
 
-    if (temp.length === 0 && editFlag) {
-      UpdateMachinGroupUser();
-    } else {
-      if (temp.length === 0) {
-        AddMachinGroupUser();
+    if (temp.length > 0) {
+      console.error("Please fill all mandatory fields.");
+      return;
+    }
+
+    try {
+      startLoading();
+
+      if (editFlag) {
+        await UpdateMachinGroupUser();
+      } else {
+        await AddMachinGroupUser();
       }
+    } catch (error) {
+      console.error("Error saving machine group user:", error);
+    } finally {
+      stopLoading();
     }
   };
 
   const AddMachinGroupUser = async () => {
     try {
+      startLoading();
       const body: any = {
         departmentId: selectedDepartment?.id,
         machineGroupId: selectedMachineGroup?.id,
@@ -244,11 +264,14 @@ const MachineGroupUser = () => {
       }
     } catch (err) {
       console.log(err);
+    } finally {
+      stopLoading();
     }
   };
 
   const UpdateMachinGroupUser = async () => {
     try {
+      startLoading();
       const body: any = {
         departmentId: selectedDepartment?.id,
         id: machineGroupUserInput.id,
@@ -277,6 +300,8 @@ const MachineGroupUser = () => {
       }
     } catch (err) {
       console.log(err);
+    } finally {
+      stopLoading();
     }
   };
 

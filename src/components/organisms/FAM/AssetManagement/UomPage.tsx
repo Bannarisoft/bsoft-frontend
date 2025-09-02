@@ -13,7 +13,12 @@ import { FiEdit } from "react-icons/fi";
 import { RiDeleteBin6Line } from "react-icons/ri";
 import dayjs from "dayjs";
 import NoDataFound from "../../../molecules/AdminLayout/NoDataFound";
-import { Apirequest } from "../../../../utils/lib";
+import {
+  Apirequest,
+  isSubmitting,
+  startLoading,
+  stopLoading,
+} from "../../../../utils/lib";
 import CreateUom, { UomProps } from "../../../molecules/FAM/CreateUom";
 import DeleteConfirmation from "../../../molecules/Master/DeleteConfirmation";
 import { usePrivilegeCheck } from "../../../../hooks/usePrivilegeCheck";
@@ -201,28 +206,44 @@ function UomPage() {
     setOpen(true);
   };
 
-  const handleSubmit = (e: React.MouseEvent<HTMLButtonElement>) => {
-    let temp: any = [];
-    Object.entries(uomInput).map(([key, value]) => {
-      if (key === "code" && value?.length < 1) {
-        temp.push(key);
-      } else if (key === "uomName" && value?.length < 1) {
-        temp.push(key);
-      }
+  const handleSubmit = async (e: React.MouseEvent<HTMLButtonElement>) => {
+    let temp: string[] = [];
+    if (isSubmitting()) return;
+    startLoading();
 
-      if (selectedUomType === null) {
-        temp.push("uomType");
+    Object.entries(uomInput).forEach(([key, value]) => {
+      if (key === "code" && (!value || value.toString().trim().length < 1)) {
+        temp.push(key);
+      } else if (
+        key === "uomName" &&
+        (!value || value.toString().trim().length < 1)
+      ) {
+        temp.push(key);
       }
     });
-    selectedUomType === null && temp.push("miscType");
+
+    if (selectedUomType === null) temp.push("uomType");
+
     setError(temp);
-    if (temp.length === 0 && editFlag) {
-      UpdateUom();
-    } else {
-      if (temp.length === 0) {
-        AddMisc();
+
+    if (temp.length > 0) {
+      toast.error("Please fill all required fields");
+      stopLoading();
+      return;
+    }
+
+    try {
+      if (editFlag) {
+        await UpdateUom();
+      } else {
+        await AddMisc();
         setLoading(true);
       }
+    } catch (err) {
+      console.error("Error in handleSubmit:", err);
+      toast.error("Failed to save UOM");
+    } finally {
+      stopLoading();
     }
   };
 
@@ -237,6 +258,7 @@ function UomPage() {
       sortOrder: uomInput.sortOrder,
     };
     try {
+      startLoading();
       const { endpoint, method } = Config.Uom.AddUom;
       const response = await Apirequest(endpoint, method, body, "fam").then(
         (res) => res.data
@@ -258,6 +280,8 @@ function UomPage() {
       }
     } catch (err) {
       console.log(err);
+    } finally {
+      stopLoading();
     }
   };
   const UpdateUom = async () => {
@@ -273,6 +297,7 @@ function UomPage() {
       isActive: uomInput.isActive,
     };
     try {
+      startLoading();
       const { endpoint, method } = Config.Uom.UpdateUom;
       const response = await Apirequest(endpoint, method, body, "fam").then(
         (res) => res.data
@@ -294,6 +319,8 @@ function UomPage() {
     } catch (err) {
       GetUomList();
       console.log(err);
+    } finally {
+      stopLoading();
     }
   };
   const handleSwitch = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -304,7 +331,7 @@ function UomPage() {
   };
   const { data: uomType } = useDataFetchHook(
     Config.Uom.Misc.endpoint.replace("{type}", "uomtype"),
-    Config.Uom.UomType.method,
+    Config.Uom.Misc.method,
     "fam"
   );
   const handleUomType = (

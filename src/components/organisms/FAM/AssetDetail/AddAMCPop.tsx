@@ -16,7 +16,7 @@ import { DatePicker, LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import dayjs from "dayjs";
 import { AssetAMCInputTypes } from "./AssetDetailAmc";
-import { DateFormatter } from "../../../../utils/lib";
+import { DateFormatter, isSubmitting } from "../../../../utils/lib";
 
 const Transition = React.forwardRef(function Transition(
   props: TransitionProps & {
@@ -75,7 +75,7 @@ export default function AddAMCPop(props: AddInsurancePropTypes) {
       >
         <Box className="asset-popup-header-wrapper">
           <h2 className="dialog-header">
-             {editFlag ? "Edit  AMC" : "Add AMC"}
+            {editFlag ? "Edit  AMC" : "Add AMC"}
           </h2>
           <IoClose
             fontSize={24}
@@ -448,6 +448,7 @@ export default function AddAMCPop(props: AddInsurancePropTypes) {
                 textTransform: "capitalize",
                 background: "#3a8484!important",
               }}
+              disabled={isSubmitting()}
               onClick={handleSubmit}
             >
               Submit

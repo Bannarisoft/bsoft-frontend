@@ -14,9 +14,14 @@ import { LoginForm, MuiButton, MuiText } from "bsoft-base-elements";
 import NavigationLink from "../../atoms/NavigationLink";
 import Cookies from "js-cookie";
 import Swal from "sweetalert2";
-import { Apirequest } from "../../../utils/lib";
+import {
+  Apirequest,
+  isSubmitting,
+  startLoading,
+  stopLoading,
+} from "../../../utils/lib";
 import Config from "../../../../src/utils/config.api.json";
-import { User, UserInput } from "../../../types";
+import { User, UserInput } from "../../../types/types";
 import { useRouter } from "next/navigation";
 import ErrorModal from "../../molecules/Master/Role/ErrorModal";
 import toast from "react-hot-toast";
@@ -116,6 +121,7 @@ function LoginPage() {
 
   const handleLogout = async () => {
     try {
+      startLoading();
       const userData: User = {
         username: input.c_name,
         password: input.c_password,
@@ -136,6 +142,8 @@ function LoginPage() {
       }
     } catch (err) {
       console.log(err);
+    } finally {
+      stopLoading;
     }
   };
 
@@ -236,6 +244,7 @@ function LoginPage() {
             </MuiButton>
             <MuiButton
               onClick={handleLogout}
+              disabled={isSubmitting()}
               variant="contained"
               color="primary"
               sx={{

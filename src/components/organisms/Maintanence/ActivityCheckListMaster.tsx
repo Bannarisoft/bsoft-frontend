@@ -8,11 +8,16 @@ import { GoPlus } from "react-icons/go";
 import NoDataFound from "../../molecules/AdminLayout/NoDataFound";
 import dayjs from "dayjs";
 import { FiEdit } from "react-icons/fi";
-import { checklistProps } from "../../../maintanenceTypes";
+import { checklistProps } from "../../../types/maintanenceTypes";
 import { useDebounce } from "../../../hooks/useDebounceHook";
 import { useDataFetchHook } from "../../../hooks/useDataFetchHook";
 import MainConfig from "../../../utils/main.api.json";
-import { Apirequest } from "../../../utils/lib";
+import {
+  Apirequest,
+  isSubmitting,
+  startLoading,
+  stopLoading,
+} from "../../../utils/lib";
 import CreateActivityCheckList from "../../molecules/Maintanence/CreateActivityCheckList";
 import SkeletonLoader from "../../molecules/AdminLayout/SkeletonLoader";
 import ErrorModal from "../../molecules/Master/Role/ErrorModal";
@@ -179,11 +184,12 @@ const ActivityCheckListPage = () => {
 
   const AddCheckList = async () => {
     try {
+      startLoading();
       const body: any = {
         activityID: selectedActivity.id,
         activityCheckList: checkListInput.activityCheckList
           ?.trim()
-          .replace(/\b\w/g, (char: any) => char.toUpperCase()),
+          .replace(/\b\w/g, (char: string) => char.toUpperCase()),
         isActive: checkListInput.isActive,
         unitId: userValue.unitId,
       };
@@ -208,11 +214,14 @@ const ActivityCheckListPage = () => {
       }
     } catch (err) {
       console.log(err);
+    } finally {
+      stopLoading();
     }
   };
 
   const UpdateCheckList = async () => {
     try {
+      startLoading();
       const body: any = {
         activityID: selectedActivity.id,
         activityCheckList: checkListInput.activityCheckList?.trim(),
@@ -241,6 +250,8 @@ const ActivityCheckListPage = () => {
       }
     } catch (err) {
       console.log(err);
+    } finally {
+      stopLoading();
     }
   };
   const handleSwitch = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -250,21 +261,42 @@ const ActivityCheckListPage = () => {
       : setcheckListInput({ ...checkListInput, isActive: 0 });
   };
 
-  const handleSubmit = (e: React.MouseEvent<HTMLButtonElement>) => {
-    let temp: any = [];
-    Object.entries(checkListInput).map(([key, value]) => {
-      if (key === "activityCheckList" && value?.length == 0) {
+  const handleSubmit = async (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+
+    if (isSubmitting()) return;
+
+    let temp: string[] = [];
+
+    Object.entries(checkListInput).forEach(([key, value]) => {
+      if (key === "activityCheckList" && (!value || value.length === 0)) {
         temp.push(key);
       }
-      if (selectedActivity === null) temp.push("activityId");
     });
+
+    if (selectedActivity === null) {
+      temp.push("activityId");
+    }
+
     setError(temp);
-    if (temp.length === 0 && editFlag) {
-      UpdateCheckList();
-    } else {
-      if (temp.length === 0) {
-        AddCheckList();
+
+    if (temp.length > 0) {
+      toast.error("Please fill all mandatory fields.");
+      return;
+    }
+
+    try {
+      startLoading();
+
+      if (editFlag) {
+        await UpdateCheckList();
+      } else {
+        await AddCheckList();
       }
+    } catch (error) {
+      console.error("Error saving checklist:", error);
+    } finally {
+      stopLoading();
     }
   };
 

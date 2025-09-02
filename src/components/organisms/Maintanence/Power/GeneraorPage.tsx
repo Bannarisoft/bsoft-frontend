@@ -6,11 +6,14 @@ import { MuiButton, MuiTable } from "bsoft-base-elements";
 import { GoPlus } from "react-icons/go";
 import NoDataFound from "../../../molecules/AdminLayout/NoDataFound";
 import { useDebounce } from "../../../../hooks/useDebounceHook";
-import {
-  GeneratorConsumption,
-} from "../../../../maintanenceTypes";
+import { GeneratorConsumption } from "../../../../types/maintanenceTypes";
 import dayjs from "dayjs";
-import { Apirequest } from "../../../../utils/lib";
+import {
+  Apirequest,
+  isSubmitting,
+  startLoading,
+  stopLoading,
+} from "../../../../utils/lib";
 import MainConfig from "../../../../utils/main.api.json";
 import ErrorModal from "../../../molecules/Master/Role/ErrorModal";
 import { useRecoilValue } from "recoil";
@@ -153,7 +156,7 @@ const GeneratorConsumptionpage = () => {
     setOpen(true);
     setError([]);
     setSelectedValues({});
-     setGeneratorInput({
+    setGeneratorInput({
       ...generatorInput,
       openingEnergyReading: 0,
       closingEnergyReading: 0,
@@ -179,40 +182,39 @@ const GeneratorConsumptionpage = () => {
       dieselConsumption: 0,
     });
   };
- const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-  const { name, value } = e.target;
-  let updated = { ...generatorInput };
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    let updated = { ...generatorInput };
 
-  const numericFields = [
-    "openingEnergyReading",
-    "closingEnergyReading",
-    "totalUnits",
-    "runningHours",
-  ];
+    const numericFields = [
+      "openingEnergyReading",
+      "closingEnergyReading",
+      "totalUnits",
+      "runningHours",
+    ];
 
-  if (numericFields.includes(name)) {
-    const numericValue = Number(value);
-    updated[name] = value === "" ? 0 : numericValue;
+    if (numericFields.includes(name)) {
+      const numericValue = Number(value);
+      updated[name] = value === "" ? 0 : numericValue;
 
-    if (name === "closingEnergyReading") {
-      const opening = Number(generatorInput.openingEnergyReading) || 0;
+      if (name === "closingEnergyReading") {
+        const opening = Number(generatorInput.openingEnergyReading) || 0;
 
-      if (value === "" || numericValue === 0) {
-        updated.totalUnits = 0;
-      } else {
-        const total = numericValue - opening; // ✅ closing - opening
-        const multiplied = total >= 0 ? total * 1000 : 0;
-        updated.totalUnits = Number(multiplied.toFixed(2));
+        if (value === "" || numericValue === 0) {
+          updated.totalUnits = 0;
+        } else {
+          const total = numericValue - opening; // ✅ closing - opening
+          const multiplied = total >= 0 ? total * 1000 : 0;
+          updated.totalUnits = Number(multiplied.toFixed(2));
+        }
       }
+    } else {
+      updated[name] = value;
     }
-  } else {
-    updated[name] = value;
-  }
 
-  setGeneratorInput(updated);
-  setError([]);
-};
-
+    setGeneratorInput(updated);
+    setError([]);
+  };
 
   useEffect(() => {
     if (generatorInput.startTime && generatorInput.endTime) {
@@ -233,46 +235,49 @@ const GeneratorConsumptionpage = () => {
       } as React.ChangeEvent<HTMLInputElement>);
     }
   }, [generatorInput.startTime, generatorInput.endTime]);
-  const handleSubmit = (e: React.MouseEvent<HTMLButtonElement>) => {
-    let temp: any = [];
-    Object.entries(generatorInput).map(([key, value]) => {
+  const handleSubmit = async (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+
+    if (isSubmitting()) return;
+
+    let temp: string[] = [];
+
+    Object.entries(generatorInput).forEach(([key, value]) => {
       if (
-        (key === "openingEnergyReading" &&
-          (value === "" || value === 0 || value == null)) ||
-        (key === "closingEnergyReading" &&
-          (value === "" || value === 0 || value == null)) ||
-        (key === "startTime" &&
-          (value === "" || value === 0 || value == null)) ||
-        (key === "endTime" && (value === "" || value === 0 || value == null)) ||
-        (key === "dieselConsumption" &&
-          (value === "" || value === 0 || value == null))
+        (key === "openingEnergyReading" && (!value || Number(value) === 0)) ||
+        (key === "closingEnergyReading" && (!value || Number(value) === 0)) ||
+        (key === "startTime" && !value) ||
+        (key === "endTime" && !value) ||
+        (key === "dieselConsumption" && (!value || Number(value) === 0))
       ) {
         temp.push(key);
       }
     });
 
-    if (
-      !selectedValues["generatorId"] ||
-      selectedValues["generatorId"].length === 0
-    ) {
-      temp.push("generatorId");
-    }
+    if (!selectedValues["generatorId"]?.length) temp.push("generatorId");
+    if (!selectedValues["purposeId"]?.length) temp.push("purposeId");
 
-    if (
-      !selectedValues["purposeId"] ||
-      selectedValues["purposeId"].length === 0
-    ) {
-      temp.push("purposeId");
-    }
     setError(temp);
 
-    if (temp.length === 0) {
-      AddGeneratorConsumption();
+    if (temp.length > 0) {
+      console.error("Please fill all mandatory fields.");
+      return;
+    }
+
+    try {
+      startLoading();
+
+      await AddGeneratorConsumption();
+    } catch (error) {
+      console.error("Error adding generator consumption:", error);
+    } finally {
+      stopLoading();
     }
   };
 
   const AddGeneratorConsumption = async () => {
     try {
+      startLoading();
       const body: any = {
         generatorId: selectedValues["generatorId"]?.[0]?.id || 0,
         startTime: generatorInput.startTime
@@ -312,6 +317,8 @@ const GeneratorConsumptionpage = () => {
       }
     } catch (err) {
       console.log(err);
+    } finally {
+      stopLoading();
     }
   };
 

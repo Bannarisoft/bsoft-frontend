@@ -13,7 +13,12 @@ import CreateMaintanenceType from "../../molecules/Maintanence/CreateMaintanence
 import { useDebounce } from "../../../hooks/useDebounceHook";
 import DeleteConfirmation from "../../molecules/Master/DeleteConfirmation";
 import MainConfig from "../../../utils/main.api.json";
-import { Apirequest } from "../../../utils/lib";
+import {
+  Apirequest,
+  isSubmitting,
+  startLoading,
+  stopLoading,
+} from "../../../utils/lib";
 import config from "../../../utils/main.api.json";
 import SkeletonLoader from "../../molecules/AdminLayout/SkeletonLoader";
 import ErrorModal from "../../molecules/Master/Role/ErrorModal";
@@ -142,6 +147,7 @@ const MaintanenceTypePage = () => {
 
   const AddMaintanencetype = async () => {
     try {
+      startLoading();
       const body: any = {
         typeName: maintanenceTypeInput.typeName
           ?.trim()
@@ -171,11 +177,14 @@ const MaintanenceTypePage = () => {
       }
     } catch (err) {
       console.log(err);
+    } finally {
+      stopLoading();
     }
   };
 
   const UpdateMaintanencetype = async () => {
     try {
+      startLoading();
       const body: any = {
         typeName: maintanenceTypeInput.typeName
           ?.trim()
@@ -203,6 +212,8 @@ const MaintanenceTypePage = () => {
       }
     } catch (err) {
       console.log(err);
+    } finally {
+      stopLoading();
     }
   };
   const handleSwitch = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -229,25 +240,42 @@ const MaintanenceTypePage = () => {
       console.log(err);
     }
   };
+  const handleSubmit = async (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
 
-  const handleSubmit = (e: React.MouseEvent<HTMLButtonElement>) => {
-    let temp: any = [];
-    Object.entries(maintanenceTypeInput).map(([key, value]) => {
+    if (isSubmitting()) return; // Prevent multiple submissions
+
+    let temp: string[] = [];
+
+    Object.entries(maintanenceTypeInput).forEach(([key, value]) => {
       if (
         key === "maitenenceType" &&
-        typeof value == "string" &&
-        value?.length == 0
+        typeof value === "string" &&
+        value.trim().length === 0
       ) {
         temp.push(key);
       }
     });
+
     setError(temp);
-    if (temp.length === 0 && editFlag) {
-      UpdateMaintanencetype();
-    } else {
-      if (temp.length === 0) {
-        AddMaintanencetype();
+
+    if (temp.length > 0) {
+      toast.error("Please fill all mandatory fields.");
+      return;
+    }
+
+    try {
+      startLoading();
+
+      if (editFlag) {
+        await UpdateMaintanencetype();
+      } else {
+        await AddMaintanencetype();
       }
+    } catch (error) {
+      console.error("Error submitting maintenance type:", error);
+    } finally {
+      stopLoading();
     }
   };
 

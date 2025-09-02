@@ -12,6 +12,7 @@ import {
   MuiSwitch,
   MuiText,
 } from "bsoft-base-elements";
+import { isSubmitting } from "../../../utils/lib";
 
 export interface DepreciationProps {
   code: string;
@@ -114,7 +115,7 @@ export default function CreateDepreciation({
           <Grid2 container spacing={2}>
             <Grid2 size={4}>
               <MuiText variant="h6" my={1} className="admin-label-title">
-               Depreciation Code <span className="mandatory-sign">*</span>
+                Depreciation Code <span className="mandatory-sign">*</span>
               </MuiText>
               <MuiInputField
                 fullWidth
@@ -240,7 +241,8 @@ export default function CreateDepreciation({
             </Grid2>
             <Grid2 size={4}>
               <MuiText variant="h6" my={1} className="admin-label-title">
-                Depreciation Method Name <span className="mandatory-sign">*</span>
+                Depreciation Method Name{" "}
+                <span className="mandatory-sign">*</span>
               </MuiText>
 
               <Autocomplete
@@ -374,7 +376,11 @@ export default function CreateDepreciation({
             >
               Cancel
             </MuiButton>
-            <MuiButton variant="contained" onClick={handleSubmit}>
+            <MuiButton
+              variant="contained"
+              disabled={isSubmitting()}
+              onClick={handleSubmit}
+            >
               Submit
             </MuiButton>
           </Box>

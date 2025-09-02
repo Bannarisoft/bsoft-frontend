@@ -19,6 +19,7 @@ import {
   MuiText,
 } from "bsoft-base-elements";
 import { subtle } from "node:crypto";
+import { isSubmitting } from "../../../utils/lib";
 
 export interface subLocationProps {
   code: string;
@@ -185,7 +186,7 @@ export default function CreateSubLocation({
             <Grid2 size={6}>
               <FormControl fullWidth>
                 <MuiText variant="h6" my={1} className="admin-label-title">
-                 Sub Location Code <span className="mandatory-sign">*</span>
+                  Sub Location Code <span className="mandatory-sign">*</span>
                 </MuiText>
                 <MuiInputField
                   fullWidth
@@ -291,7 +292,11 @@ export default function CreateSubLocation({
             >
               Cancel
             </MuiButton>
-            <MuiButton variant="contained" onClick={handleSubmit}>
+            <MuiButton
+              variant="contained"
+              disabled={isSubmitting()}
+              onClick={handleSubmit}
+            >
               Submit
             </MuiButton>
           </Box>

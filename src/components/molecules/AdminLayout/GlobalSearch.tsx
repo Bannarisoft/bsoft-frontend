@@ -2,7 +2,7 @@ import React from "react";
 import InputComponent from "../../atoms/Input";
 import { InputAdornment } from "@mui/material";
 import { RiSearchLine } from "react-icons/ri";
-import { GlobalSearchProps } from "../../../types";
+import { GlobalSearchProps } from "../../../types/types";
 
 function GlobalSearch({
   width,

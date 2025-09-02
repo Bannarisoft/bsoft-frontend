@@ -68,11 +68,23 @@ function WorkOrderReport({
       },
       {
         field: "woDate",
-        headerName: "Work Order Date",
+        headerName: "Open Date",
         valueGetter: (params) =>
           params.data.woDate
             ? dayjs(params.data.woDate).format("DD-MM-YYYY hh:mm a")
             : "-",
+      },
+      {
+        field: "closedDate",
+        headerName: "Closed Date",
+        valueGetter: (params) =>
+          params.data.closedDate
+            ? dayjs(params.data.closedDate).format("DD-MM-YYYY hh:mm a")
+            : "-",
+      },
+      {
+        field: "closedUser",
+        headerName: "Submitted By",
       },
       {
         field: "status",

@@ -1,5 +1,5 @@
 import React from "react";
-import { CreateFeederPropType } from "../../../../maintanenceTypes";
+import { CreateFeederPropType } from "../../../../types/maintanenceTypes";
 import {
   Autocomplete,
   Box,
@@ -20,6 +20,7 @@ import {
 import { TransitionProps } from "@mui/material/transitions";
 import InputDatePicker from "../../../atoms/Datepicker";
 import dayjs from "dayjs";
+import { isSubmitting } from "../../../../utils/lib";
 const Transition = React.forwardRef(function Transition(
   props: TransitionProps & {
     children: React.ReactElement<any, any>;
@@ -362,7 +363,7 @@ const CreateFeeder = ({
                 }
               />
             </Grid2>
-            <Grid2 size={{ xs: 12, sm: 6, md: 6, lg: feederTypeFlag ? 4 : 6}}>
+            <Grid2 size={{ xs: 12, sm: 6, md: 6, lg: feederTypeFlag ? 4 : 6 }}>
               <MuiText variant="h6" my={1} className="admin-label-title">
                 Department Name <span className="mandatory-sign">*</span>
               </MuiText>
@@ -404,7 +405,7 @@ const CreateFeeder = ({
                 size={{ xs: 12, sm: 6, md: 6, lg: feederTypeFlag ? 4 : 6 }}
               >
                 <MuiText variant="h6" my={1} className="admin-label-title">
-                  Meter Type 
+                  Meter Type
                 </MuiText>
 
                 <Autocomplete
@@ -427,15 +428,14 @@ const CreateFeeder = ({
                     </li>
                   )}
                   renderInput={(params) => (
-                    <MuiInputField
-                      {...params}
-                      name="meterTypeId"
-                    />
+                    <MuiInputField {...params} name="meterTypeId" />
                   )}
                 />
               </Grid2>
             )}
-            <Grid2 size={{ xs: 12, sm: 6, md: 6, lg: feederTypeFlag ? 12 : 12 }}>
+            <Grid2
+              size={{ xs: 12, sm: 6, md: 6, lg: feederTypeFlag ? 12 : 12 }}
+            >
               <MuiText variant="h6" my={1} className="admin-label-title">
                 Description
               </MuiText>
@@ -508,7 +508,12 @@ const CreateFeeder = ({
             >
               Cancel
             </MuiButton>
-            <MuiButton className="filled-icon-btn" onClick={handleSubmit}>
+
+            <MuiButton
+              className="filled-icon-btn"
+              disabled={isSubmitting()}
+              onClick={handleSubmit}
+            >
               Submit
             </MuiButton>
           </Box>

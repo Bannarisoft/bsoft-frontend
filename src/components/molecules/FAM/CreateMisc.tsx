@@ -13,6 +13,7 @@ import {
   MuiSwitch,
   MuiText,
 } from "bsoft-base-elements";
+import { isSubmitting } from "../../../utils/lib";
 
 interface CreateMiscPropTypes {
   open: boolean;
@@ -116,7 +117,7 @@ export default function CreateMisc({
             </Grid2>
             <Grid2 size={6}>
               <MuiText variant="h6" my={1} className="admin-label-title">
-               Misc Code <span className="mandatory-sign">*</span>
+                Misc Code <span className="mandatory-sign">*</span>
               </MuiText>
               <MuiInputField
                 fullWidth
@@ -202,7 +203,11 @@ export default function CreateMisc({
             >
               Cancel
             </MuiButton>
-            <MuiButton variant="contained" onClick={handleSubmit}>
+            <MuiButton
+              variant="contained"
+              disabled={isSubmitting()}
+              onClick={handleSubmit}
+            >
               Submit
             </MuiButton>
           </Box>

@@ -8,19 +8,28 @@ import { GoPlus } from "react-icons/go";
 import { BsTrash } from "react-icons/bs";
 import FamConfig from "../../../../utils/fam.api.json";
 import config from "../../../../utils/config.api.json";
-import { Apirequest, DateFormatter } from "../../../../utils/lib";
+import {
+  Apirequest,
+  DateFormatter,
+  isSubmitting,
+  startLoading,
+  stopLoading,
+} from "../../../../utils/lib";
 import { useEffect, useState } from "react";
 import { useRecoilValue } from "recoil";
 import { UserData } from "../../../../utils/atoms";
 import Swal from "sweetalert2";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
+import ErrorModal from "../../../molecules/Master/Role/ErrorModal";
 
 export default function CreateAssetTransfer() {
   const userValue = useRecoilValue(UserData);
   const [deptData, setDeptData] = useState([]);
   const [deptByData, setDeptByData] = useState([]);
   const [gatePass, setGatePass] = useState("");
+  const [errorModalOpen, setErrorModalOpen] = useState(false);
+  const [errorMessages, setErrorMessages] = useState<string[]>([]);
   const [selectedValue, setSelectedValue] = useState({
     department: null as any,
     category: "" as any,
@@ -204,9 +213,9 @@ export default function CreateAssetTransfer() {
       const { data, message, statusCode } = result;
       if (statusCode === 200 || statusCode === 201) {
         setAssetDetails(data);
-        toast.success(message);
+        typeof message === "string" && toast.success(message);
       } else {
-        toast.error(message);
+        typeof message === "string" && toast.error(message);
       }
     } catch (err) {
       console.log(err);
@@ -374,9 +383,11 @@ export default function CreateAssetTransfer() {
       !selectedValue.toDepartment ||
       !custodian.selected
     ) {
-      toast.error("Missing required fields");
       return;
     }
+
+    if (isSubmitting()) return;
+    startLoading();
 
     try {
       const body = {
@@ -387,15 +398,15 @@ export default function CreateAssetTransfer() {
           toUnitId: unit.selected?.id,
           fromDepartmentId: selectedValue.department?.id,
           toDepartmentId: selectedValue.toDepartment?.id,
-          fromCustodianId: assetList?.at(0)?.fromCustodianId,
-          fromCustodianName: assetList?.at(0)?.fromCustodianName,
+          fromCustodianId: assetList?.[0]?.fromCustodianId,
+          fromCustodianName: assetList?.[0]?.fromCustodianName,
           toCustodianId: custodian.selected?.custodianId,
           toCustodianName: custodian.selected?.custodianName,
           status: "pending",
           gatePassNo: gatePass,
           assetTransferIssueDtls:
-            Array.isArray(assetList) && assetList.length > 0
-              ? assetList.map((item) => ({
+            assetList.length > 0
+              ? assetList.map((item: any) => ({
                   assetId: item?.assetId,
                   assetValue: item?.assetValue,
                 }))
@@ -403,30 +414,35 @@ export default function CreateAssetTransfer() {
         },
       };
 
+      console.log("Submitting Asset Transfer:", body);
+
       const { endpoint, method } = FamConfig.AssetTransfer.AddAssetTransfer;
       const response = await Apirequest(endpoint, method, body, "fam").then(
         (res) => res.data
       );
 
-      const { statusCode } = response;
+      const { statusCode, errors, message } = response;
+
       if (statusCode === 200 || statusCode === 201) {
-        Swal.fire({
+        await Swal.fire({
           title: "Asset Transfer Receipt updated successfully",
           icon: "success",
-          confirmButtonText: "okay",
-          customClass: {
-            title: "custom-title",
-          },
-        }).then((res) => {
-          if (res.isConfirmed) {
-            router.push(`/fam/transfer/asset-transfer`);
-          }
+          confirmButtonText: "Okay",
+          customClass: { title: "custom-title" },
         });
+
+        router.push(`/fam/transfer/asset-transfer`);
       } else {
-        toast.error("Something went wrong");
+        toast.error(message);
+        if (errors) {
+          setErrorMessages(errors);
+          setErrorModalOpen(true);
+        }
       }
     } catch (err) {
       console.error("Error saving transfer:", err);
+    } finally {
+      stopLoading();
     }
   };
 
@@ -953,7 +969,8 @@ export default function CreateAssetTransfer() {
                       !transferType.selected ||
                       !unit.selected ||
                       !selectedValue.toDepartment ||
-                      !custodian.selected
+                      !custodian.selected ||
+                      isSubmitting()
                     }
                   >
                     Save
@@ -964,6 +981,11 @@ export default function CreateAssetTransfer() {
           </Box>
         </Box>
       </Box>
+      <ErrorModal
+        open={errorModalOpen}
+        onClose={() => setErrorModalOpen(false)}
+        errors={errorMessages}
+      />
     </Box>
   );
 }

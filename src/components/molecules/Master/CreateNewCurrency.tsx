@@ -17,7 +17,7 @@ import TextComponent from "../../atoms/Text";
 import InputComponent from "../../atoms/Input";
 import ButtonComponent from "../../atoms/Button";
 import { TransitionProps } from "@mui/material/transitions";
-import { CreateCurrencyPropTypes } from "../../../types";
+import { CreateCurrencyPropTypes } from "../../../types/types";
 import MyCustomSwitch from "../../atoms/Switch";
 import {
   MuiButton,
@@ -25,6 +25,7 @@ import {
   MuiSwitch,
   MuiText,
 } from "bsoft-base-elements";
+import { isSubmitting } from "../../../utils/lib";
 
 const Transition = React.forwardRef(function Transition(
   props: TransitionProps & {
@@ -156,7 +157,7 @@ const CreateNewCurrency = ({
             >
               Cancel
             </MuiButton>
-            <MuiButton className="filled-icon-btn" onClick={handleSubmit}>
+            <MuiButton className="filled-icon-btn" disabled={isSubmitting()} onClick={handleSubmit}>
               Submit
             </MuiButton>
           </Box>

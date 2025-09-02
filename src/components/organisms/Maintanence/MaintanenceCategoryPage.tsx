@@ -11,7 +11,12 @@ import dayjs from "dayjs";
 import { FiEdit } from "react-icons/fi";
 import { RiDeleteBin6Line } from "react-icons/ri";
 import DeleteConfirmation from "../../molecules/Master/DeleteConfirmation";
-import { Apirequest } from "../../../utils/lib";
+import {
+  Apirequest,
+  isSubmitting,
+  startLoading,
+  stopLoading,
+} from "../../../utils/lib";
 import { useDebounce } from "../../../hooks/useDebounceHook";
 import MainConfig from "../../../utils/main.api.json";
 import config from "../../../utils/main.api.json";
@@ -136,6 +141,12 @@ function MaintanenceCategoryPage() {
   ];
   const handleClickOpen = () => {
     setOpen(true);
+    setMaintanenceInput({
+      ...maintanenceInput,
+      categoryName: "",
+      description: "",
+      isActive: 1,
+    });
   };
   const handleClose = () => {
     setOpen(false);
@@ -156,6 +167,7 @@ function MaintanenceCategoryPage() {
 
   const AddMaintanence = async () => {
     try {
+      startLoading();
       const body: any = {
         categoryName: maintanenceInput.categoryName
           ?.trim()
@@ -185,12 +197,14 @@ function MaintanenceCategoryPage() {
         }
       }
     } catch (err) {
+      stopLoading();
       console.log(err);
     }
   };
 
   const UpdateMaintanence = async () => {
     try {
+      startLoading();
       const body: any = {
         categoryName: maintanenceInput.categoryName
           ?.trim()
@@ -217,6 +231,7 @@ function MaintanenceCategoryPage() {
         }
       }
     } catch (err) {
+      stopLoading();
       console.log(err);
     }
   };
@@ -249,32 +264,49 @@ function MaintanenceCategoryPage() {
       console.log(err);
     }
   };
-  const handleSubmit = (e: React.MouseEvent<HTMLButtonElement>) => {
-    let temp: any = [];
-    Object.entries(maintanenceInput).map(([key, value]) => {
+  const handleSubmit = async (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+
+    if (isSubmitting()) return;
+
+    let temp: string[] = [];
+
+    Object.entries(maintanenceInput).forEach(([key, value]) => {
       if (
         key === "categoryName" &&
-        typeof value === "string" &&
-        value.length === 0
+        (!value || String(value).trim().length === 0)
       ) {
         temp.push(key);
-      } else if (
+      }
+      if (
         key === "decription" &&
-        typeof value === "string" &&
-        value.length === 0
+        (!value || String(value).trim().length === 0)
       ) {
         temp.push(key);
       }
     });
+
     setError(temp);
-    if (temp.length === 0 && editFlag) {
-      UpdateMaintanence();
-    } else {
-      if (temp.length === 0) {
-        AddMaintanence();
+
+    if (temp.length > 0) {
+      console.error("Please fill all mandatory fields.");
+      return;
+    }
+
+    try {
+      startLoading();
+      if (editFlag) {
+        await UpdateMaintanence();
+      } else {
+        await AddMaintanence();
       }
+    } catch (error) {
+      console.error("Error submitting maintenance:", error);
+    } finally {
+      stopLoading();
     }
   };
+
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearch(e.target.value);
   };

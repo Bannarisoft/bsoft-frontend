@@ -20,7 +20,7 @@ import Cookies from "js-cookie";
 import Config from "../../../../src/utils/config.api.json";
 import { GrAnalytics, GrClear, GrDashboard } from "react-icons/gr";
 import { CiSettings } from "react-icons/ci";
-import { BsPeople } from "react-icons/bs";
+import { BsCart, BsPeople } from "react-icons/bs";
 import {
   MdInventory,
   MdPayment,
@@ -40,7 +40,6 @@ import { SiSmartthings } from "react-icons/si";
 import { useRouter } from "next/navigation";
 
 const ModuleSelectorDemo = () => {
-  const theme = useTheme();
   const token = Cookies.get("bsoft");
   const [menu, setMenu] = useState<any>([]);
   const [selectedModules, setSelectedModules] = useState<string[]>([]);
@@ -90,6 +89,7 @@ const ModuleSelectorDemo = () => {
     if (name?.includes("calendar") || name?.includes("schedule"))
       return <BiCalendar />;
     if (name?.includes("code") || name?.includes("dev")) return <BiCode />;
+    if (name?.includes("purchase") || name?.includes("dev")) return <BsCart />;
     if (name?.includes("cloud") || name?.includes("storage"))
       return <BiCloud />;
     return <BiRepost />;
@@ -122,14 +122,10 @@ const ModuleSelectorDemo = () => {
   const handleSelectAll = () => {
     if (selectedModules.length === menu.length) {
       setSelectedModules([]);
+      Cookies.remove("_ids");
     } else {
       setSelectedModules(menu.map((module: any) => module.id));
     }
-  };
-
-  const handleClearAll = () => {
-    setSelectedModules([]);
-    Cookies.remove("_ids");
   };
 
   const GetLink = (menu: any) => {
@@ -237,28 +233,6 @@ const ModuleSelectorDemo = () => {
                   ? "Deselect All"
                   : "Select All"}
               </Button>
-              <Button
-                variant="outlined"
-                startIcon={<GrClear />}
-                onClick={handleClearAll}
-                disabled={selectedModules.length === 0}
-                sx={{
-                  borderRadius: "25px",
-                  px: 3,
-                  py: 1,
-                  textTransform: "none",
-                  fontWeight: 600,
-                  borderColor: "#667eea",
-                  color: "#667eea",
-                  "&:hover": {
-                    borderColor: "#764ba2",
-                    color: "#764ba2",
-                    transform: "translateY(-2px)",
-                  },
-                }}
-              >
-                Clear All
-              </Button>
             </Stack>
             <Chip
               label={`${selectedModules.length} of ${menu.length} modules selected`}
@@ -307,6 +281,7 @@ const ModuleSelectorDemo = () => {
                     sx={{
                       cursor: "pointer",
                       position: "relative",
+                      minWidth: 250,
                       overflow: "hidden",
                       borderRadius: "20px",
                       background: isSelected
@@ -416,18 +391,6 @@ const ModuleSelectorDemo = () => {
                         }}
                       >
                         {module.moduleName}
-                      </Typography>
-                      <Typography
-                        variant="body2"
-                        sx={{
-                          color: isSelected
-                            ? "rgba(255,255,255,0.9)"
-                            : "text.secondary",
-                          lineHeight: 1.4,
-                          opacity: 0.8,
-                        }}
-                      >
-                        {`Experience the power of ${module.moduleName} module`}
                       </Typography>
                     </CardContent>
                   </Card>

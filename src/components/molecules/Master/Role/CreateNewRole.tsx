@@ -16,9 +16,15 @@ import TextComponent from "../../../atoms/Text";
 import InputComponent from "../../../atoms/Input";
 import ButtonComponent from "../../../atoms/Button";
 import { TransitionProps } from "@mui/material/transitions";
-import { CreateRoleProps } from "../../../../types";
+import { CreateRoleProps } from "../../../../types/types";
 import MyCustomSwitch from "../../../atoms/Switch";
-import { MuiButton, MuiInputField, MuiSwitch, MuiText } from "bsoft-base-elements";
+import {
+  MuiButton,
+  MuiInputField,
+  MuiSwitch,
+  MuiText,
+} from "bsoft-base-elements";
+import { isSubmitting } from "../../../../utils/lib";
 
 const Transition = React.forwardRef(function Transition(
   props: TransitionProps & {
@@ -36,7 +42,7 @@ export default function CreateNewRole({
   handleChange,
   error,
   handleSwitch,
-  editFlag
+  editFlag,
 }: CreateRoleProps) {
   return (
     <React.Fragment>
@@ -51,8 +57,10 @@ export default function CreateNewRole({
           },
         }}
       >
-       <Box className="popup-header-wrapper">
-        <h2 className="dialog-header">{editFlag ? "Edit Role" : "Create Role"}</h2>
+        <Box className="popup-header-wrapper">
+          <h2 className="dialog-header">
+            {editFlag ? "Edit Role" : "Create Role"}
+          </h2>
           <IoClose
             fontSize={24}
             onClick={close}
@@ -135,7 +143,11 @@ export default function CreateNewRole({
             >
               Cancel
             </MuiButton>
-            <MuiButton className="filled-icon-btn" onClick={handleSubmit}>
+            <MuiButton
+              className="filled-icon-btn"
+              disabled={isSubmitting()}
+              onClick={handleSubmit}
+            >
               Submit
             </MuiButton>
           </Box>

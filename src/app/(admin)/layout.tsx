@@ -19,12 +19,10 @@ import { FaFilter } from "react-icons/fa6";
 import Cookies from "js-cookie";
 import { Apirequest, filterMenuItems, tokenDecode } from "../../utils/lib";
 import Config from "../../../src/utils/config.api.json";
-import { Profile } from "../../types";
-import YarnBg from "../../components/atoms/YarnBg";
+import { Profile } from "../../types/types";
 import Logo from "../../components/atoms/Logo";
 import { useRouter } from "next/navigation";
 import { useNotificationSignalR } from "../../components/molecules/AdminLayout/NotificationComponent";
-
 
 export default function RootLayout({
   children,

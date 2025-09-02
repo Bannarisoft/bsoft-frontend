@@ -10,6 +10,9 @@ import IconBreadcrumbs from "../../../molecules/AdminLayout/BreadCrumbs";
 import { MuiInputField, MuiText } from "bsoft-base-elements";
 import {
   Apirequest,
+  isSubmitting,
+  startLoading,
+  stopLoading,
   StyledAutocomplete,
   StyledButton,
 } from "../../../../utils/lib";
@@ -18,7 +21,7 @@ import { useRecoilValue } from "recoil";
 import { UserData } from "../../../../utils/atoms";
 import { useDataFetchHook } from "../../../../hooks/useDataFetchHook";
 import ConfigMain from "../../../../utils/main.api.json";
-import { SpareRow } from "../../../../maintanenceTypes";
+import { SpareRow } from "../../../../types/maintanenceTypes";
 import MrsItems from "./MrsItems";
 import Swal from "sweetalert2";
 import CreateGif from "../../../../../public/assets/images/create-animation.gif";
@@ -434,10 +437,16 @@ function RaiseMrsPage() {
   }, []);
 
   const CreateMrs = useCallback(async () => {
-    if (!validateForm()) return;
+    if (!validateForm()) {
+      toast.error("Please fill all required fields.");
+      return;
+    }
+    if (isSubmitting()) return;
+
+    startLoading();
+    setLoading(true);
 
     try {
-      setLoading(true);
       const body = {
         divcode: oldUnitId,
         irDate: dayjs(new Date()).toISOString(),
@@ -451,7 +460,7 @@ function RaiseMrsPage() {
         details: rows.map((row) => ({
           itemCode: row.item?.itemCode || "",
           macno: row?.machine?.id ? String(row.machine.id) : "",
-          qtyReqd: Number(row.requiredQty),
+          qtyReqd: Number(row.requiredQty) || 0,
           catCode: row.category?.catcode || "",
           ccCode: row.subCostCenter?.scccode || "",
           currStk: row?.availableQty || 0,
@@ -470,7 +479,6 @@ function RaiseMrsPage() {
         response?.data?.statusCode === 200 ||
         response?.data?.statusCode === 201
       ) {
-        setLoading(false);
         await Swal.fire({
           title: response.data.message || "MRS created successfully",
           icon: "success",
@@ -478,7 +486,6 @@ function RaiseMrsPage() {
         });
         resetForm();
       } else {
-        setLoading(false);
         if (response?.data?.errors?.length > 0) {
           setErrorMessages(response.data.errors);
           setErrorModalOpen(true);
@@ -489,11 +496,12 @@ function RaiseMrsPage() {
       }
     } catch (err) {
       console.error("Error creating MRS:", err);
-      toast.error("Failed to create MRS. Please try again.");
+      toast.error("Something went wrong. Please try again.");
     } finally {
       setLoading(false);
+      stopLoading();
     }
-  }, [validateForm, oldUnitId, selectedValues, rows, resetForm]);
+  }, [validateForm, isSubmitting, oldUnitId, selectedValues, rows, resetForm]);
 
   const handleCloseErrorModal = useCallback(() => {
     setErrorModalOpen(false);
@@ -740,7 +748,7 @@ function RaiseMrsPage() {
               "&:hover": { bgcolor: "#2d6666" },
             }}
             onClick={CreateMrs}
-            disabled={loading}
+            disabled={loading || isSubmitting()}
           >
             {loading ? "Saving..." : "Save"}
           </StyledButton>

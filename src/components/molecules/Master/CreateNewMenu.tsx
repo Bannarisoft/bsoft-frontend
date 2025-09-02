@@ -17,7 +17,8 @@ import {
 } from "bsoft-base-elements";
 import React from "react";
 import { IoClose } from "react-icons/io5";
-import { CreateMenuPropsTypes } from "../../../types";
+import { CreateMenuPropsTypes } from "../../../types/types";
+import { isSubmitting } from "../../../utils/lib";
 const Transition = React.forwardRef(function Transition(
   props: TransitionProps & {
     children: React.ReactElement<any, any>;
@@ -191,6 +192,21 @@ const CreateNewMenu = ({
             </Grid2>
             <Grid2 size={6}>
               <MuiText variant="h6" my={1} className="admin-label-title">
+                Menu Type
+              </MuiText>
+              <MuiInputField
+                fullWidth
+                variant="outlined"
+                size="small"
+                onChange={handleChange}
+                autoComplete="off"
+                value={menuInput.menuType}
+                name="menuType"
+                type="text"
+              />
+            </Grid2>
+            <Grid2 size={6}>
+              <MuiText variant="h6" my={1} className="admin-label-title">
                 Sort Order <span className="mandatory-sign">*</span>
               </MuiText>
               <MuiInputField
@@ -247,7 +263,11 @@ const CreateNewMenu = ({
             >
               Cancel
             </MuiButton>
-            <MuiButton className="filled-icon-btn" onClick={handleSubmit}>
+            <MuiButton
+              className="filled-icon-btn"
+              disabled={isSubmitting()}
+              onClick={handleSubmit}
+            >
               Submit
             </MuiButton>
           </Box>

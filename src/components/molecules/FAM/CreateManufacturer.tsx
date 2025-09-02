@@ -18,6 +18,7 @@ import {
 } from "bsoft-base-elements";
 import React from "react";
 import { IoClose } from "react-icons/io5";
+import { isSubmitting } from "../../../utils/lib";
 export interface ManufacturerInputTypes {
   code: string;
   manufactureName: string;
@@ -41,9 +42,8 @@ interface CreateMiscPropTypes {
   handleSwitch: (e: React.ChangeEvent<HTMLInputElement>) => void;
   errors: Array<{}>;
   handleAutocomplete: (
-    e: React.ChangeEvent<HTMLInputElement>,
+    e: React.SyntheticEvent | any, // <-- Fix here
     value: any,
-
     field: string
   ) => void;
   handleManufacturertype: (
@@ -239,162 +239,107 @@ export default function CreateManufacturer({
                 <Grid2 size={3}>
                   <FormControl fullWidth>
                     <MuiText variant="h6" mt={1} className="admin-label-title">
+                      {" "}
                       Country Name <span className="mandatory-sign">*</span>
                     </MuiText>
                     <Autocomplete
                       options={countryData || []}
-                      id="country-autocomplete"
-                      fullWidth
-                      size="small"
                       value={selectedCountry}
-                      defaultValue={selectedCountry}
-                      getOptionLabel={(option: any) => option?.countryName}
+                      getOptionLabel={(option: any) => option.countryName}
                       onChange={(event, value) =>
-                        handleAutocomplete(
-                          event as React.ChangeEvent<HTMLInputElement>,
-                          value,
-                          "country"
-                        )
+                        handleAutocomplete(event, value, "country")
                       }
-                      renderOption={(
-                        props,
-                        option: { countryCode: string; countryName: string }
-                      ) => (
-                        <li {...props} key={option?.countryCode}>
-                          {option?.countryName}
-                        </li>
-                      )}
                       renderInput={(params) => (
                         <MuiInputField
                           {...params}
-                          name="countryName"
                           error={errors.includes("country")}
                           helperText={
                             errors.includes("country") &&
-                            "please select a country"
+                            "Please select a country"
                           }
+                          size="small"
                         />
                       )}
                     />
                   </FormControl>
                 </Grid2>
+
                 <Grid2 size={3}>
                   <FormControl fullWidth>
                     <MuiText variant="h6" mt={1} className="admin-label-title">
+                      {" "}
                       State Name <span className="mandatory-sign">*</span>
                     </MuiText>
                     <Autocomplete
                       options={stateData || []}
-                      id="state-autocomplete"
-                      fullWidth
-                      size="small"
                       value={selectedState}
-                      getOptionLabel={(option: any) => option?.stateName}
+                      getOptionLabel={(option: any) => option.stateName}
                       onChange={(event, value) =>
-                        handleAutocomplete(
-                          event as React.ChangeEvent<HTMLInputElement>,
-                          value,
-                          "state"
-                        )
+                        handleAutocomplete(event, value, "state")
                       }
-                      renderOption={(
-                        props,
-                        option: { stateCode: string; stateName: string }
-                      ) => (
-                        <li {...props} key={option?.stateCode}>
-                          {option?.stateName}
-                        </li>
-                      )}
                       renderInput={(params) => (
                         <MuiInputField
                           {...params}
                           error={errors.includes("state")}
                           helperText={
-                            errors.includes("state") && "please select a state"
+                            errors.includes("state") && "Please select a state"
                           }
+                          size="small"
                         />
                       )}
                     />
                   </FormControl>
                 </Grid2>
+
                 <Grid2 size={3}>
                   <FormControl fullWidth>
                     <MuiText variant="h6" mt={1} className="admin-label-title">
+                      {" "}
                       City Name <span className="mandatory-sign">*</span>
                     </MuiText>
                     <Autocomplete
                       options={cityData || []}
-                      id="country-autocomplete"
-                      fullWidth
-                      size="small"
                       value={selectedCity}
-                      getOptionLabel={(option: any) => option?.cityName}
+                      getOptionLabel={(option: any) => option.cityName}
                       onChange={(event, value) =>
-                        handleAutocomplete(
-                          event as React.ChangeEvent<HTMLInputElement>,
-                          value,
-                          "city"
-                        )
+                        handleAutocomplete(event, value, "city")
                       }
-                      renderOption={(
-                        props,
-                        option: { cityCode: string; cityName: string }
-                      ) => (
-                        <li {...props} key={option?.cityCode}>
-                          {option?.cityName}
-                        </li>
-                      )}
                       renderInput={(params) => (
                         <MuiInputField
                           {...params}
-                          name="cityName"
                           error={errors.includes("city")}
                           helperText={
-                            errors.includes("city") && "please select a city"
+                            errors.includes("city") && "Please select a city"
                           }
+                          size="small"
                         />
                       )}
                     />
                   </FormControl>
                 </Grid2>
+
                 <Grid2 size={3}>
                   <FormControl fullWidth>
                     <MuiText variant="h6" mt={1} className="admin-label-title">
+                      {" "}
                       Manufacture Type <span className="mandatory-sign">*</span>
                     </MuiText>
                     <Autocomplete
                       options={manufacturerType || []}
-                      id="manufacture-type-autocomplete"
-                      fullWidth
-                      size="small"
                       value={selectedManufacturerType}
-                      defaultValue={selectedManufacturerType}
-                      getOptionLabel={(option: any) => option?.description}
-                      onChange={(event, value) =>
-                        handleManufacturertype(
-                          event as React.ChangeEvent<HTMLInputElement>,
-                          value,
-                          "miscTypeId"
-                        )
+                      getOptionLabel={(option: any) => option.description}
+                      onChange={(event: any, value) =>
+                        handleManufacturertype(event, value, "miscTypeId")
                       }
-                      renderOption={(
-                        props,
-                        option: { id: string; description: string }
-                      ) => (
-                        <li {...props} key={option?.id}>
-                          {option?.description}
-                        </li>
-                      )}
                       renderInput={(params) => (
                         <MuiInputField
                           {...params}
-                          name="manufactureType"
-                          value={manufacturerInput.manufactureType}
                           error={errors.includes("manufactureType")}
                           helperText={
                             errors.includes("manufactureType") &&
-                            "please select a manufacture type"
+                            "Please select a manufacture type"
                           }
+                          size="small"
                         />
                       )}
                     />
@@ -534,7 +479,11 @@ export default function CreateManufacturer({
             >
               Cancel
             </MuiButton>
-            <MuiButton variant="contained" onClick={handleSubmit}>
+            <MuiButton
+              variant="contained"
+              disabled={isSubmitting()}
+              onClick={handleSubmit}
+            >
               Submit
             </MuiButton>
           </Box>

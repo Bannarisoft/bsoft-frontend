@@ -16,6 +16,7 @@ html,
 body {
   max-width: 100vw;
   overflow-x: hidden;
+  scroll-behavior: smooth;
 }
 
 * {
@@ -260,22 +261,6 @@ a {
   background-color: #0a2744;
 }
 
-/* .sidebar-wrapper {
-  min-height: calc(100dvh - 49px);
-  background: linear-gradient(135deg, #375555 0%, #236060 100%);
-}
-
-.sidebar-wrapper::before {
-  content: '';
-  position: "absolute";
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: "radial-gradient(circle at 25% 75%, rgba(74, 163, 163, 0.2) 0%, transparent 60%), radial-gradient(circle at 75% 25%, rgba(74, 163, 163, 0.2) 0%, transparent 60%)";
-  z-index: 0;
-} */
-
 .d-flex-center {
   display: flex;
   justify-content: center;
@@ -377,17 +362,6 @@ a {
   background: var(--menu-gradient);
 }
 
-/* .main-table .MuiDataGrid-row:nth-of-type(odd) {
-  color: "#000";
-  font-family: var(--poppins-font);
-}
-
-.main-table .MuiDataGrid-row:nth-of-type(even) {
-  background: #fff;
-  color: "#000";
-  font-family: var(--poppins-font);
-} */
-
 .MuiTablePagination-root {
   background: #ffffff8a !important;
 }
@@ -444,7 +418,7 @@ a {
 }
 
 .Mui-disabled {
-  opacity: 0.5;
+  opacity: 0.8 !important;
 }
 
 .highlighted-header {
@@ -682,4 +656,91 @@ a {
   background-color: #fff;
   border-radius: 6px;
   margin-block: 16px;
+}
+
+.section-wrapper {
+  background-color: #fff;
+  padding: 16px;
+  margin-block: 16px;
+  border-radius: 8px;
+}
+
+.styledAutocomplete .MuiButtonBase-root {
+  border-radius: 8px !important;
+  font-size: 13px !important;
+}
+
+.loaderRoot {
+  inline-size: 128px;
+  block-size: 128px;
+  display: grid;
+  place-items: center;
+  filter: drop-shadow(0 8px 24px rgba(0, 0, 0, 0.15));
+  will-change: transform, filter;
+}
+
+.logoWrap {
+  position: relative;
+  inline-size: 100%;
+  block-size: 100%;
+  border-radius: 50%;
+  transform-style: preserve-3d;
+  animation: tiltSpin 2.2s cubic-bezier(0.5, 0.1, 0.2, 1) infinite;
+}
+
+.logoImg {
+  object-fit: contain;
+  mix-blend-mode: normal;
+  transform: translateZ(0);
+  border-radius: 50%;
+}
+
+/* glossy sweep using mask + gradient */
+.sheen {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: linear-gradient(
+    120deg,
+    transparent 35%,
+    rgba(255, 255, 255, 0.35) 50%,
+    transparent 65%
+  );
+  mask: radial-gradient(circle at 50% 50%, black 70%, transparent 72%);
+  pointer-events: none;
+  animation: sweep 1.6s ease-in-out infinite;
+}
+
+/* keyframes */
+@keyframes tiltSpin {
+  0% {
+    transform: rotateZ(0deg) rotateX(0deg);
+    filter: saturate(1);
+  }
+  50% {
+    transform: rotateZ(180deg) rotateX(12deg);
+    filter: saturate(1.05);
+  }
+  100% {
+    transform: rotateZ(360deg) rotateX(0deg);
+    filter: saturate(1);
+  }
+}
+
+@keyframes sweep {
+  0% {
+    transform: translateX(-60%) translateY(-60%) rotate(0deg);
+    opacity: 0;
+  }
+  25% {
+    opacity: 0.9;
+  }
+  50% {
+    transform: translateX(60%) translateY(60%) rotate(12deg);
+    opacity: 0;
+  }
+  100% {
+    transform: translateX(60%) translateY(60%) rotate(12deg);
+    opacity: 0;
+  }
 }

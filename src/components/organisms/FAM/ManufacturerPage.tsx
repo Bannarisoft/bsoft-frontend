@@ -6,7 +6,13 @@ import GlobalSearch from "../../molecules/AdminLayout/GlobalSearch";
 import { MuiButton, MuiTable } from "bsoft-base-elements";
 import { GoPlus } from "react-icons/go";
 import NoDataFound from "../../molecules/AdminLayout/NoDataFound";
-import { Apirequest, emailRegex } from "../../../utils/lib";
+import {
+  Apirequest,
+  emailRegex,
+  isSubmitting,
+  startLoading,
+  stopLoading,
+} from "../../../utils/lib";
 import Config from "../../../../src/utils/fam.api.json";
 import config from "../../../utils/config.api.json";
 import { FiEdit } from "react-icons/fi";
@@ -242,23 +248,40 @@ function ManufacturerPage() {
       const response = await Apirequest(endpoint, method).then(
         (res) => res.data
       );
-      setCountryData(response.data);
+      setCountryData(response.data || []);
     } catch (err) {
       console.log(err);
       setCountryData([]);
     }
   };
-  const GetState = async (id: number) => {
+
+  const GetState = async (countryId: number) => {
     try {
       const { endpoint, method } = config.State.getById;
       const response = await Apirequest(
-        endpoint.replace(`{countryId}`, id ? id.toString() : ""),
+        endpoint.replace("{countryId}", countryId.toString()),
         method
       ).then((res) => res.data);
-      setStateData(response.data.data);
+
+      setStateData(response.data || []);
     } catch (err) {
       console.log(err);
       setStateData([]);
+    }
+  };
+
+  const GetCity = async (stateId: number) => {
+    try {
+      const { endpoint, method } = config.City.getById;
+      const response = await Apirequest(
+        endpoint.replace("{stateId}", stateId.toString()),
+        method
+      ).then((res) => res.data);
+
+      setCityData(response.data || []);
+    } catch (err) {
+      console.log(err);
+      setCityData([]);
     }
   };
 
@@ -276,19 +299,19 @@ function ManufacturerPage() {
     }
   }, [editFlag, stateData, cityData]);
 
-  const GetCity = async (id: number) => {
-    try {
-      const { endpoint, method } = config.City.getById;
-      const response = await Apirequest(
-        endpoint.replace(`{stateId}`, id ? id.toString() : ""),
-        method
-      ).then((res) => res.data);
-      setCityData(response.data.data);
-    } catch (err) {
-      console.log(err);
-      setCityData([]);
-    }
-  };
+  // const GetCity = async (id: number) => {
+  //   try {
+  //     const { endpoint, method } = config.City.getById;
+  //     const response = await Apirequest(
+  //       endpoint.replace(`{stateId}`, id ? id.toString() : ""),
+  //       method
+  //     ).then((res) => res.data);
+  //     setCityData(response.data.data);
+  //   } catch (err) {
+  //     console.log(err);
+  //     setCityData([]);
+  //   }
+  // };
   const GetManufacturerType = async () => {
     try {
       const { endpoint, method } = Config.Manufacturer.Manufacturertype;
@@ -317,8 +340,39 @@ function ManufacturerPage() {
       }
     }
   };
+  // const handleAutocomplete = async (
+  //   e: React.ChangeEvent<HTMLInputElement>,
+  //   value: any,
+  //   field: string
+  // ) => {
+  //   setErrors([]);
+
+  //   if (field === "country") {
+  //     if (!value) {
+  //       setSelectedCountry(null);
+  //       setSelectedState(null);
+  //       setSelectedCity(null);
+  //       setStateData([]);
+  //       setCityData([]);
+  //     } else {
+  //       setSelectedCountry(value);
+  //       await GetState(value.id); // Wait for states to load
+  //     }
+  //   } else if (field === "state") {
+  //     if (!value) {
+  //       setSelectedState(null);
+  //       setSelectedCity(null);
+  //       setCityData([]);
+  //     } else {
+  //       setSelectedState(value);
+  //       await GetCity(value.id); // Wait for cities to load
+  //     }
+  //   } else if (field === "city") {
+  //     setSelectedCity(value);
+  //   }
+  // };
   const handleAutocomplete = async (
-    e: React.ChangeEvent<HTMLInputElement>,
+    e: React.SyntheticEvent | any, // <-- Fix here
     value: any,
     field: string
   ) => {
@@ -333,7 +387,7 @@ function ManufacturerPage() {
         setCityData([]);
       } else {
         setSelectedCountry(value);
-        await GetState(value.id); // Wait for states to load
+        await GetState(value.id);
       }
     } else if (field === "state") {
       if (!value) {
@@ -342,7 +396,7 @@ function ManufacturerPage() {
         setCityData([]);
       } else {
         setSelectedState(value);
-        await GetCity(value.id); // Wait for cities to load
+        await GetCity(value.id);
       }
     } else if (field === "city") {
       setSelectedCity(value);
@@ -449,6 +503,7 @@ function ManufacturerPage() {
       email: manufacturerInput.email,
     };
     try {
+      startLoading();
       const { endpoint, method } = Config.Manufacturer.AddManufacturer;
       const response = await Apirequest(endpoint, method, body, "fam").then(
         (res) => res.data
@@ -469,6 +524,8 @@ function ManufacturerPage() {
       }
     } catch (err) {
       console.log(err);
+    } finally {
+      stopLoading();
     }
   };
   const UpdateManufacturer = async () => {
@@ -491,6 +548,7 @@ function ManufacturerPage() {
       isActive: manufacturerInput.isActive,
     };
     try {
+      startLoading();
       const { endpoint, method } = Config.Manufacturer.UpdateManufacturer;
       const response = await Apirequest(endpoint, method, body, "fam").then(
         (res) => res.data
@@ -526,6 +584,8 @@ function ManufacturerPage() {
       }
     } catch (err) {
       console.log(err);
+    } finally {
+      stopLoading();
     }
   };
 
@@ -575,51 +635,47 @@ function ManufacturerPage() {
     DeleteManufacturer();
     setDeleteOpen(false);
   };
-  const handleSubmit = (e: React.MouseEvent<HTMLButtonElement>) => {
-    let temp: any = [];
-    Object.entries(manufacturerInput).map(([key, value]) => {
-      if (key === "code" && value?.length < 1) {
-        temp.push(key);
-      } else if (key === "manufactureName" && value?.length < 1) {
-        temp.push(key);
-      } else if (key === "addressLine1" && value?.length === 0) {
-        temp.push(key);
-      } else if (key === "addressLine2" && value?.length === 0) {
-        temp.push(key);
-      } else if (key === "personName" && value?.length < 1) {
-        temp.push(key);
-      } else if (key === "phoneNumber" && value?.length < 10) {
-        temp.push(key);
-      } else if (key === "email" && !emailRegex.test(value)) {
-        temp.push(key);
-      } else if (key === "pinCode" && value?.length < 6) {
-        temp.push(key);
-      }
+  const handleSubmit = async (e: React.MouseEvent<HTMLButtonElement>) => {
+    if (isSubmitting()) return;
 
-      if (selectedCountry === null) {
-        temp.push("country");
-      }
-      if (selectedState === null) {
-        temp.push("state");
-      }
-      if (selectedCity === null) {
-        temp.push("city");
-      }
-      if (selectedManufacturerType === null) {
-        temp.push("manufactureType");
-      }
+    let temp: string[] = [];
+
+    Object.entries(manufacturerInput).forEach(([key, value]) => {
+      if (key === "code" && (!value || value.length < 1)) temp.push(key);
+      if (key === "manufactureName" && (!value || value.length < 1))
+        temp.push(key);
+      if (key === "addressLine1" && (!value || value.length < 1))
+        temp.push(key);
+      if (key === "addressLine2" && (!value || value.length < 1))
+        temp.push(key);
+      if (key === "personName" && (!value || value.length < 1)) temp.push(key);
+      if (key === "phoneNumber" && (!value || value.length < 10))
+        temp.push(key);
+      if (key === "email" && !emailRegex.test(value as string)) temp.push(key);
+      if (key === "pinCode" && (!value || value.length < 6)) temp.push(key);
     });
-    // selectedManufacturerType === null && temp.push("miscType");
+
+    if (!selectedCountry) temp.push("country");
+    if (!selectedState) temp.push("state");
+    if (!selectedCity) temp.push("city");
+    if (!selectedManufacturerType) temp.push("manufactureType");
+
     setErrors(temp);
-    if (temp.length === 0 && editFlag) {
-      UpdateManufacturer();
-    } else {
-      if (temp.length === 0) {
-        AddManufacturer();
-        setLoading(true);
+
+    if (temp.length > 0) return;
+
+    try {
+      startLoading();
+      if (editFlag) {
+        await UpdateManufacturer();
+      } else {
+        await AddManufacturer();
       }
+    } finally {
+      stopLoading();
     }
   };
+
   return (
     <>
       <Box

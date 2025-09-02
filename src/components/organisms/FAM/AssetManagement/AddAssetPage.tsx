@@ -21,7 +21,12 @@ import { useRecoilValue } from "recoil";
 import { UserData } from "../../../../utils/atoms";
 import { usePurchaseForm } from "./usePurchaseForm";
 import { useAssetLocation } from "./useAssetLocation";
-import { Apirequest } from "../../../../utils/lib";
+import {
+  Apirequest,
+  isSubmitting,
+  startLoading,
+  stopLoading,
+} from "../../../../utils/lib";
 import FamConfig from "../../../../utils/fam.api.json";
 import dayjs from "dayjs";
 import ErrorModal from "../../../molecules/Master/Role/ErrorModal";
@@ -147,10 +152,12 @@ export default function AddAssetPage({ assetId }: { assetId?: string }) {
   };
 
   const handleNext = async () => {
+    if (isSubmitting()) return;
+    startLoading();
+
     try {
       switch (activeStep) {
-        case 0:
-          let generalErrors: string[] = [];
+        case 0: {
           const mandatoryGeneralFields = [
             "selectedAssetGroup",
             "selectedAssetCategory",
@@ -162,14 +169,13 @@ export default function AddAssetPage({ assetId }: { assetId?: string }) {
             "assetImage",
           ];
 
-          Object.entries(state).forEach(([key, value]) => {
-            if (
-              mandatoryGeneralFields.includes(key) &&
-              (value === null || value === "")
-            ) {
-              generalErrors.push(key);
-            }
-          });
+          const generalErrors: string[] = Object.entries(state)
+            .filter(
+              ([key, value]) =>
+                mandatoryGeneralFields.includes(key) &&
+                (value === null || value === "")
+            )
+            .map(([key]) => key);
 
           if (generalErrors.length > 0) {
             setErrors(generalErrors);
@@ -188,9 +194,9 @@ export default function AddAssetPage({ assetId }: { assetId?: string }) {
           }));
           setActiveStep(1);
           break;
+        }
 
-        case 1:
-          let locationErrors: string[] = [];
+        case 1: {
           const mandatoryLocationFields = [
             "selectedDepartment",
             "selectedLocation",
@@ -198,11 +204,11 @@ export default function AddAssetPage({ assetId }: { assetId?: string }) {
             "selectedCustodian",
           ];
 
-          Object.entries(locationState).forEach(([key, value]) => {
-            if (mandatoryLocationFields.includes(key) && !value) {
-              locationErrors.push(key);
-            }
-          });
+          const locationErrors: string[] = Object.entries(locationState)
+            .filter(
+              ([key, value]) => mandatoryLocationFields.includes(key) && !value
+            )
+            .map(([key]) => key);
 
           if (locationErrors.length > 0) {
             setLocationErrors(locationErrors);
@@ -221,9 +227,11 @@ export default function AddAssetPage({ assetId }: { assetId?: string }) {
           }));
           setActiveStep(2);
           break;
+        }
 
-        case 2:
+        case 2: {
           const isPurchaseValid = validatePurchaseForm() && validateAllFields();
+
           if (!isPurchaseValid) {
             setStepValidation((prev) => ({
               ...prev,
@@ -242,6 +250,7 @@ export default function AddAssetPage({ assetId }: { assetId?: string }) {
 
           setLoading(true);
           const result = await AddAsset();
+
           if (result.statusCode === 200 || result.statusCode === 201) {
             setActiveStep(3);
             setLoading(false);
@@ -250,22 +259,19 @@ export default function AddAssetPage({ assetId }: { assetId?: string }) {
             }, 500);
           } else {
             setLoading(false);
-            result.errors
-              ? setErrorMessages(result.errors)
-              : toast.error(result?.message);
-            result.errors && setErrorModalOpen(true);
-            if (result?.status === 500) {
-              toast.error("Something went wrong");
-            } else {
-              toast.error(result.message);
+            if (result.errors) {
+              setErrorMessages(result.errors);
+              setErrorModalOpen(true);
             }
+            toast.error(result?.message || "Something went wrong");
           }
-
           return;
+        }
       }
     } catch (error: any) {
       console.error("Validation Error:", error);
-      return;
+    } finally {
+      stopLoading();
     }
   };
 
@@ -830,11 +836,13 @@ export default function AddAssetPage({ assetId }: { assetId?: string }) {
       mainAssetData?.assetPurchaseDetails?.length > 0 &&
       purchaseState.itemData?.length > 0
     ) {
-      const selectItem = purchaseState.itemData
-        .filter(
-          (i) => i?.grnSno == mainAssetData.assetPurchaseDetails[0]?.grnSno
-        )
-        ?.at(0);
+      const selectItem =
+        Array.isArray(purchaseState?.itemData) &&
+        purchaseState?.itemData
+          ?.filter(
+            (i) => i?.grnSno == mainAssetData.assetPurchaseDetails[0]?.grnSno
+          )
+          ?.at(0);
 
       if (selectItem) {
         purchaseDispatch({ type: "selectedItem", payload: selectItem });
@@ -844,15 +852,19 @@ export default function AddAssetPage({ assetId }: { assetId?: string }) {
 
   React.useEffect(() => {
     if (mainAssetData) {
-      const selectCustodian = locationState.custodianData
-        .filter(
-          (i) => i?.custodianId == mainAssetData?.assetLocation?.custodianId
-        )
-        .at(0);
+      const selectCustodian =
+        Array.isArray(locationState?.custodianData) &&
+        locationState.custodianData
+          ?.filter(
+            (i) => i?.custodianId == mainAssetData?.assetLocation?.custodianId
+          )
+          .at(0);
       locationDispatch({ type: "selectedCustodian", payload: selectCustodian });
-      const selectUser = locationState.custodianData
-        .filter((i) => i?.custodianId == mainAssetData?.assetLocation?.userId)
-        ?.at(0);
+      const selectUser =
+        Array.isArray(locationState?.custodianData) &&
+        locationState.custodianData
+          .filter((i) => i?.custodianId == mainAssetData?.assetLocation?.userId)
+          ?.at(0);
       locationDispatch({ type: "selectedUser", payload: selectUser });
     }
   }, [mainAssetData, locationState.custodianData]);
@@ -975,6 +987,7 @@ export default function AddAssetPage({ assetId }: { assetId?: string }) {
                   <MuiButton
                     variant="contained"
                     onClick={handleNext}
+                    disabled={isSubmitting()}
                     sx={{
                       background: "#107869 !important",
                       px: 4,

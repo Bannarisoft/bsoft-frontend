@@ -11,6 +11,7 @@ export const useDataFetchHook = (
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [count, setCount] = useState<number>(0);
+
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
@@ -23,8 +24,10 @@ export const useDataFetchHook = (
           null,
           module ? module : undefined
         ).then((res) => res.data);
+
         setData(response?.data);
-        if (response.totalCount) {
+
+        if (response?.totalCount) {
           setCount(response.totalCount);
         }
       } catch (err: any) {

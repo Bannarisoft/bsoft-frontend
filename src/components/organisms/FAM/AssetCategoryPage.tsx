@@ -7,7 +7,12 @@ import GlobalSearch from "../../molecules/AdminLayout/GlobalSearch";
 import { MuiButton, MuiTable } from "bsoft-base-elements";
 import { GoPlus } from "react-icons/go";
 import Config from "../../../../src/utils/fam.api.json";
-import { Apirequest } from "../../../utils/lib";
+import {
+  Apirequest,
+  isSubmitting,
+  startLoading,
+  stopLoading,
+} from "../../../utils/lib";
 import { useDebounce } from "../../../hooks/useDebounceHook";
 import { FiEdit } from "react-icons/fi";
 import { RiDeleteBin6Line } from "react-icons/ri";
@@ -229,24 +234,42 @@ function AssetCategoryPage() {
     setError([]);
   };
 
-  const handleSubmit = (e: React.MouseEvent<HTMLButtonElement>) => {
-    let temp: any = [];
-    Object.entries(categoryInput).map(([key, value]) => {
-      if (key === "categoryName" && value.trim().length < 1) {
+  const handleSubmit = async (e: React.MouseEvent<HTMLButtonElement>) => {
+    let temp: string[] = [];
+    if (isSubmitting()) return;
+    startLoading();
+
+    Object.entries(categoryInput).forEach(([key, value]) => {
+      if (
+        key === "categoryName" &&
+        (!value || value.toString().trim().length < 1)
+      ) {
         temp.push(key);
       }
     });
 
-    selectedGroup === null && temp.push("group");
+    if (selectedGroup === null) temp.push("group");
+
     setError(temp);
 
-    if (temp.length === 0 && editFlag) {
-      UpdateCategory();
-    } else {
-      if (temp.length === 0) {
-        AddCategory();
+    if (temp.length > 0) {
+      toast.error("Please fill all required fields");
+      stopLoading();
+      return;
+    }
+
+    try {
+      if (editFlag) {
+        await UpdateCategory();
+      } else {
+        await AddCategory();
         setLoading(true);
       }
+    } catch (err) {
+      console.error("Error in handleSubmit:", err);
+      toast.error("Failed to save category");
+    } finally {
+      stopLoading();
     }
   };
 
@@ -260,6 +283,7 @@ function AssetCategoryPage() {
     };
 
     try {
+      startLoading();
       const { endpoint, method } = Config.Category.AddAssetCategory;
       const response = await Apirequest(endpoint, method, body, "fam").then(
         (res) => res.data
@@ -284,6 +308,8 @@ function AssetCategoryPage() {
       }
     } catch (err) {
       console.log(err);
+    } finally {
+      stopLoading();
     }
   };
 
@@ -299,6 +325,7 @@ function AssetCategoryPage() {
       isActive: categoryInput.isActive,
     };
     try {
+      startLoading();
       const { endpoint, method } = Config.Category.UpdateAssetCategory;
       const response = await Apirequest(endpoint, method, body, "fam").then(
         (res) => res.data
@@ -324,6 +351,8 @@ function AssetCategoryPage() {
     } catch (err) {
       GetAssetCategoryList();
       console.log(err);
+    } finally {
+      stopLoading();
     }
   };
 

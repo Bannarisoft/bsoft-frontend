@@ -22,7 +22,13 @@ import NoDataFound from "../../../molecules/AdminLayout/NoDataFound";
 import { useRecoilValue } from "recoil";
 import { UserData } from "../../../../utils/atoms";
 import { DataGrid, GridRowSelectionModel } from "@mui/x-data-grid";
-import { Apirequest, DateFormatter } from "../../../../utils/lib";
+import {
+  Apirequest,
+  DateFormatter,
+  isSubmitting,
+  startLoading,
+  stopLoading,
+} from "../../../../utils/lib";
 import FamConfig from "../../../../utils/fam.api.json";
 import config from "../../../../utils/config.api.json";
 import Swal from "sweetalert2";
@@ -402,8 +408,22 @@ const CreateAssetBulkTransfer = () => {
     }
   };
   const handleSave = async () => {
+    if (isSubmitting()) return;
+    startLoading();
+    setLoading(true);
+
     try {
-      setLoading(true);
+      if (
+        selectedAssets.length === 0 ||
+        !transferType.selected ||
+        !unit.selected ||
+        !selectedValue.toDepartment ||
+        !custodian.selected
+      ) {
+        setLoading(false);
+        return;
+      }
+
       const body = {
         assetTransferIssueHdrDto: {
           docDate: dayjs(transferDate).format("YYYY-MM-DD"),
@@ -425,39 +445,42 @@ const CreateAssetBulkTransfer = () => {
         },
       };
 
-      console.log("Final Payload:", body);
 
       const { endpoint, method } = FamConfig.AssetTransfer.AddAssetTransfer;
       const response = await Apirequest(endpoint, method, body, "fam").then(
         (res) => res.data
       );
 
-      const { statusCode } = response;
+      const { statusCode, message, errors } = response;
+
       if (statusCode === 200 || statusCode === 201) {
-        Swal.fire({
+        await Swal.fire({
           title: "Asset Bulk Transfer Receipt updated successfully",
           icon: "success",
           confirmButtonText: "Okay",
-          customClass: {
-            title: "custom-title",
-          },
-        }).then(() => {
-          setSelectedRowIds([]);
-          setSelectedAssets([]);
-          setAssetList([]);
-          resetForm();
-          setLoading(false);
+          customClass: { title: "custom-title" },
         });
+
+        setSelectedRowIds([]);
+        setSelectedAssets([]);
+        setAssetList([]);
+        resetForm();
+        setLoading(false);
       } else {
-        toast.error(response.message);
-        setErrorMessages(response.errors);
-        setErrorModalOpen(true);
+        toast.error(message);
+        if (errors) {
+          setErrorMessages(errors);
+          setErrorModalOpen(true);
+        }
       }
     } catch (err) {
       console.error("Error saving transfer:", err);
-      toast.error("API error while saving transfer");
+    } finally {
+      stopLoading();
+      setLoading(false);
     }
   };
+
   useEffect(() => {
     if (userValue.companyId) {
       GetUnitByCompany();
@@ -878,7 +901,8 @@ const CreateAssetBulkTransfer = () => {
                       !transferType.selected ||
                       !unit.selected ||
                       !selectedValue.toDepartment ||
-                      !custodian.selected
+                      !custodian.selected ||
+                      isSubmitting()
                     }
                   >
                     Save

@@ -13,7 +13,7 @@ import { MuiInputField, MuiText } from "bsoft-base-elements";
 import { FiChevronDown, FiChevronUp } from "react-icons/fi";
 import { LuCircleFadingPlus, LuTrash2 } from "react-icons/lu";
 import { TbClipboardList } from "react-icons/tb";
-import { ScheduleItemProps } from "../../../../maintanenceTypes";
+import { ScheduleItemProps } from "../../../../types/maintanenceTypes";
 
 const ItemCard = styled(Box)(({ theme }) => ({
   backgroundColor: "#ffffff",

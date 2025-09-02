@@ -16,13 +16,19 @@ import React, { useEffect, useState } from "react";
 import IconBreadcrumbs from "../../../molecules/AdminLayout/BreadCrumbs";
 import { MuiButton, MuiInputField, MuiText } from "bsoft-base-elements";
 import InputDatePicker from "../../../atoms/Datepicker";
-import { Apirequest } from "../../../../utils/lib";
+import {
+  Apirequest,
+  isSubmitting,
+  startLoading,
+  stopLoading,
+} from "../../../../utils/lib";
 import { useDebounce } from "../../../../hooks/useDebounceHook";
 import { FaAngleRight } from "react-icons/fa6";
 import NoDataFound from "../../../molecules/AdminLayout/NoDataFound";
 import Swal from "sweetalert2";
 import ErrorModal from "../../../molecules/Master/Role/ErrorModal";
 import dayjs from "dayjs";
+import toast from "react-hot-toast";
 
 export interface TransferApprovalProps {
   id: number;
@@ -162,34 +168,36 @@ export default function TransferApprovalpage() {
       return;
     }
 
+    if (isSubmitting()) return;
+    startLoading();
+
     try {
       const { endpoint, method } =
         Config.AssetTransferApproval.AddTransferApproval;
       const payload = { id: selectedIds, status };
 
       const result = await Apirequest(endpoint, method, payload, "fam");
-      if (result.data.statusCode !== 200) {
-        setErrorMessages([result.data.errors]);
+      const { statusCode, errors, message } = result.data;
+
+      if (statusCode !== 200) {
+        setErrorMessages(errors);
         setErrorModalOpen(true);
       } else {
-        Swal.fire({
-          title: result.data.message,
+        await Swal.fire({
+          title: message,
           icon: "success",
-          confirmButtonText: "okay",
-          customClass: {
-            title: "custom-title",
-          },
-        }).then((res) => {
-          if (res.isConfirmed) {
-            console.log("sucess");
-          }
+          confirmButtonText: "Okay",
+          customClass: { title: "custom-title" },
         });
       }
+
       setSelectedIds([]);
       setCheckAll(false);
       GetTransferApprovalList();
     } catch (err) {
       console.error("Error performing action:", err);
+    } finally {
+      stopLoading();
     }
   };
 
@@ -410,6 +418,7 @@ export default function TransferApprovalpage() {
                       <MuiButton
                         variant="contained"
                         onClick={() => handleAction("Approved")}
+                        disabled={isSubmitting()}
                       >
                         Approve
                       </MuiButton>
@@ -418,6 +427,7 @@ export default function TransferApprovalpage() {
                       <MuiButton
                         variant="contained"
                         onClick={() => handleAction("Rejected")}
+                        disabled={isSubmitting()}
                       >
                         Reject
                       </MuiButton>

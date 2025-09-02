@@ -12,13 +12,14 @@ import {
 import { TransitionProps } from "@mui/material/transitions";
 import React from "react";
 import { IoClose } from "react-icons/io5";
-import { CreateUnitProps } from "../../../types";
+import { CreateUnitProps } from "../../../types/types";
 import {
   MuiButton,
   MuiInputField,
   MuiSwitch,
   MuiText,
 } from "bsoft-base-elements";
+import { isSubmitting } from "../../../utils/lib";
 
 const Transition = React.forwardRef(function Transition(
   props: TransitionProps & {
@@ -359,7 +360,7 @@ function CreateUnit(props: CreateUnitProps) {
                       type="text"
                       value={
                         unitInput.pincode &&
-                        unitInput.pincode.toString() !== "0"
+                          unitInput.pincode.toString() !== "0"
                           ? unitInput.pincode.toString().slice(0, 6)
                           : ""
                       }
@@ -651,7 +652,11 @@ function CreateUnit(props: CreateUnitProps) {
             >
               Cancel
             </MuiButton>
-            <MuiButton className="filled-icon-btn" onClick={handleSubmit}>
+            <MuiButton
+              className="filled-icon-btn"
+              disabled={isSubmitting()}
+              onClick={handleSubmit}
+            >
               Submit
             </MuiButton>
           </Box>

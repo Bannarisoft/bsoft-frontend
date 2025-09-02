@@ -1,6 +1,6 @@
 import { SelectChangeEvent, SnackbarCloseReason } from "@mui/material";
 import { Dayjs } from "dayjs";
-import React from "react";
+import React, { SyntheticEvent } from "react";
 
 export interface UserInput {
   c_name: string;
@@ -513,6 +513,7 @@ export interface MenuPropsType {
   parentId: number;
   sortOrder: number;
   isActive: number;
+  menuType: string | null;
 }
 
 // ----------------------------------------
@@ -690,4 +691,258 @@ export interface AdditionalCost {
   costType: any;
   amount: string;
   journalNo: string;
+}
+
+export interface CreateNotificationPropTypes {
+  open: boolean;
+  close: () => void;
+  notificationInput: NotificationProps;
+  handleSubmit: (e: React.MouseEvent<HTMLButtonElement>) => void;
+  handleChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  error: Array<{}>;
+  handleSwitch: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  NotificationType: any;
+  handleAutocomplete: (name: string, value: any | null) => void;
+  selectedValue: any;
+  editFlag?: boolean;
+}
+
+export interface NotificationProps {
+  moduleName: string;
+  notificationEventTypeId: number;
+  id: number;
+  isActive: number;
+}
+
+export interface CreateNotificationGroupPropTypes {
+  open: boolean;
+  close: () => void;
+  notificationGroupInput: NotificationGroupProps;
+  handleSubmit: (e: React.MouseEvent<HTMLButtonElement>) => void;
+  handleChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  error: Array<{}>;
+  handleSwitch: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  editFlag?: boolean;
+}
+export interface NotificationGroupProps {
+  groupName: string;
+  id: number;
+  isActive: number;
+}
+
+export interface CreateGroupMemberPropTypes {
+  open: boolean;
+  close: () => void;
+  groupMemberInput: GroupMembersProps;
+  error: Array<{}>;
+  editFlag?: boolean;
+  handleSubmit: (e: React.MouseEvent<HTMLButtonElement>) => void;
+  selectedValues: any;
+  handleSwitch: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  handleAutocompleteChange: (
+    e: React.SyntheticEvent,
+    value: any[] | any | null,
+    field: string
+  ) => void;
+  groupData: any;
+  userData: any[];
+}
+export interface GroupMembersProps {
+  groupId: number;
+  userId: number[];
+  id: number;
+  isActive: number;
+}
+export interface NotificationEventRule {
+  id: number;
+  notificationChannelId: number;
+  recipientTypeId: number;
+  templateId: number;
+  notificationTypeId?: number;
+  notificationTemplateId?: number;
+}
+
+export interface NotificationEventRuleProps {
+  id: number;
+  notificationConfigId: number;
+  targetTypeId: number;
+  targetId: number;
+  approvalModeId: number;
+  description: string;
+  isActive: number;
+  notificationEventRules: NotificationEventRule[];
+}
+
+export interface CreateNotificationEventRuleTypes {
+  open: boolean;
+  close: () => void;
+  notificationGroupInput: NotificationEventRuleProps;
+  error: Array<{}>;
+  editFlag?: boolean;
+  handleAutocompleteChange: (
+    name: string,
+    value: any | null,
+    ruleId?: number
+  ) => void;
+  targetType: any;
+  targetOptions: any;
+  ApprovalMode: any;
+  NotificationConfig: any;
+  DepartmentData: any;
+  NotificationType: any;
+  NotificationTemplet: any;
+  ReceipientType: any;
+  handleAddNotificationRule: () => void;
+  getFilteredOptions: (
+    currentValue: any | null,
+    allOptions: any[],
+    currentRuleId: number,
+    allRules: NotificationEventRule[],
+    fieldName: string
+  ) => NotificationEventRule[];
+  handleDeleteNotificationRule: (id: number) => void;
+  selectedValues: { [key: string]: any[] };
+  handleSwitch: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  handleSubmit: (e: React.MouseEvent<HTMLButtonElement>) => void;
+  handleChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+}
+
+export interface CreateNotificationTemplateTypes {
+  open: boolean;
+  close: () => void;
+  notificationTemplateInput: NotificationTemplateProps;
+  error: Array<{}>;
+  editFlag?: boolean;
+  handleAutocompleteChange: (name: string, value: any | null) => void;
+  NotificationConfig: any;
+  NotificationType: any;
+  selectedValues: { [key: string]: any[] };
+  handleSwitch: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  handleSubmit: (e: React.MouseEvent<HTMLButtonElement>) => void;
+  handleChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+}
+export interface NotificationTemplateProps {
+  notificationTypeId: number;
+  notificationConfigId: number;
+  subjectTemplate: string;
+  headerTemplate: string;
+  bodyTemplate: string;
+  footerTemplate: string;
+  languageCode: string;
+  id: number;
+  isActive: number;
+}
+//Workflow
+export interface CreateWorkflowTypes {
+  open: boolean;
+  close: () => void;
+  editFlag?: boolean;
+  workflowInput: WorkflowTypesProps;
+  ModuleData?: { id: number; moduleName: string }[];
+  handleAutocomplete: (
+    e: React.SyntheticEvent,
+    value: { id: number; moduleName: string } | null
+  ) => void;
+  selectedValue: { id: number; moduleName: string } | null;
+  handleChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  error: Array<{}>;
+  handleSubmit: (e: React.MouseEvent<HTMLButtonElement>) => void;
+  handleSwitch: (e: React.ChangeEvent<HTMLInputElement>) => void;
+}
+export interface WorkflowTypesProps {
+  moduleId: number;
+  moduleTypeName: string;
+  id: number;
+  isActive: number;
+}
+
+export interface CreateApprovalRules {
+  open: boolean;
+  close: () => void;
+  editFlag?: boolean;
+  approvalRuleInput: ApprovalRuleProps;
+  handleChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  error: string[];
+  handleSubmit: (e: React.MouseEvent<HTMLButtonElement>) => void;
+  handleSwitch: (e: React.ChangeEvent<HTMLInputElement>) => void;
+
+  UnitData: { id: number; name: string }[];
+  WorkflowTypeData: { id: number; name: string }[];
+  selectedValue: any | null;
+  handleAutocomplete: (name: string, value: any | null) => void;
+}
+export interface ApprovalRuleProps {
+  unitId: number;
+  workflowTypeId: number;
+  conditionKey: string;
+  operator: string;
+  value: string;
+  action: string;
+  [key: string]: any;
+  id: number;
+  isActive: number;
+}
+
+export interface CreateApprovalRules {
+  open: boolean;
+  close: () => void;
+  editFlag?: boolean;
+  approvalRuleInput: ApprovalRuleProps;
+  handleChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  error: string[];
+  handleSubmit: (e: React.MouseEvent<HTMLButtonElement>) => void;
+  handleSwitch: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  selectedValue: any | null;
+  handleAutocomplete: (name: string, value: any | null) => void;
+}
+export interface ApprovalRuleProps {
+  unitId: number;
+  workflowTypeId: number;
+  conditionKey: string;
+  operator: string;
+  value: string;
+  action: string;
+  id: number;
+  isActive: number;
+}
+
+export interface CreateApprovalDetail {
+  open: boolean;
+  close: () => void;
+  editFlag?: boolean;
+  approvalDetailInput: ApprovalDetailProps;
+  error: string[];
+  selectedValue: any | null;
+  handleAutocomplete: (name: string, value: any | null) => void;
+  handleChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  handleSwitch: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  workflowTypeOptions: any[];
+  targetTypeOptions: any[];
+  approvalStepOptions: any[];
+  approvalTypeOptions: any[];
+  unitOptions: any[];
+  ruleOptions: any[];
+  departmentOptions: any[];
+  handleSubmit: (e: React.MouseEvent<HTMLButtonElement>) => void;
+}
+
+export interface ApprovalDetailProps {
+  workFlowTypeId: number;
+  stepOrder: number;
+  targetTypeId: number;
+  approvalStepId: number;
+  approvalTypeId: number;
+  slaHours: number;
+  onSLAAction: string;
+  approvalStepUnitMappings: {
+    unitId: number;
+  }[];
+  ruleSkipApproverMappings: {
+    ruleId: number;
+  }[];
+  approvalStepDepartmentMappings: {
+    departmentId: number;
+  }[];
+  isActive: number;
+  id: number;
 }

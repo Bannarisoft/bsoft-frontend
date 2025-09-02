@@ -11,9 +11,14 @@ import { FiEdit } from "react-icons/fi";
 import { RiDeleteBin6Line } from "react-icons/ri";
 import { useDebounce } from "../../../hooks/useDebounceHook";
 import DeleteConfirmation from "../../molecules/Master/DeleteConfirmation";
-import { ShiftProps } from "../../../maintanenceTypes";
+import { ShiftProps } from "../../../types/maintanenceTypes";
 import config from "../../../utils/main.api.json";
-import { Apirequest } from "../../../utils/lib";
+import {
+  Apirequest,
+  isSubmitting,
+  startLoading,
+  stopLoading,
+} from "../../../utils/lib";
 import MainConfig from "../../../utils/main.api.json";
 import SkeletonLoader from "../../molecules/AdminLayout/SkeletonLoader";
 import ErrorModal from "../../molecules/Master/Role/ErrorModal";
@@ -166,6 +171,7 @@ const ShiftMasterPage = () => {
 
   const AddShift = async () => {
     try {
+      startLoading();
       const body: any = {
         shiftCode: shiftInput.shiftCode?.trim()?.toUpperCase(),
         shiftName: shiftInput.shiftName
@@ -197,11 +203,14 @@ const ShiftMasterPage = () => {
       }
     } catch (err) {
       console.log(err);
+    } finally {
+      stopLoading();
     }
   };
 
   const UpdateShift = async () => {
     try {
+      startLoading();
       const body: any = {
         shiftCode: shiftInput.shiftCode?.trim()?.toUpperCase(),
         shiftName: shiftInput.shiftName
@@ -236,30 +245,48 @@ const ShiftMasterPage = () => {
     } catch (err) {
       GetShiftList();
       console.log(err);
+    } finally {
+      stopLoading();
     }
   };
-  const handleSubmit = (e: React.MouseEvent<HTMLButtonElement>) => {
-    let temp: any = [];
+const handleSubmit = async (e: React.MouseEvent<HTMLButtonElement>) => {
+  e.preventDefault();
 
-    Object.entries(shiftInput).map(([key, value]) => {
-      if (key === "shiftCode" && value?.length == 0) {
-        temp.push(key);
-      } else if (key === "shiftName" && value?.length == 0) {
-        temp.push(key);
-      } else if (key === "effectiveDate" && value?.length == 0) {
-        temp.push(key);
-      }
-    });
+  if (isSubmitting()) return; 
 
-    setError(temp);
-    if (temp.length === 0 && editFlag) {
-      UpdateShift();
+  let temp: string[] = [];
+
+  Object.entries(shiftInput).forEach(([key, value]) => {
+    if (
+      (key === "shiftCode" || key === "shiftName" || key === "effectiveDate") &&
+      (!value || value.toString().trim().length === 0)
+    ) {
+      temp.push(key);
+    }
+  });
+
+  setError(temp);
+
+  if (temp.length > 0) {
+    console.error("Please fill all mandatory fields.");
+    return;
+  }
+
+  try {
+    startLoading();
+
+    if (editFlag) {
+      await UpdateShift();
     } else {
-      if (temp.length === 0) {
-        AddShift();
-      }
+      await AddShift(); 
     }
-  };
+  } catch (error) {
+    console.error("Error saving shift:", error);
+  } finally {
+    stopLoading(); 
+  }
+};
+
   const handleEdit = (row: any) => {
     setEditFlag(true);
     setOpen(true);

@@ -4,7 +4,13 @@ import InputComponent from "../../atoms/Input";
 import ButtonComponent from "../../atoms/Button";
 import { Box, InputAdornment, LinearProgress } from "@mui/material";
 import Config from "../../../../src/utils/config.api.json";
-import { Apirequest, emailTemplate } from "../../../utils/lib";
+import {
+  Apirequest,
+  emailTemplate,
+  isSubmitting,
+  startLoading,
+  stopLoading,
+} from "../../../utils/lib";
 import LoginResponsePopUp from "./LoginResponsePopUp";
 import { MuiOtpInput } from "mui-one-time-password-input";
 import { useRouter } from "next/navigation";
@@ -35,6 +41,7 @@ const ForgotPasswordForm = () => {
   const router = useRouter();
   const ResetRequest = async () => {
     try {
+      startLoading();
       setLoading(true);
       const body = {
         username: username,
@@ -45,9 +52,10 @@ const ForgotPasswordForm = () => {
       if (result.data.statusCode !== 200) {
         setErrorMessages(result.data.errors);
         setErrorModalOpen(true);
-       
+
         setLoading(false);
       } else {
+        startLoading();
         setLoading(true);
         SendMail(
           result?.data?.message?.verificationCode,
@@ -59,6 +67,8 @@ const ForgotPasswordForm = () => {
     } catch (err) {
       console.log(err);
       setLoading(false);
+    } finally {
+      stopLoading();
     }
   };
 
@@ -80,7 +90,6 @@ const ForgotPasswordForm = () => {
         .post(`${process.env.NEXT_PUBLIC_SERVICE_URL}/api/email/send`, body)
         .then((res) => res.data);
       if (response.statusCode === 200 || response.statusCode === 201) {
-    
         Swal.fire({
           title: message,
           icon: "success",
@@ -115,12 +124,15 @@ const ForgotPasswordForm = () => {
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    if (isSubmitting()) return;
+
     if (username.length < 3) {
       setError(["name"]);
-    } else {
-      setError([]);
-      ResetRequest();
+      toast.error("Username must be at least 3 characters long.");
+      return;
     }
+    setError([]);
+    ResetRequest();
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -132,6 +144,7 @@ const ForgotPasswordForm = () => {
 
   const ForgetPasswordReset = async () => {
     try {
+      startLoading();
       const body = {
         userName: username,
         verificationCode: otp?.toLocaleUpperCase(),
@@ -143,7 +156,7 @@ const ForgotPasswordForm = () => {
       if (result.data.statusCode !== 200) {
         setErrorMessages(result.data.errors);
         setErrorModalOpen(true);
-    
+
         setLoading(false);
       } else {
         Swal.fire({
@@ -159,6 +172,8 @@ const ForgotPasswordForm = () => {
     } catch (err) {
       setLoading(false);
       console.log(err);
+    } finally {
+      stopLoading();
     }
   };
 
@@ -271,6 +286,7 @@ const ForgotPasswordForm = () => {
             sx={{ mt: 3 }}
             fullWidth
             type="submit"
+            disabled={isSubmitting()}
             onClick={handleSubmitOtp}
           >
             Submit
@@ -304,7 +320,12 @@ const ForgotPasswordForm = () => {
             <br />
             <br />
 
-            <MuiButton className="filled-icon-btn" fullWidth type="submit">
+            <MuiButton
+              className="filled-icon-btn"
+              disabled={isSubmitting()}
+              fullWidth
+              type="submit"
+            >
               Send Now
             </MuiButton>
           </form>

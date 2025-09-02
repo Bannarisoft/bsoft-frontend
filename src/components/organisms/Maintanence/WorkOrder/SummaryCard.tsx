@@ -1,6 +1,6 @@
 import { Box, Card, Chip, Stack } from "@mui/material";
 import { MuiText } from "bsoft-base-elements";
-import { SummaryCardProps } from "../../../../maintanenceTypes";
+import { SummaryCardProps } from"../../../../types/maintanenceTypes";
 import React from "react";
 import { FaArrowRightLong } from "react-icons/fa6";
 import dayjs from "dayjs";

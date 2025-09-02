@@ -3,7 +3,7 @@ import TextComponent from "../../../atoms/Text";
 import { FaCircleCheck } from "react-icons/fa6";
 import { GoDotFill } from "react-icons/go";
 import InputComponent from "../../../atoms/Input";
-import { CreateInformationProps, RolemenuProps } from "../../../../types";
+import { CreateInformationProps, RolemenuProps } from  "../../../../types/types";
 import { MuiInputField, MuiText } from "bsoft-base-elements";
 
 const RoleInformation: React.FC<CreateInformationProps> = ({

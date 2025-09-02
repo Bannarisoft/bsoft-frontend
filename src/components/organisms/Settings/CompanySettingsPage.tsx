@@ -1,13 +1,13 @@
-import {
-  Autocomplete,
-  Box,
-  DialogTitle,
-  Grid2,
-} from "@mui/material";
+import { Autocomplete, Box, DialogTitle, Grid2 } from "@mui/material";
 import React, { useEffect, useState } from "react";
 import IconBreadcrumbs from "../../molecules/AdminLayout/BreadCrumbs";
 import Config from "../../../../src/utils/config.api.json";
-import { Apirequest } from "../../../utils/lib";
+import {
+  Apirequest,
+  isSubmitting,
+  startLoading,
+  stopLoading,
+} from "../../../utils/lib";
 import { useRecoilValue } from "recoil";
 import { UserData } from "../../../utils/atoms";
 import {
@@ -17,6 +17,7 @@ import {
   MuiText,
 } from "bsoft-base-elements";
 import Swal from "sweetalert2";
+import toast from "react-hot-toast";
 
 function CompanySettingsPage() {
   const userValue = useRecoilValue(UserData);
@@ -93,6 +94,7 @@ function CompanySettingsPage() {
 
   const AddCompanySettings = async () => {
     try {
+      startLoading();
       const body = {
         companyId: userValue.companyId,
         passwordHistoryCount: inputs.passwordHistoryCount,
@@ -127,11 +129,14 @@ function CompanySettingsPage() {
       GetCompanySettings();
     } catch (err) {
       GetCompanySettings();
+    } finally {
+      stopLoading();
     }
   };
 
   const UpdateCompanySettings = async () => {
     try {
+      startLoading();
       const body = {
         companyId: userValue.companyId,
         passwordHistoryCount: inputs.passwordHistoryCount,
@@ -167,6 +172,8 @@ function CompanySettingsPage() {
       GetCompanySettings();
     } catch (err) {
       GetCompanySettings();
+    } finally {
+      stopLoading();
     }
   };
 
@@ -264,9 +271,23 @@ function CompanySettingsPage() {
     setSelectedLanguage(getLanguage);
   }, [inputs]);
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    editFlag ? UpdateCompanySettings() : AddCompanySettings();
+    if (isSubmitting()) return;
+    startLoading();
+
+    try {
+      if (editFlag) {
+        await UpdateCompanySettings();
+      } else {
+        await AddCompanySettings();
+      }
+    } catch (err) {
+      console.error("Error in handleSubmit:", err);
+      toast.error("Failed to save company settings");
+    } finally {
+      stopLoading();
+    }
   };
 
   useEffect(() => {

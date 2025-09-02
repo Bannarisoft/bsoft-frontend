@@ -6,11 +6,16 @@ import { GoPlus } from "react-icons/go";
 import NoDataFound from "../../molecules/AdminLayout/NoDataFound";
 import { FiEdit } from "react-icons/fi";
 import { RiDeleteBin6Line } from "react-icons/ri";
-import { Apirequest } from "../../../utils/lib";
+import {
+  Apirequest,
+  isSubmitting,
+  startLoading,
+  stopLoading,
+} from "../../../utils/lib";
 import Config from "../../../utils/config.api.json";
 import { useDebounce } from "../../../hooks/useDebounceHook";
 import { CreateNewLanguage } from "../../molecules/Master/CreateNewLanguage";
-import { LanguageProps } from "../../../types";
+import { LanguageProps } from "../../../types/types";
 import DeleteConfirmation from "../../molecules/Master/DeleteConfirmation";
 import { MuiButton, MuiTable } from "bsoft-base-elements";
 import { usePrivilegeCheck } from "../../../hooks/usePrivilegeCheck";
@@ -139,35 +144,49 @@ function LanguagePageTable() {
     setLanguageInput({ ...languageInput, [name]: filteredValue });
     setError([]);
   };
-  const handleSubmit = (e: React.MouseEvent<HTMLButtonElement>) => {
-    let temp: any = [];
-    Object.entries(languageInput).map(([key, value]) => {
+  const handleSubmit = async (e: React.MouseEvent<HTMLButtonElement>) => {
+    let temp: string[] = [];
+    if (isSubmitting()) return;
+
+    Object.entries(languageInput).forEach(([key, value]) => {
       if (
         key === "code" &&
         (!value || typeof value !== "string" || value.trim().length < 2)
       ) {
         temp.push(key);
-        console.log("Invalid code");
       } else if (
         key === "name" &&
         (!value || typeof value !== "string" || value.trim().length < 4)
       ) {
         temp.push(key);
-        console.log("Invalid Name");
       }
     });
+
     setError(temp);
-    if (temp.length === 0 && editFlag) {
-      Updatelanguage();
-    } else {
-      if (temp.length === 0) {
-        Addlanguage();
+
+    if (temp.length > 0) {
+      toast.error("Please fill all required fields");
+      stopLoading();
+      return;
+    }
+
+    try {
+      if (editFlag) {
+        await Updatelanguage();
+      } else {
+        await Addlanguage();
         setLoading(false);
       }
+    } catch (err) {
+      console.error("Error in handleSubmit:", err);
+    } finally {
+      stopLoading();
     }
   };
+
   const Addlanguage = async () => {
     try {
+      startLoading();
       const body = {
         ...languageInput,
         code: languageInput.code?.trim().toUpperCase(),
@@ -200,10 +219,13 @@ function LanguagePageTable() {
       }
     } catch (err) {
       console.log(err);
+    } finally {
+      stopLoading();
     }
   };
   const Updatelanguage = async () => {
     try {
+      startLoading();
       const body = {
         ...languageInput,
         code: languageInput.code?.trim().toUpperCase(),
@@ -236,6 +258,8 @@ function LanguagePageTable() {
       }
     } catch (err) {
       console.log(err);
+    } finally {
+      stopLoading();
     }
   };
 
@@ -252,7 +276,6 @@ function LanguagePageTable() {
   const handleDelete = (id: number) => {
     setLanguageInput({ ...languageInput, id: id });
     setDeleteOpen(true);
-    console.log("Deleted user with ID:", id);
   };
   const handleConfirmDelete = async () => {
     Deletelanguage();

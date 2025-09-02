@@ -4,7 +4,7 @@ import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { MuiButton, MuiInputField, MuiText } from "bsoft-base-elements";
 import dayjs from "dayjs";
 import React from "react";
-import { DateFormatter } from "../../../../utils/lib";
+import { DateFormatter, isSubmitting } from "../../../../utils/lib";
 
 function AssetDisposal({
   disposal,
@@ -58,7 +58,7 @@ function AssetDisposal({
                     value: disposal.disposalDate
                       ? DateFormatter(disposal.disposalDate)
                       : "",
-                    readOnly: true, 
+                    readOnly: true,
                   },
                 },
               }}
@@ -121,7 +121,8 @@ function AssetDisposal({
             !disposal?.disposalType ||
             !disposal.disposalDate ||
             !disposal.amount ||
-            !disposal.reason
+            !disposal.reason ||
+            isSubmitting()
           }
         >
           Save

@@ -12,6 +12,7 @@ import {
   MuiSwitch,
   MuiText,
 } from "bsoft-base-elements";
+import { isSubmitting } from "../../../utils/lib";
 export interface UomProps {
   code: string;
   uomName: string;
@@ -131,7 +132,7 @@ export default function CreateUom({
             </Grid2>
             <Grid2 size={4}>
               <MuiText variant="h6" my={1} className="admin-label-title">
-               UOM Code <span className="mandatory-sign">*</span>
+                UOM Code <span className="mandatory-sign">*</span>
               </MuiText>
               <MuiInputField
                 fullWidth
@@ -212,7 +213,11 @@ export default function CreateUom({
             >
               Cancel
             </MuiButton>
-            <MuiButton variant="contained" onClick={handleSubmit}>
+            <MuiButton
+              variant="contained"
+              disabled={isSubmitting()}
+              onClick={handleSubmit}
+            >
               Submit
             </MuiButton>
           </Box>

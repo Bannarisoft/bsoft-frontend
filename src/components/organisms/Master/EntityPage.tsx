@@ -5,10 +5,16 @@ import GlobalSearch from "../../molecules/AdminLayout/GlobalSearch";
 import { GoPlus } from "react-icons/go";
 import CreateNewEntity from "../../molecules/Master/CreateNewEntity";
 import Config from "../../../../src/utils/config.api.json";
-import { Apirequest, emailRegex } from "../../../utils/lib";
+import {
+  Apirequest,
+  emailRegex,
+  isSubmitting,
+  startLoading,
+  stopLoading,
+} from "../../../utils/lib";
 import { FiEdit } from "react-icons/fi";
 import { RiDeleteBin6Line } from "react-icons/ri";
-import { EntiryPropTypes } from "../../../types";
+import { EntiryPropTypes } from "../../../types/types";
 import NoDataFound from "../../molecules/AdminLayout/NoDataFound";
 import DeleteConfirmation from "../../molecules/Master/DeleteConfirmation";
 import { useDebounce } from "../../../hooks/useDebounceHook";
@@ -182,28 +188,53 @@ function EntityPage() {
       : setEntityInput({ ...entityInput, isActive: 0 });
   };
 
-  const handleSubmit = (e: React.MouseEvent<HTMLButtonElement>) => {
-    let temp: any = [];
-    Object.entries(entityInput).map(([key, value]) => {
-      if (key === "entityName" && value?.length < 2) {
+  const handleSubmit = async (e: React.MouseEvent<HTMLButtonElement>) => {
+    let temp: string[] = [];
+    if (isSubmitting()) return;
+
+    Object.entries(entityInput).forEach(([key, value]) => {
+      if (
+        key === "entityName" &&
+        (!value || value?.toString().trim().length < 2)
+      ) {
         temp.push(key);
-      } else if (key === "address" && value?.length < 10) {
+      } else if (
+        key === "address" &&
+        (!value || value?.toString().trim().length < 10)
+      ) {
         temp.push(key);
-      } else if (key === "phone" && value.length !== 10) {
+      } else if (
+        key === "phone" &&
+        (!value || value.toString().length !== 10)
+      ) {
         temp.push(key);
-      } else if (key === "email" && !emailRegex.test(value)) {
+      } else if (
+        key === "email" &&
+        (!value || !emailRegex.test(value.toString()))
+      ) {
         temp.push(key);
       }
     });
+
     setError(temp);
 
-    if (temp.length === 0 && editFlag) {
-      UpdateEntity();
-    } else {
-      if (temp.length === 0) {
-        AddEntity();
+    if (temp.length > 0) {
+      toast.error("Please fill all required fields");
+      stopLoading();
+      return;
+    }
+
+    try {
+      if (editFlag) {
+        await UpdateEntity();
+      } else {
+        await AddEntity();
         setLoading(false);
       }
+    } catch (err) {
+      console.error("Error in handleSubmit:", err);
+    } finally {
+      stopLoading();
     }
   };
 
@@ -229,7 +260,6 @@ function EntityPage() {
   const handleDelete = (id: any) => {
     setEntityInput({ ...entityInput, id: id });
     setDeleteOpen(true);
-    console.log("Deleted user with ID:", id);
   };
 
   const handleConfirmDelete = async () => {
@@ -277,6 +307,7 @@ function EntityPage() {
 
   const UpdateEntity = async () => {
     try {
+      startLoading();
       const body = {
         ...entityInput,
         entityName: entityInput.entityName
@@ -310,11 +341,14 @@ function EntityPage() {
       }
     } catch (err) {
       console.log(err);
+    } finally {
+      stopLoading();
     }
   };
 
   const AddEntity = async () => {
     try {
+      startLoading();
       const body = {
         ...entityInput,
         entityName: entityInput.entityName
@@ -348,6 +382,8 @@ function EntityPage() {
       }
     } catch (err) {
       console.log(err);
+    } finally {
+      stopLoading();
     }
   };
 
@@ -373,9 +409,7 @@ function EntityPage() {
   React.useEffect(() => {
     initFlag && search !== "" ? GetEntityList() : GetEntityList();
   }, [debouncedSearchTerm, page, size]);
-  React.useEffect(() => {
-    console.log(loading);
-  }, [loading]);
+
   useEffect(() => {
     setInitFlag(true);
   }, []);

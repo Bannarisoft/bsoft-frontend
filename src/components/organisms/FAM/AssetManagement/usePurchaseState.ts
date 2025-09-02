@@ -3,7 +3,7 @@ import { useRecoilValue } from "recoil";
 import { UserData } from "../../../../utils/atoms";
 import { Apirequest } from "../../../../utils/lib";
 import Config from "../../../../utils/fam.api.json";
-import { PurchaseActionType, PurchaseState } from "../../../../types";
+import { PurchaseActionType, PurchaseState } from  "../../../../types/types";
 import { usePurchaseDetails } from "./usePurchaseDetails";
 
 const initialState: PurchaseState = {

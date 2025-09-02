@@ -1,5 +1,5 @@
 import React from "react";
-import { CreateShiftProps } from "../../../maintanenceTypes";
+import { CreateShiftProps } from "../../../types/maintanenceTypes";
 import {
   Box,
   Dialog,
@@ -19,6 +19,7 @@ import {
 } from "bsoft-base-elements";
 import InputDatePicker from "../../atoms/Datepicker";
 import dayjs from "dayjs";
+import { isSubmitting } from "../../../utils/lib";
 
 const Transition = React.forwardRef(function Transition(
   props: TransitionProps & {
@@ -69,7 +70,7 @@ const CreateShiftMaster = ({
           <Grid2 container spacing={2}>
             <Grid2 size={4}>
               <MuiText variant="h6" my={1} className="admin-label-title">
-               Shift Code <span className="mandatory-sign">*</span>
+                Shift Code <span className="mandatory-sign">*</span>
               </MuiText>
 
               <MuiInputField
@@ -94,7 +95,7 @@ const CreateShiftMaster = ({
             </Grid2>
             <Grid2 size={4}>
               <MuiText variant="h6" my={1} className="admin-label-title">
-               Shift Name <span className="mandatory-sign">*</span>
+                Shift Name <span className="mandatory-sign">*</span>
               </MuiText>
 
               <MuiInputField
@@ -186,7 +187,11 @@ const CreateShiftMaster = ({
             >
               Cancel
             </MuiButton>
-            <MuiButton className="filled-icon-btn" onClick={handleSubmit}>
+            <MuiButton
+              className="filled-icon-btn"
+              disabled={isSubmitting()}
+              onClick={handleSubmit}
+            >
               Submit
             </MuiButton>
           </Box>

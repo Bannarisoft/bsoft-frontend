@@ -1,6 +1,6 @@
 import { MenuItem, NativeSelect, Select } from "@mui/material";
 import React from "react";
-import { SelectComponentProps } from "../../types";
+import { SelectComponentProps } from "../../types/types";
 import { IoIosArrowDown } from "react-icons/io";
 
 function SelectComponent({

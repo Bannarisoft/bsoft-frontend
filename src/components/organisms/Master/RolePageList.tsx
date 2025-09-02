@@ -7,11 +7,16 @@ import { FiEdit } from "react-icons/fi";
 import { RiDeleteBin6Line } from "react-icons/ri";
 import { DataGrid } from "@mui/x-data-grid";
 import NoDataFound from "../../molecules/AdminLayout/NoDataFound";
-import { Apirequest } from "../../../utils/lib";
+import {
+  Apirequest,
+  isSubmitting,
+  startLoading,
+  stopLoading,
+} from "../../../utils/lib";
 import Config from "../../../../src/utils/config.api.json";
 import { useDebounce } from "../../../hooks/useDebounceHook";
 import CreateNewRole from "../../molecules/Master/Role/CreateNewRole";
-import { RoleProps } from "../../../types";
+import { RoleProps } from "../../../types/types";
 import { useRecoilValue } from "recoil";
 import { UserData } from "../../../utils/atoms";
 import DeleteConfirmation from "../../molecules/Master/DeleteConfirmation";
@@ -192,26 +197,51 @@ function RolePageList() {
     setSearch(e.target.value);
   };
 
-  const handleSubmit = (e: React.MouseEvent<HTMLButtonElement>) => {
-    let temp: any = [];
-    Object.entries(roleInput).map(([key, value]) => {
-      if (key === "roleName" && value?.length === 0) {
+  const handleSubmit = async (e: React.MouseEvent<HTMLButtonElement>) => {
+    let temp: string[] = [];
+    if (isSubmitting()) return;
+    startLoading();
+
+    Object.entries(roleInput).forEach(([key, value]) => {
+      if (
+        key === "roleName" &&
+        (!value || value.toString().trim().length === 0)
+      ) {
         temp.push(key);
-      } else if (key === "description" && value?.length === 0) {
+      } else if (
+        key === "description" &&
+        (!value || value.toString().trim().length === 0)
+      ) {
         temp.push(key);
       }
     });
+
     setError(temp);
-    if (temp.length === 0 && editFlag) {
-      UpdateRole();
-    } else if (temp.length === 0) {
-      AddRole();
-      setLoading(false);
+
+    if (temp.length > 0) {
+      toast.error("Please fill all required fields");
+      stopLoading();
+      return;
+    }
+
+    try {
+      if (editFlag) {
+        await UpdateRole();
+      } else {
+        await AddRole();
+        setLoading(false);
+      }
+    } catch (err) {
+      console.error("Error in handleSubmit:", err);
+      toast.error("Failed to save role");
+    } finally {
+      stopLoading();
     }
   };
 
   const AddRole = async () => {
     try {
+      startLoading();
       const body = {
         companyId: userValue.companyId,
         roleName: roleInput.roleName?.trim().toUpperCase(),
@@ -247,11 +277,14 @@ function RolePageList() {
       }
     } catch (err) {
       console.log(err);
+    } finally {
+      stopLoading();
     }
   };
 
   const UpdateRole = async () => {
     try {
+      startLoading();
       const body = {
         companyId: userValue.companyId,
         roleName: roleInput.roleName?.trim().toUpperCase(),
@@ -285,6 +318,8 @@ function RolePageList() {
       }
     } catch (err) {
       console.log(err);
+    } finally {
+      stopLoading();
     }
   };
   const handleDelete = (id: number) => {

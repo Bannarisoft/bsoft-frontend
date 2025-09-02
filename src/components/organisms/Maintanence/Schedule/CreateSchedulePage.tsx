@@ -13,11 +13,14 @@ import React, { useEffect, useState } from "react";
 import IconBreadcrumbs from "../../../molecules/AdminLayout/BreadCrumbs";
 import { MuiText } from "bsoft-base-elements";
 import { TabContext, TabPanel } from "@mui/lab";
-import { SpareRow } from "../../../../maintanenceTypes";
+import { SpareRow } from "../../../../types/maintanenceTypes";
 import MainConfig from "../../../../utils/main.api.json";
 import Config from "../../../../utils/config.api.json";
 import {
   Apirequest,
+  isSubmitting,
+  startLoading,
+  stopLoading,
   StyledAutocomplete,
   StyledButton,
 } from "../../../../utils/lib";
@@ -258,15 +261,23 @@ function CreateSchedulePage({ sheduleId }: { sheduleId?: string }) {
     Config.Department.getGroupName.method
   );
 
-  const handleSave = () => {
-    const isFormValid = validateForm();
+  const handleSave = async () => {
+    if (isSubmitting()) return;
 
+    const isFormValid = validateForm();
     if (!isFormValid) {
       toast.error("Please fill all required fields.");
       return;
     }
 
-    CreateSchedule();
+    try {
+      startLoading();
+      await CreateSchedule();
+    } catch (error) {
+      console.error("Error creating schedule:", error);
+    } finally {
+      stopLoading();
+    }
   };
 
   const validateForm = () => {
@@ -317,6 +328,7 @@ function CreateSchedulePage({ sheduleId }: { sheduleId?: string }) {
   const CreateSchedule = async () => {
     await withLoader(async () => {
       try {
+        startLoading();
         const validRows = rows.filter(
           (row) =>
             row.type && row.item && row.requiredQty && row.requiredQty > 0
@@ -409,6 +421,8 @@ function CreateSchedulePage({ sheduleId }: { sheduleId?: string }) {
         toast.error(
           err?.message || "An error occurred while saving the schedule"
         );
+      } finally {
+        stopLoading();
       }
     });
   };
@@ -614,8 +628,9 @@ function CreateSchedulePage({ sheduleId }: { sheduleId?: string }) {
       maintanenceTypeData &&
       frequencyTypeData &&
       periodTypeData &&
-      storeTypeData &&
-      activityMasterData
+      storeTypeData
+      // &&
+      // activityMasterData
     ) {
       processScheduleData();
     }
@@ -627,7 +642,7 @@ function CreateSchedulePage({ sheduleId }: { sheduleId?: string }) {
     frequencyTypeData,
     periodTypeData,
     storeTypeData,
-    activityMasterData,
+    // activityMasterData,
   ]);
 
   useEffect(() => {
@@ -642,26 +657,46 @@ function CreateSchedulePage({ sheduleId }: { sheduleId?: string }) {
     }
   };
 
+  useEffect(() => {
+    if (
+      validateArray(scheduleData?.activity) &&
+      validateArray(activityMasterData) &&
+      selectedActivities.length === 0
+    ) {
+      const mappedActivities = scheduleData.activity.map((activity: any) => {
+        const foundActivity = activityMasterData.find(
+          (master: any) => master.id === activity.activityId
+        );
+        return foundActivity || activityMasterData?.at(0);
+      });
+      setSelectedActivities(mappedActivities);
+    }
+  }, [scheduleData?.activity, activityMasterData]);
+
   const GetActivityByGroup = async (id: string) => {
     try {
       const { endpoint, method } = MainConfig.WorkOrder.Activity.GetByGroupName;
-      const response = await Apirequest(
-        endpoint.replace("{group}", id?.toString()),
+      const res = await Apirequest(
+        endpoint.replace("{group}", id),
         method,
         null,
         "main"
-      ).then((res) => res.data);
-      setActivityMasterData(response?.data);
+      );
+      if (res?.data?.statusCode === 200 || res?.data?.statusCode === 201) {
+        setActivityMasterData(res.data.data);
+      } else {
+        setActivityMasterData([]);
+      }
     } catch (err) {
-      console.log(err);
+      console.error("Error fetching activities:", err);
     }
   };
 
   useEffect(() => {
-    if (selectedValues.selectedMachineGroup) {
-      GetActivityByGroup(selectedValues.selectedMachineGroup?.id);
+    if (selectedValues.selectedMachineGroup?.id) {
+      GetActivityByGroup(selectedValues.selectedMachineGroup.id);
     }
-  }, [selectedValues.selectedMachineGroup]);
+  }, [selectedValues.selectedMachineGroup?.id]);
 
   return (
     <div>
@@ -726,11 +761,11 @@ function CreateSchedulePage({ sheduleId }: { sheduleId?: string }) {
                 options={machineGroupData || []}
                 getOptionLabel={(option: any) => option.groupName || ""}
                 fullWidth
-                value={selectedValues.selectedMachineGroup}
-                onChange={(_, newvalue: any) => {
+                value={selectedValues.selectedMachineGroup || null}
+                onChange={(_, newValue: any) => {
                   setSelectedValues({
                     ...selectedValues,
-                    selectedMachineGroup: newvalue,
+                    selectedMachineGroup: newValue,
                   });
                   setSelectedActivities([]);
                 }}
@@ -821,13 +856,13 @@ function CreateSchedulePage({ sheduleId }: { sheduleId?: string }) {
               },
               "& .MuiTabs-list": {
                 gap: "5px",
-                borderBottom: "1px solid #333333",
+                borderBottom: "1px solid #3a8484",
               },
               "& .Mui-selected": {
-                border: "1px solid #333333",
+                border: "1px solid #3a8484",
                 borderBottom: "1px solid #fff",
-                borderTop: "4px solid #333333",
-                color: "#333333",
+                borderTop: "4px solid #3a8484",
+                color: "#3a8484",
                 zIndex: 2,
                 top: 1,
                 borderRadius: "12px 12px 0 0",
@@ -856,7 +891,7 @@ function CreateSchedulePage({ sheduleId }: { sheduleId?: string }) {
               multiple
               id="activities-autocomplete"
               options={activityMasterData || []}
-              getOptionLabel={(option: any) => option.activityName || ""}
+              getOptionLabel={(option: any) => option?.activityName || ""}
               value={selectedActivities}
               onChange={handleActivityChange}
               renderInput={(params) => (
@@ -932,10 +967,10 @@ function CreateSchedulePage({ sheduleId }: { sheduleId?: string }) {
             variant="contained"
             sx={{
               borderRadius: 2,
-              bgcolor: "#333333",
-              "&:hover": { bgcolor: "#333333" },
+              bgcolor: "#3a8484",
+              "&:hover": { bgcolor: "#3a8484" },
             }}
-            disabled={stockLoading || isLoading()}
+            disabled={stockLoading || isLoading() || isSubmitting()}
             onClick={handleSave}
           >
             {sheduleId ? "Update" : "Save"}

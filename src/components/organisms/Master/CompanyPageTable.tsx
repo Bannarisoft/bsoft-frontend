@@ -199,7 +199,7 @@ export default function CompanyPageTable() {
               <Link href={"/master/company/add-company"}>
                 <MuiButton
                   startIcon={<GoPlus />}
-                  onClick={() => {}}
+                  onClick={() => { }}
                   variant="contained"
                 >
                   Create

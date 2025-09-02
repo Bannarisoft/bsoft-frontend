@@ -6,12 +6,17 @@ import NoDataFound from "../../molecules/AdminLayout/NoDataFound";
 import dayjs, { Dayjs } from "dayjs";
 import { FiEdit } from "react-icons/fi";
 import { RiDeleteBin6Line } from "react-icons/ri";
-import { Apirequest } from "../../../utils/lib";
+import {
+  Apirequest,
+  isSubmitting,
+  startLoading,
+  stopLoading,
+} from "../../../utils/lib";
 import Config from "../../../utils/config.api.json";
 import { useDebounce } from "../../../hooks/useDebounceHook";
 import { GoPlus } from "react-icons/go";
 import CreateNewFinancial from "../../molecules/Master/CreateNewFinancial";
-import { FinancialProps } from "../../../types";
+import { FinancialProps } from "../../../types/types";
 import DeleteConfirmation from "../../molecules/Master/DeleteConfirmation";
 import { MuiButton, MuiTable } from "bsoft-base-elements";
 import { usePrivilegeCheck } from "../../../hooks/usePrivilegeCheck";
@@ -183,41 +188,50 @@ const FinancialyearTable = () => {
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearch(e.target.value);
   };
-  const handleSubmit = (e: React.MouseEvent<HTMLButtonElement>) => {
+  const handleSubmit = async (e: React.MouseEvent<HTMLButtonElement>) => {
     let temp: string[] = [];
+    if (isSubmitting()) return;
 
     Object.entries(financialInput).forEach(([key, value]) => {
-      if (key === "startYear" && value === "") {
+      if (key === "startYear" && !value) {
         temp.push(key);
-        console.log("Invalid Start Year");
       }
-      if (key === "startDate" && value === "") {
+      if (key === "startDate" && !value) {
         temp.push(key);
-        console.log("Invalid Start Date");
       }
-      if (key === "endDate" && value === "") {
+      if (key === "endDate" && !value) {
         temp.push(key);
-        console.log("Invalid End Date");
       }
-      if (key === "finYearName" && value === "") {
+      if (key === "finYearName" && !value) {
         temp.push(key);
-        console.log("Invalid Financial Year Name");
       }
     });
 
     setError(temp);
 
-    if (temp.length === 0 && editFlag) {
-      UpdateFinancial();
-    } else {
-      if (temp.length === 0) {
-        AddFinancial();
+    if (temp.length > 0) {
+      toast.error("Please fill all required fields");
+      stopLoading();
+      return;
+    }
+
+    try {
+      if (editFlag) {
+        await UpdateFinancial();
+      } else {
+        await AddFinancial();
         setLoading(false);
       }
+    } catch (err) {
+      console.error("Error in handleSubmit:", err);
+    } finally {
+      stopLoading();
     }
   };
+
   const AddFinancial = async () => {
     try {
+      startLoading();
       const { endpoint, method } = Config.Financial.addfinancial;
       const response = await Apirequest(endpoint, method, financialInput).then(
         (res) => res.data
@@ -245,10 +259,13 @@ const FinancialyearTable = () => {
       }
     } catch (err) {
       console.log(err);
+    } finally {
+      stopLoading();
     }
   };
   const UpdateFinancial = async () => {
     try {
+      startLoading();
       const { endpoint, method } = Config.Financial.updatefinancial;
       const response = await Apirequest(endpoint, method, financialInput).then(
         (res) => res.data
@@ -276,6 +293,8 @@ const FinancialyearTable = () => {
       }
     } catch (err) {
       console.log(err);
+    } finally {
+      stopLoading();
     }
   };
   const handleEdit = (row: any) => {
@@ -293,7 +312,6 @@ const FinancialyearTable = () => {
   const handleDelete = (id: number) => {
     setFinancialInput({ ...financialInput, id: id });
     setDeleteOpen(true);
-    console.log("Deleted user with ID:", id);
   };
   const handleConfirmDelete = async () => {
     DeleteFinancial();

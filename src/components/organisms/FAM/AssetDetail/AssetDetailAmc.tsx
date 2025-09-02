@@ -12,7 +12,13 @@ import { MuiButton, MuiText } from "bsoft-base-elements";
 import dayjs, { Dayjs } from "dayjs";
 import React, { useEffect, useState } from "react";
 import AddAMCPop from "./AddAMCPop";
-import { Apirequest, emailRegex } from "../../../../utils/lib";
+import {
+  Apirequest,
+  emailRegex,
+  isSubmitting,
+  startLoading,
+  stopLoading,
+} from "../../../../utils/lib";
 import Config from "../../../../utils/fam.api.json";
 import { useDebounce } from "../../../../hooks/useDebounceHook";
 import Swal from "sweetalert2";
@@ -85,7 +91,7 @@ function AssetDetailAmc({ amcList, pathname, renewalData, onUpdated }: any) {
     renewalStatus: "",
     renewedDate: "",
   });
-  const [errors, setErrors] = useState([]);
+  const [errors, setErrors] = useState<string[]>([]);
   const [coverageData, setCoverageData] = useState([]);
   const debouncedSearchTerm = useDebounce(amcInputs.vendorCode, 500);
   const userValue = useRecoilValue(UserData);
@@ -143,21 +149,32 @@ function AssetDetailAmc({ amcList, pathname, renewalData, onUpdated }: any) {
     setAmcInputs({ ...amcInputs, [name]: value });
   };
 
-  const handleSubmit = () => {
-    let temp: any = [];
-    Object.entries(amcInputs).map(([key, value]: any) => {
+  const handleSubmit = async () => {
+    if (isSubmitting()) return;
+
+    let temp: string[] = [];
+
+    Object.entries(amcInputs).forEach(([key, value]: any) => {
       if (key === "phone") {
-        value?.length !== 10 && temp.push(key);
+        if (!value || value.toString().length !== 10) temp.push(key);
       } else if (key === "email") {
-        !emailRegex.test(value) && temp.push(key);
+        if (!emailRegex.test(value)) temp.push(key);
       } else if (value === "" || value === null) {
         temp.push(key);
       }
     });
+
     setErrors(temp);
-    if (temp?.length === 0) {
-      AddAmc();
-      setLoading(true);
+
+    if (temp.length === 0) {
+      try {
+        setLoading(true);
+        await AddAmc(); 
+      } catch (error) {
+        console.error("Failed to add AMC:", error);
+      } finally {
+        setLoading(false);
+      }
     }
   };
 
@@ -180,6 +197,7 @@ function AssetDetailAmc({ amcList, pathname, renewalData, onUpdated }: any) {
       body["id"] = amcId;
     }
     try {
+      startLoading();
       const { endpoint, method } = editFlag
         ? Config.AssetWarranty.UpdateAmc
         : Config.AssetWarranty.AddAMC;
@@ -217,6 +235,8 @@ function AssetDetailAmc({ amcList, pathname, renewalData, onUpdated }: any) {
     } catch (err) {
       setLoading(false);
       console.log(err);
+    } finally {
+      stopLoading();
     }
   };
 

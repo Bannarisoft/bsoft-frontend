@@ -1,5 +1,5 @@
 import React from "react";
-import { CreatePowerConsumptionpage } from "../../../../maintanenceTypes";
+import { CreatePowerConsumptionpage } from "../../../../types/maintanenceTypes";
 import {
   Autocomplete,
   Box,
@@ -13,6 +13,7 @@ import {
 import { TransitionProps } from "@mui/material/transitions";
 import { MuiButton, MuiInputField, MuiText } from "bsoft-base-elements";
 import { IoClose } from "react-icons/io5";
+import { isSubmitting } from "../../../../utils/lib";
 
 const Transition = React.forwardRef(function Transition(
   props: TransitionProps & {
@@ -250,7 +251,11 @@ const CreatePowerConsumption = ({
             >
               Cancel
             </MuiButton>
-            <MuiButton className="filled-icon-btn" onClick={handleSubmit}>
+            <MuiButton
+              className="filled-icon-btn"
+              disabled={isSubmitting()}
+              onClick={handleSubmit}
+            >
               Submit
             </MuiButton>
           </Box>

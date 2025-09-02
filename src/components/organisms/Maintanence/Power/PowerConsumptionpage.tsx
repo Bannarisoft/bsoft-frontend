@@ -7,9 +7,14 @@ import { GoPlus } from "react-icons/go";
 import NoDataFound from "../../../molecules/AdminLayout/NoDataFound";
 import { useDebounce } from "../../../../hooks/useDebounceHook";
 import CreatePowerConsumption from "../../../molecules/Maintanence/Power/CreatePowerConsumption";
-import { PowerConsumption } from "../../../../maintanenceTypes";
+import { PowerConsumption } from "../../../../types/maintanenceTypes";
 import dayjs from "dayjs";
-import { Apirequest } from "../../../../utils/lib";
+import {
+  Apirequest,
+  isSubmitting,
+  startLoading,
+  stopLoading,
+} from "../../../../utils/lib";
 import MainConfig from "../../../../utils/main.api.json";
 import { useDataFetchHook } from "../../../../hooks/useDataFetchHook";
 import ErrorModal from "../../../molecules/Master/Role/ErrorModal";
@@ -155,66 +160,68 @@ const PowerConsumptionpage = () => {
       totalUnits: 0,
     });
   };
-const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-  let { name, value } = e.target;
-  const numericValue = Number(value);
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    let { name, value } = e.target;
+    const numericValue = Number(value);
 
-  let updated = {
-    ...powerInput,
-    [name]: value === "" ? 0 : numericValue,
-  };
+    let updated = {
+      ...powerInput,
+      [name]: value === "" ? 0 : numericValue,
+    };
 
-  if (name === "closingReading") {
-    const opening = Number(powerInput.openingReading) || 0;
+    if (name === "closingReading") {
+      const opening = Number(powerInput.openingReading) || 0;
 
-    if (value === "" || numericValue === 0) {
-      updated.totalUnits = 0;
-    } else {
-      const total = numericValue - opening;
-      const multiplied = total >= 0 ? total * 1000 : 0;
-      updated.totalUnits = Number(multiplied.toFixed(2)); 
+      if (value === "" || numericValue === 0) {
+        updated.totalUnits = 0;
+      } else {
+        const total = numericValue - opening;
+        const multiplied = total >= 0 ? total * 1000 : 0;
+        updated.totalUnits = Number(multiplied.toFixed(2));
+      }
     }
-  }
 
-  setPowerInput(updated);
-  setError([]);
-};
-
+    setPowerInput(updated);
+    setError([]);
+  };
 
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearch(e.target.value);
   };
 
-  const handleSubmit = (e: React.MouseEvent<HTMLButtonElement>) => {
-    let temp: any = [];
-    Object.entries(powerInput).map(([key, value]) => {
+  const handleSubmit = async (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+
+    if (isSubmitting()) return;
+
+    let temp: string[] = [];
+    Object.entries(powerInput).forEach(([key, value]) => {
       if (
-        (key === "openingReading" &&
-          (value === "" || value === 0 || value == null)) ||
-        (key === "closingReading" &&
-          (value === "" || value === 0 || value == null))
+        (key === "openingReading" && (!value || Number(value) === 0)) ||
+        (key === "closingReading" && (!value || Number(value) === 0))
       ) {
         temp.push(key);
       }
     });
 
-    if (
-      !selectedValues["feederTypeId"] ||
-      selectedValues["feederTypeId"].length === 0
-    ) {
-      temp.push("feederTypeId");
-    }
+    if (!selectedValues["feederTypeId"]?.length) temp.push("feederTypeId");
+    if (!selectedValues["feederId"]?.length) temp.push("feederId");
 
-    if (
-      !selectedValues["feederId"] ||
-      selectedValues["feederId"].length === 0
-    ) {
-      temp.push("feederId");
-    }
     setError(temp);
 
-    if (temp.length === 0) {
-      AddPowerConsumption();
+    if (temp.length > 0) {
+      console.error("Please fill all mandatory fields.");
+      return;
+    }
+
+    try {
+      startLoading();
+
+      await AddPowerConsumption();
+    } catch (error) {
+      console.error("Error adding power consumption:", error);
+    } finally {
+      stopLoading();
     }
   };
 
@@ -288,7 +295,6 @@ const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         openingReading: response.data.openingReading ?? 0,
       }));
 
-      console.log("Opening Reading Set:", response.data.openingReading);
     } catch (err) {
       console.log(err);
     }
@@ -296,6 +302,7 @@ const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 
   const AddPowerConsumption = async () => {
     try {
+      startLoading();
       const body: any = {
         feederTypeId: selectedValues["feederTypeId"]?.[0]?.id || 0,
         feederId: selectedValues["feederId"]?.[0]?.id || 0,
@@ -326,6 +333,8 @@ const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
       }
     } catch (err) {
       console.log(err);
+    } finally {
+      stopLoading();
     }
   };
 

@@ -1,5 +1,5 @@
 import React from "react";
-import { CreateShiftDetailProps } from "../../../maintanenceTypes";
+import { CreateShiftDetailProps } from "../../../types/maintanenceTypes";
 import {
   Autocomplete,
   Box,
@@ -35,6 +35,7 @@ import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { DesktopTimePicker } from "@mui/x-date-pickers/DesktopTimePicker";
 import InputDatePicker from "../../atoms/Datepicker";
+import { isSubmitting } from "../../../utils/lib";
 const CreateShiftMasterDetail = ({
   open,
   close,
@@ -51,7 +52,6 @@ const CreateShiftMasterDetail = ({
   error,
   editFlag,
 }: CreateShiftDetailProps) => {
-
   return (
     <React.Fragment>
       <Dialog
@@ -111,8 +111,7 @@ const CreateShiftMasterDetail = ({
                     value={shiftDeatailInput.shiftMasterId}
                     error={error.includes("shiftMasterId")}
                     helperText={
-                      error.includes("shiftMasterId") &&
-                      "Please select a shift"
+                      error.includes("shiftMasterId") && "Please select a shift"
                     }
                   />
                 )}
@@ -317,7 +316,11 @@ const CreateShiftMasterDetail = ({
             >
               Cancel
             </MuiButton>
-            <MuiButton className="filled-icon-btn" onClick={handleSubmit}>
+            <MuiButton
+              className="filled-icon-btn"
+              disabled={isSubmitting()}
+              onClick={handleSubmit}
+            >
               Submit
             </MuiButton>
           </Box>

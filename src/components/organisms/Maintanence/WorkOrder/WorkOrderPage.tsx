@@ -377,6 +377,7 @@ function WorkOrderPage() {
                 onChange={(newValue) =>
                   setFilter({ ...filter, endDate: newValue })
                 }
+                maxDate={dayjs(new Date())}
                 slotProps={{
                   textField: {
                     fullWidth: true,

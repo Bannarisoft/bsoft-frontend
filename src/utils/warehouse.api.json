@@ -1,0 +1,104 @@
+{
+    "Warehouse": {
+        "GetWarehouseMaster": {
+            "endpoint": "api/WarehouseMaster?PageNumber={page}&PageSize={size}&SearchTerm={searchTerm}",
+            "method": "GET"
+        },
+        "GetWarehouseMasterid": {
+            "endpoint": "api/WarehouseMaster/{id}",
+            "method": "GET"
+        },
+        "AddWarehouseMaster": {
+            "endpoint": "api/WarehouseMaster",
+            "method": "POST"
+        },
+        "UpdateWarehouseMaster": {
+            "endpoint": "api/WarehouseMaster/update",
+            "method": "PUT"
+        },
+        "DeleteWarehouseMaster": {
+            "endpoint": "api/WarehouseMaster?id={id}",
+            "method": "DELETE"
+        },
+        "GetAllWarehouseMaster": {
+            "endpoint": "api/WarehouseMaster/by-name",
+            "method": "GET"
+        },
+        "GetParentWarehouseWH": {
+            "endpoint": "api/WarehouseMaster/Get Parent Warehouse",
+            "method": "GET"
+        }
+    },
+    "WarehouseMisc": {
+        "endpoint": "api/MiscMaster/by-name?MiscTypeCode={type}",
+        "method": "GET"
+    },
+    "BinMaster": {
+        "GetBinMaster": {
+            "endpoint": "BinMaster?PageNumber={page}&PageSize={size}&SearchTerm={search}",
+            "method": "GET"
+        },
+        "GetBinMasterid": {
+            "endpoint": "BinMaster/{id}",
+            "method": "GET"
+        },
+        "AddBinMaster": {
+            "endpoint": "BinMaster/create",
+            "method": "POST"
+        },
+        "UpdateBinMaster": {
+            "endpoint": "BinMaster/update",
+            "method": "PUT"
+        },
+        "DeleteBinMaster": {
+            "endpoint": "BinMaster?id={id}",
+            "method": "DELETE"
+        },
+        "GetAllBinMaster": {
+            "endpoint": "BinMaster/by-name",
+            "method": "GET"
+        },
+        "GetParentBinMasterWH": {
+            "endpoint": "api/BinMaster/Get Parent BinMaster",
+            "method": "GET"
+        }
+    },
+    "BinMasterMisc": {
+        "endpoint": "api/MiscMaster/by-name?MiscTypeCode={type}",
+        "method": "GET"
+    },
+    "RackMaster": {
+        "GetAllRackMaster": {
+            "endpoint": "api/RackMaster?PageNumber={page}&PageSize={size}&SearchTerm={searchTerm}",
+            "method": "GET"
+        },
+        "GetRackMasterid": {
+            "endpoint": "api/RackMaster/{id}",
+            "method": "GET"
+        },
+        "AddRackMaster": {
+            "endpoint": "api/RackMaster/create",
+            "method": "POST"
+        },
+        "UpdateRackMaster": {
+            "endpoint": "api/RackMaster/update",
+            "method": "PUT"
+        },
+        "DeleteRackMaster": {
+            "endpoint": "api/RackMaster?id={id}",
+            "method": "DELETE"
+        },
+        "GetRackMaster": {
+            "endpoint": "api/RackMaster/by-name",
+            "method": "GET"
+        },
+        "GetParentRackMasterWH": {
+            "endpoint": "api/RackMaster/Get Parent RackMaster",
+            "method": "GET"
+        }
+    },
+    "RackMasterMisc": {
+        "endpoint": "api/MiscMaster/by-name?MiscTypeCode={type}",
+        "method": "GET"
+    }
+}

@@ -25,6 +25,9 @@ import {
   Apirequest,
   emailRegex,
   gstRegex,
+  isSubmitting,
+  startLoading,
+  stopLoading,
   websiteRegex,
 } from "../../../utils/lib";
 import { LiaAddressCardSolid } from "react-icons/lia";
@@ -122,9 +125,9 @@ function CreateCompanyPage({ companyId }: { companyId?: string }) {
     setErrors([]);
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     const temp: string[] = [];
-
+    if (isSubmitting()) return;
     const validationRules = {
       companyName: (value: string) => value.length > 3,
       legalName: (value: string) => value.length > 3,
@@ -168,7 +171,20 @@ function CreateCompanyPage({ companyId }: { companyId?: string }) {
     if (addresses.length < 1) temp.push("address");
     setErrors(temp);
     if (temp.length === 0) {
-      companyId ? UpdateCompany() : AddCompany();
+      try {
+        if (companyId) {
+          await UpdateCompany();
+        } else {
+          await AddCompany();
+        }
+      } catch (err) {
+        console.error("Error in handleSubmit:", err);
+      } finally {
+        stopLoading();
+      }
+    } else {
+      toast.error("Please fill all required fields");
+      stopLoading();
     }
   };
 
@@ -209,6 +225,7 @@ function CreateCompanyPage({ companyId }: { companyId?: string }) {
 
   const AddCompany = async () => {
     try {
+      startLoading();
       const { endpoint, method } = Config.Company.AddCompany;
       const response = await Apirequest(endpoint, method, CompanyPayload).then(
         (res) => res.data
@@ -228,6 +245,8 @@ function CreateCompanyPage({ companyId }: { companyId?: string }) {
     } catch (err) {
       console.log(err);
       toast.error("Something Went Wrong, Please try again after sometime");
+    } finally {
+      stopLoading();
     }
   };
 
@@ -236,6 +255,7 @@ function CreateCompanyPage({ companyId }: { companyId?: string }) {
       CompanyPayload["company"]["id"] = companyId;
     }
     try {
+      startLoading();
       const { endpoint, method } = Config.Company.UpdateCompany;
       const response = await Apirequest(endpoint, method, CompanyPayload).then(
         (res) => res.data
@@ -255,6 +275,8 @@ function CreateCompanyPage({ companyId }: { companyId?: string }) {
     } catch (err) {
       console.log(err);
       toast.error("Something Went Wrong, Please try again after sometime");
+    } finally {
+      stopLoading();
     }
   };
 
@@ -287,7 +309,7 @@ function CreateCompanyPage({ companyId }: { companyId?: string }) {
         endpoint.replace(`{countryId}`, id ? id.toString() : ""),
         method
       ).then((res) => res.data);
-      setStateData(result.data.data);
+      setStateData(result.data);
     } catch (err) {
       console.log(err);
       setStateData([]);
@@ -301,7 +323,7 @@ function CreateCompanyPage({ companyId }: { companyId?: string }) {
         endpoint.replace(`{stateId}`, id ? id.toString() : ""),
         method
       ).then((res) => res.data);
-      setCityData(result.data.data);
+      setCityData(result.data);
     } catch (err) {
       console.log(err);
       setCityData([]);
@@ -461,7 +483,6 @@ function CreateCompanyPage({ companyId }: { companyId?: string }) {
         );
         setCompanyInput({ ...companyInput, logo: result?.data?.logoBase64 });
         setFile(result?.data?.logo);
-        console.log("Upload result:", result);
       }
     } catch (err) {
       console.error("Image upload failed: ", err);
@@ -480,7 +501,6 @@ function CreateCompanyPage({ companyId }: { companyId?: string }) {
         );
         setCompanyInput({ ...companyInput, logo: "" });
         setFile(result?.data?.logo);
-        console.log("Upload result:", result);
       }
     } catch (err) {
       console.error("Image upload failed: ", err);
@@ -1014,7 +1034,7 @@ function CreateCompanyPage({ companyId }: { companyId?: string }) {
                 }
                 value={
                   companyInput.pincode &&
-                  companyInput.pincode.toString() !== "0"
+                    companyInput.pincode.toString() !== "0"
                     ? companyInput.pincode.toString().slice(0, 6)
                     : ""
                 }
@@ -1401,7 +1421,11 @@ function CreateCompanyPage({ companyId }: { companyId?: string }) {
             Cancel
           </MuiButton>
 
-          <MuiButton className="filled-icon-btn" onClick={handleSubmit}>
+          <MuiButton
+            className="filled-icon-btn"
+            disabled={isSubmitting()}
+            onClick={handleSubmit}
+          >
             Submit
           </MuiButton>
         </Box>

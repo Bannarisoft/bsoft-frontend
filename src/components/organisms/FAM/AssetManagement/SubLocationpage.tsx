@@ -5,7 +5,12 @@ import dayjs from "dayjs";
 import { Box } from "@mui/material";
 import { FiEdit } from "react-icons/fi";
 import { RiDeleteBin6Line } from "react-icons/ri";
-import { Apirequest } from "../../../../utils/lib";
+import {
+  Apirequest,
+  isSubmitting,
+  startLoading,
+  stopLoading,
+} from "../../../../utils/lib";
 import IconBreadcrumbs from "../../../molecules/AdminLayout/BreadCrumbs";
 import GlobalSearch from "../../../molecules/AdminLayout/GlobalSearch";
 import { MuiButton, MuiTable } from "bsoft-base-elements";
@@ -300,29 +305,45 @@ function SubLocationpage() {
       setLocationData([]);
     }
   };
-  const handleSubmit = (e: React.MouseEvent<HTMLButtonElement>) => {
-    let temp: any = [];
-    Object.entries(SublocationInput).map(([key, value]) => {
-      if (key === "code" && value?.length < 1) {
+  const handleSubmit = async (e: React.MouseEvent<HTMLButtonElement>) => {
+    let temp: string[] = [];
+    if (isSubmitting()) return;
+    startLoading();
+
+    Object.entries(SublocationInput).forEach(([key, value]) => {
+      if (key === "code" && (!value || value.toString().trim().length < 1)) {
         temp.push(key);
-      } else if (key === "subLocationName" && value?.length < 1) {
+      } else if (
+        key === "subLocationName" &&
+        (!value || value.toString().trim().length < 1)
+      ) {
         temp.push(key);
-      }
-      if (selectedDepartment === null) {
-        temp.push("departmentId");
-      }
-      if (selectedLocation === null) {
-        temp.push("locationId");
       }
     });
+
+    if (selectedDepartment === null) temp.push("departmentId");
+    if (selectedLocation === null) temp.push("locationId");
+
     setError(temp);
-    if (temp.length === 0 && editFlag) {
-      UpdateSubLocation();
-    } else {
-      if (temp.length === 0) {
-        AddSubLocation();
+
+    if (temp.length > 0) {
+      toast.error("Please fill all required fields");
+      stopLoading();
+      return;
+    }
+
+    try {
+      if (editFlag) {
+        await UpdateSubLocation();
+      } else {
+        await AddSubLocation();
         setLoading(true);
       }
+    } catch (err) {
+      console.error("Error in handleSubmit:", err);
+      toast.error("Failed to save sub-location");
+    } finally {
+      stopLoading();
     }
   };
   const AddSubLocation = async () => {
@@ -338,6 +359,7 @@ function SubLocationpage() {
       id: SublocationInput.id,
     };
     try {
+      startLoading();
       const { endpoint, method } = Config.SubLocation.AddSubLocation;
       const response = await Apirequest(endpoint, method, body, "fam").then(
         (res) => res.data
@@ -357,6 +379,8 @@ function SubLocationpage() {
       }
     } catch (err) {
       console.log(err);
+    } finally {
+      stopLoading();
     }
   };
   const UpdateSubLocation = async () => {
@@ -374,6 +398,7 @@ function SubLocationpage() {
     };
 
     try {
+      startLoading();
       const { endpoint, method } = Config.SubLocation.UpdateSubLocation;
       const response = await Apirequest(endpoint, method, body, "fam").then(
         (res) => res.data
@@ -394,12 +419,13 @@ function SubLocationpage() {
     } catch (err) {
       GetSubLocationList();
       console.log(err);
+    } finally {
+      stopLoading();
     }
   };
   const handleDelete = (id: number) => {
     setSubLocationInput({ ...SublocationInput, id: id });
     setDeleteOpen(true);
-    console.log("Deleted user with ID:", id);
   };
   const handleConfirmDelete = async () => {
     DeleteSubLocation();

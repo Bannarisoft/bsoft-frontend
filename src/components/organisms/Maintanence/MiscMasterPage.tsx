@@ -7,7 +7,12 @@ import GlobalSearch from "../../molecules/AdminLayout/GlobalSearch";
 import { MuiButton, MuiTable } from "bsoft-base-elements";
 import { GoPlus } from "react-icons/go";
 import Config from "../../../../src/utils/fam.api.json";
-import { Apirequest } from "../../../utils/lib";
+import {
+  Apirequest,
+  isSubmitting,
+  startLoading,
+  stopLoading,
+} from "../../../utils/lib";
 import { useDebounce } from "../../../hooks/useDebounceHook";
 import { FiEdit } from "react-icons/fi";
 import { RiDeleteBin6Line } from "react-icons/ri";
@@ -195,6 +200,7 @@ function MiscMainMasterPage() {
     };
 
     try {
+      startLoading();
       const { endpoint, method } = MainConfig.Misc.AddMisc;
       const response = await Apirequest(endpoint, method, body, "main").then(
         (res) => res.data
@@ -216,6 +222,8 @@ function MiscMainMasterPage() {
       GetMiscList();
     } catch (err) {
       console.log(err);
+    } finally {
+      stopLoading();
     }
   };
 
@@ -229,6 +237,7 @@ function MiscMainMasterPage() {
       sortOrder: miscInput.sortOrder,
     };
     try {
+      startLoading();
       const { endpoint, method } = MainConfig.Misc.UpdateMisc;
       const response = await Apirequest(endpoint, method, body, "main").then(
         (res) => res.data
@@ -250,6 +259,8 @@ function MiscMainMasterPage() {
     } catch (err) {
       GetMiscList();
       console.log(err);
+    } finally {
+      stopLoading();
     }
   };
 
@@ -302,24 +313,43 @@ function MiscMainMasterPage() {
     setError([]);
   };
 
-  const handleSubmit = (e: React.MouseEvent<HTMLButtonElement>) => {
-    let temp: any = [];
-    Object.entries(miscInput).map(([key, value]) => {
-      if (key === "miscCode" && value?.length == 0) {
-        temp.push(key);
-      } else if (key === "description" && value?.length == 0) {
-        temp.push(key);
+  const handleSubmit = async (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    if (isSubmitting()) return;
+
+    let temp: string[] = [];
+
+    Object.entries(miscInput).forEach(([key, value]) => {
+      if (key === "miscCode" && (!value || value.trim().length === 0)) {
+        temp.push("miscCode");
+      } else if (
+        key === "description" &&
+        (!value || value.trim().length === 0)
+      ) {
+        temp.push("description");
       }
     });
-    selectedMisc === null && temp.push("miscType");
+
+    if (!selectedMisc) temp.push("miscType");
+
     setError(temp);
-    if (temp.length === 0 && editFlag) {
-      UpdateMisc();
-    } else {
-      if (temp.length === 0) {
-        AddMisc();
-        setLoading(true);
+
+    if (temp.length > 0) return;
+
+    try {
+      startLoading();
+      setLoading(true);
+
+      if (editFlag) {
+        await UpdateMisc();
+      } else {
+        await AddMisc();
       }
+    } catch (error) {
+      console.error("Error while submitting Misc data:", error);
+    } finally {
+      stopLoading();
+      setLoading(false);
     }
   };
 

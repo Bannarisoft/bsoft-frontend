@@ -9,12 +9,12 @@ import {
 } from "@mui/material";
 import React from "react";
 import { IoClose } from "react-icons/io5";
-import { CreateFinancialPropTypes } from "../../../types";
+import { CreateFinancialPropTypes } from "../../../types/types";
 import { TransitionProps } from "@mui/material/transitions";
 import InputDatePicker from "../../atoms/Datepicker";
 import dayjs from "dayjs";
 import { MuiButton, MuiSwitch, MuiText } from "bsoft-base-elements";
-import { DateFormatter } from "../../../utils/lib";
+import { DateFormatter, isSubmitting } from "../../../utils/lib";
 
 const Transition = React.forwardRef(function Transition(
   props: TransitionProps & {
@@ -118,7 +118,7 @@ const CreateNewFinancial = ({
                 End Date <span className="mandatory-sign">*</span>
               </MuiText>
               <InputDatePicker
-                format="DD-MM-YYYY" 
+                format="DD-MM-YYYY"
                 slotProps={{
                   textField: {
                     size: "small",
@@ -199,7 +199,11 @@ const CreateNewFinancial = ({
             >
               Cancel
             </MuiButton>
-            <MuiButton className="filled-icon-btn" onClick={handleSubmit}>
+            <MuiButton
+              className="filled-icon-btn"
+              disabled={isSubmitting()}
+              onClick={handleSubmit}
+            >
               Submit
             </MuiButton>
           </Box>

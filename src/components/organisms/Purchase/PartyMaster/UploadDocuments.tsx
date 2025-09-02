@@ -3,6 +3,9 @@ import { MuiInputField, MuiText } from "bsoft-base-elements";
 import { Box, Card, Grid2, Stack, Button, Autocomplete } from "@mui/material";
 import PdfUpload from "./PdfUpload";
 import { FiPlus, FiTrash2 } from "react-icons/fi";
+import toast from "react-hot-toast";
+import { Apirequest } from "../../../../utils/lib";
+import PartyConfig from "../../../../utils/party.api.json";
 
 interface DocumentType {
   id: number;
@@ -15,18 +18,17 @@ interface UploadedDocument {
   uploadedAt: Date;
 }
 
-function UploadDocuments() {
-  const [docType] = useState({
-    additionalCostData: [
-      { id: 1, code: "GST Doc" },
-      { id: 2, code: "MSME Reg" },
-      { id: 3, code: "Bank Statement" },
-      { id: 4, code: "PAN Card" },
-      { id: 5, code: "Aadhar Card" },
-      { id: 6, code: "License Doc" },
-    ],
-  });
-
+function UploadDocuments({
+  canEdit,
+  uploadTypeOptions,
+  onImageUpload,
+  onImageDelete,
+}: {
+  canEdit: boolean;
+  uploadTypeOptions: DocumentType[];
+  onImageUpload?: (imageUrl: string | null, base64?: string | null) => void;
+  onImageDelete?: () => void;
+}) {
   const [selectedDocType, setSelectedDocType] = useState<DocumentType | null>(
     null
   );
@@ -41,7 +43,7 @@ function UploadDocuments() {
 
   const getFilteredDocTypes = (): DocumentType[] => {
     const addedTypes = getAddedDocTypes();
-    return (docType.additionalCostData || []).filter(
+    return (uploadTypeOptions || []).filter(
       (option) => !addedTypes.includes(option.code)
     );
   };
@@ -53,12 +55,10 @@ function UploadDocuments() {
 
   const handleFileSelect = (files: File[]) => {
     setCurrentFiles(files);
-    console.log("Selected files for", selectedDocType?.code, ":", files);
   };
 
   const handleFileRemove = (fileName: string) => {
     setCurrentFiles((prev) => prev.filter((file) => file.name !== fileName));
-    console.log("Removed file:", fileName, "for", selectedDocType?.code);
   };
 
   const handleUploadComplete = (uploadedFiles: File[]) => {
@@ -69,6 +69,57 @@ function UploadDocuments() {
       ":",
       uploadedFiles
     );
+  };
+
+  const UploadImage = async (file: File | Blob) => {
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const { endpoint, method } = PartyConfig.ItemImageUpload.UploadImage;
+
+      const response = await Apirequest(
+        endpoint,
+        method,
+        formData,
+        "party"
+      ).then((r) => r.data);
+
+      const { statusCode, message, data } = response;
+      if (statusCode === 200 || statusCode === 201) {
+        toast.success("File uploaded successfully");
+        console.log(data);
+        // onImageUpload?.(data?.fileName, data?.partyDocumentBase64);
+      } else {
+        toast.error("Image upload failed");
+        onImageUpload?.(null, null);
+      }
+    } catch (err) {
+      console.error("Upload failed:", err);
+      toast.error("Image upload failed");
+      onImageUpload?.(null, null);
+    }
+  };
+
+  const DeleteImage = async (imagePath: string) => {
+    try {
+      const { endpoint, method } = PartyConfig.ItemImageUpload.DeleteImage;
+      const response = await Apirequest(
+        endpoint,
+        method,
+        { imagePath },
+        "party"
+      ).then((r) => r.data);
+
+      const { statusCode, message } = response;
+      if (statusCode === 200 || statusCode === 201) {
+        toast.success(message);
+        onImageDelete?.();
+      }
+    } catch (err) {
+      console.error("Delete failed:", err);
+      toast.error("Image delete failed");
+    }
   };
 
   const handleAddDocument = () => {
@@ -88,19 +139,21 @@ function UploadDocuments() {
     setSelectedDocType(null);
     setCurrentFiles([]);
 
-    console.log("Document added:", newDocument);
+    // Optionally upload files to API immediately
+    currentFiles.forEach((file) => UploadImage(file));
   };
 
   const removeUploadedDocument = (docTypeId: number) => {
     setUploadedDocuments((prev) =>
       prev.filter((doc) => doc.docType.id !== docTypeId)
     );
+    onImageDelete?.();
   };
 
   const canAddDocument = selectedDocType && currentFiles.length > 0;
 
   return (
-    <Box>
+    <Box sx={{ pointerEvents: !canEdit ? "none" : undefined }}>
       <Card sx={{ p: 2 }} elevation={2}>
         <MuiText variant="h6" my={1} pt={1} className="admin-page-title">
           Upload Documents
@@ -137,10 +190,7 @@ function UploadDocuments() {
               isOptionEqualToValue={(
                 option: DocumentType,
                 value: DocumentType
-              ) => {
-                if (!option || !value) return false;
-                return option.id === value.id;
-              }}
+              ) => option.id === value.id}
               renderInput={(params: any) => (
                 <MuiInputField
                   {...params}
@@ -227,9 +277,7 @@ function UploadDocuments() {
                     sx={{
                       p: 2,
                       position: "relative",
-                      "&:hover": {
-                        boxShadow: 2,
-                      },
+                      "&:hover": { boxShadow: 2 },
                     }}
                   >
                     <Stack

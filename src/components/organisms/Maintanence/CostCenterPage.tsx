@@ -12,8 +12,13 @@ import dayjs from "dayjs";
 import { FiEdit } from "react-icons/fi";
 import { RiDeleteBin6Line } from "react-icons/ri";
 import { useDebounce } from "../../../hooks/useDebounceHook";
-import { CostCenterProps } from "../../../maintanenceTypes";
-import { Apirequest } from "../../../utils/lib";
+import { CostCenterProps } from "../../../types/maintanenceTypes";
+import {
+  Apirequest,
+  isSubmitting,
+  startLoading,
+  stopLoading,
+} from "../../../utils/lib";
 import { useRecoilValue } from "recoil";
 import { UserData } from "../../../utils/atoms";
 import CreateCostCenter from "../../molecules/Maintanence/CreateCostCenter";
@@ -253,6 +258,7 @@ const CostCenterPage = () => {
   };
   const AddCostCenter = async () => {
     try {
+      startLoading();
       const body: any = {
         costCenterCode: costCenterInput.costCenterCode?.trim()?.toUpperCase(),
         costCenterName: costCenterInput.costCenterName
@@ -291,11 +297,14 @@ const CostCenterPage = () => {
       }
     } catch (err) {
       console.log(err);
+    } finally {
+      stopLoading();
     }
   };
 
   const UpdateCostCenter = async () => {
     try {
+      startLoading();
       const body: any = {
         costCenterCode: costCenterInput.costCenterCode?.trim()?.toUpperCase(),
         costCenterName: costCenterInput.costCenterName
@@ -334,36 +343,55 @@ const CostCenterPage = () => {
       }
     } catch (err) {
       console.log(err);
+    } finally {
+      stopLoading();
     }
   };
-  const handleSubmit = (e: React.MouseEvent<HTMLButtonElement>) => {
-    let temp: any = [];
+  const handleSubmit = async (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
 
-    Object.entries(costCenterInput).map(([key, value]) => {
-      if (key === "costCenterCode" && value?.length == 0) {
+    if (isSubmitting()) return;
+
+    let temp: string[] = [];
+
+    Object.entries(costCenterInput).forEach(([key, value]) => {
+      if (key === "costCenterCode" && (!value || value.trim().length === 0)) {
         temp.push(key);
-      } else if (key === "costCenterName" && value?.length == 0) {
+      } else if (
+        key === "costCenterName" &&
+        (!value || value.trim().length === 0)
+      ) {
         temp.push(key);
       } else if (key === "effectiveDate" && !value) {
         temp.push(key);
       }
     });
 
-    if (selectedDepartment === null) temp.push("departmentId");
-    if (selectedResponsiblePerson === null) temp.push("responsiblePerson");
+    if (!selectedDepartment) temp.push("departmentId");
+    if (!selectedResponsiblePerson) temp.push("responsiblePerson");
 
     setError(temp);
 
-    if (temp.length === 0) {
-      if (editFlag) {
-        UpdateCostCenter();
-      } else {
-        AddCostCenter();
-      }
-    } else {
+    if (temp.length > 0) {
       toast.error("Please fill all required fields");
+      return;
+    }
+
+    try {
+      startLoading();
+
+      if (editFlag) {
+        await UpdateCostCenter();
+      } else {
+        await AddCostCenter();
+      }
+    } catch (error) {
+      console.error(error);
+    } finally {
+      stopLoading();
     }
   };
+
   const handleEdit = (row: any) => {
     setEditFlag(true);
     setOpen(true);
@@ -453,7 +481,6 @@ const CostCenterPage = () => {
 
   const GetCostCenterList = async () => {
     try {
-      setLoading(true);
       const response = await Apirequest(
         MainConfig.CostCenter.GetCostCenter.endpoint
           .replace("{page}", page.toString())

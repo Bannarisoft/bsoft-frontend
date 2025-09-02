@@ -4,7 +4,14 @@ import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { MuiButton, MuiInputField, MuiText } from "bsoft-base-elements";
 import dayjs from "dayjs";
 import React, { useEffect, useState } from "react";
-import { Apirequest, DateFormatter, emailRegex } from "../../../../utils/lib";
+import {
+  Apirequest,
+  DateFormatter,
+  emailRegex,
+  isSubmitting,
+  startLoading,
+  stopLoading,
+} from "../../../../utils/lib";
 import FamConfig from "../../../../utils/fam.api.json";
 import { WarrantyState } from "./useAssetWarranty";
 import Swal from "sweetalert2";
@@ -101,9 +108,9 @@ function AssetWaranty(props: AssetWarrantyTypes) {
     id: warrantyId !== 0 ? warrantyId : undefined,
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
+    if (isSubmitting()) return;
     let temp: string[] = [];
-
     Object.entries(warrantyInputs).forEach(([key, value]: any) => {
       if (key === "mobile" || key === "centrePhone") {
         if (!value || value.toString().length !== 10) temp.push(key);
@@ -147,12 +154,20 @@ function AssetWaranty(props: AssetWarrantyTypes) {
       if (warrantyBody.id) {
         warrantyBody.id = warrantyId;
       }
-      AddWarranty();
+      try {
+        startLoading();
+        await AddWarranty();
+      } catch (error) {
+        console.error("Warranty submission failed:", error);
+      } finally {
+        stopLoading();
+      }
     }
   };
 
   const AddWarranty = async () => {
     try {
+      startLoading();
       if (
         warrantyInputs.serviceLastClaimDate &&
         dayjs(warrantyInputs.serviceLastClaimDate).isValid()
@@ -193,6 +208,8 @@ function AssetWaranty(props: AssetWarrantyTypes) {
       }
     } catch (err) {
       console.error(err);
+    } finally {
+      stopLoading();
     }
   };
 
@@ -777,6 +794,7 @@ function AssetWaranty(props: AssetWarrantyTypes) {
         <MuiButton
           variant="contained"
           onClick={handleSubmit}
+          disabled={isSubmitting()}
           sx={{
             background: "#107869 !important",
             px: 4,

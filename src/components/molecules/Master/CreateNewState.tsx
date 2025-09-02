@@ -4,7 +4,7 @@ import DialogActions from "@mui/material/DialogActions";
 import DialogContent from "@mui/material/DialogContent";
 import Slide from "@mui/material/Slide";
 import { TransitionProps } from "@mui/material/transitions";
-import { CreateStatePropsTypes } from "../../../types";
+import { CreateStatePropsTypes } from "../../../types/types";
 import { Autocomplete, Box, FormGroup, Grid2 } from "@mui/material";
 import { IoClose } from "react-icons/io5";
 import {
@@ -13,6 +13,7 @@ import {
   MuiSwitch,
   MuiText,
 } from "bsoft-base-elements";
+import { isSubmitting } from "../../../utils/lib";
 
 const Transition = React.forwardRef(function Transition(
   props: TransitionProps & {
@@ -189,7 +190,7 @@ export default function CreateNewState({
             >
               Cancel
             </MuiButton>
-            <MuiButton className="filled-icon-btn" onClick={handleSubmit}>
+            <MuiButton className="filled-icon-btn" disabled={isSubmitting()} onClick={handleSubmit}>
               Submit
             </MuiButton>
           </Box>

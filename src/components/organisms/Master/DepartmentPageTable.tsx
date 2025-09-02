@@ -7,9 +7,14 @@ import IconBreadcrumbs from "../../molecules/AdminLayout/BreadCrumbs";
 import GlobalSearch from "../../molecules/AdminLayout/GlobalSearch";
 import { GoPlus } from "react-icons/go";
 import Config from "../../../utils/config.api.json";
-import { DepartmentProps } from "../../../types";
+import { DepartmentProps } from "../../../types/types";
 import CreateNewDepartment from "../../molecules/Master/CreateNewDepartment";
-import { Apirequest } from "../../../utils/lib";
+import {
+  Apirequest,
+  isSubmitting,
+  startLoading,
+  stopLoading,
+} from "../../../utils/lib";
 import { useDebounce } from "../../../hooks/useDebounceHook";
 import DeleteConfirmation from "../../molecules/Master/DeleteConfirmation";
 import { useRecoilValue } from "recoil";
@@ -188,37 +193,53 @@ function DepartmentPageTable() {
       ? setDepartmentInput({ ...departmentInput, isActive: 1 })
       : setDepartmentInput({ ...departmentInput, isActive: 0 });
   };
-  const handleSubmit = (e: React.MouseEvent<HTMLButtonElement>) => {
-    let temp: any = [];
-    Object.entries(departmentInput).map(([key, value]) => {
+  const handleSubmit = async (e: React.MouseEvent<HTMLButtonElement>) => {
+    let temp: string[] = [];
+    if (isSubmitting()) return;
+
+    Object.entries(departmentInput).forEach(([key, value]) => {
       if (
         key === "shortName" &&
         (!value || typeof value !== "string" || value.trim().length < 2)
       ) {
         temp.push(key);
-        console.log("Invalid shortName");
       } else if (
         key === "deptName" &&
         (!value || typeof value !== "string" || value.trim().length < 4)
       ) {
         temp.push(key);
-        console.log("Invalid deptName");
       }
     });
-    if (selectedDepartmentGroup === null) temp.push("departmentGroupId");
+
+    if (selectedDepartmentGroup === null) {
+      temp.push("departmentGroupId");
+    }
 
     setError(temp);
-    if (temp.length === 0 && editFlag) {
-      Updatedepartment();
-    } else {
-      if (temp.length === 0) {
-        AddDepartment();
+
+    if (temp.length > 0) {
+      toast.error("Please fill all required fields");
+      stopLoading();
+      return;
+    }
+
+    try {
+      if (editFlag) {
+        await Updatedepartment();
+      } else {
+        await AddDepartment();
         setLoading(false);
       }
+    } catch (err) {
+      console.error("Error in handleSubmit:", err);
+    } finally {
+      stopLoading();
     }
   };
+
   const AddDepartment = async () => {
     try {
+      startLoading();
       const body = {
         shortName: departmentInput.shortName?.trim(),
         deptName: departmentInput.deptName
@@ -255,10 +276,13 @@ function DepartmentPageTable() {
       }
     } catch (err) {
       console.log(err);
+    } finally {
+      stopLoading();
     }
   };
   const Updatedepartment = async () => {
     try {
+      startLoading();
       const body = {
         shortName: departmentInput.shortName?.trim(),
         deptName: departmentInput.deptName
@@ -296,6 +320,8 @@ function DepartmentPageTable() {
       }
     } catch (err) {
       console.log(err);
+    } finally {
+      stopLoading();
     }
   };
 

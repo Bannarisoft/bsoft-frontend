@@ -4,7 +4,6 @@ import {
   Paper,
   Typography,
   Button,
-  LinearProgress,
   Alert,
   IconButton,
   Chip,
@@ -156,40 +155,6 @@ const PdfUpload: React.FC<PdfUploadProps> = ({
       success: false,
     }));
     onFileRemove?.(fileName);
-  };
-
-  const handleUpload = async () => {
-    if (state.files.length === 0 || disabled) return;
-
-    setState((prev) => ({
-      ...prev,
-      uploading: true,
-      uploadProgress: 0,
-      error: null,
-    }));
-
-    try {
-      for (let progress = 0; progress <= 100; progress += 10) {
-        await new Promise((resolve) => setTimeout(resolve, 200));
-        setState((prev) => ({ ...prev, uploadProgress: progress }));
-      }
-
-      setState((prev) => ({
-        ...prev,
-        uploading: false,
-        success: true,
-        uploadProgress: 100,
-      }));
-
-      onUploadComplete?.(state.files);
-    } catch (error) {
-      setState((prev) => ({
-        ...prev,
-        uploading: false,
-        error: "Upload failed. Please try again.",
-        uploadProgress: 0,
-      }));
-    }
   };
 
   const handleDrag = (e: React.DragEvent) => {
@@ -351,32 +316,6 @@ const PdfUpload: React.FC<PdfUploadProps> = ({
               </IconButton>
             </FilePreview>
           ))}
-        </Box>
-      )}
-
-      {/* Upload Progress */}
-      {showProgress && state.uploading && (
-        <Box sx={{ mt: 3 }}>
-          <Typography variant="body2" sx={{ mb: 1 }}>
-            Uploading... {state.uploadProgress}%
-          </Typography>
-          <LinearProgress variant="determinate" value={state.uploadProgress} />
-        </Box>
-      )}
-
-      {/* Upload Button */}
-      {state.files.length > 0 && !state.success && (
-        <Box sx={{ mt: 3, textAlign: "center" }}>
-          <Button
-            variant="contained"
-            size="large"
-            onClick={handleUpload}
-            disabled={disabled || state.uploading || state.files.length === 0}
-            startIcon={state.uploading ? undefined : <FiUpload />}
-            sx={{ minWidth: 140 }}
-          >
-            {state.uploading ? "Uploading..." : "Upload Files"}
-          </Button>
         </Box>
       )}
     </Box>

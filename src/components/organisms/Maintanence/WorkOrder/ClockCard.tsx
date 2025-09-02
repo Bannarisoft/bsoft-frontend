@@ -1,6 +1,6 @@
 import { Box, Card, IconButton, Chip } from "@mui/material";
 import { MuiText } from "bsoft-base-elements";
-import { ClockCardProps } from "../../../../maintanenceTypes";
+import { ClockCardProps } from"../../../../types/maintanenceTypes";
 import React, { useCallback } from "react";
 import {
   FaArrowRightLong,

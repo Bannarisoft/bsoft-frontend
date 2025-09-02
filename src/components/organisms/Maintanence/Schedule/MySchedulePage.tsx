@@ -48,7 +48,13 @@ import dayjs, { Dayjs } from "dayjs";
 import { MuiButton } from "bsoft-base-elements";
 import { BiSearch } from "react-icons/bi";
 import { GrClear } from "react-icons/gr";
-import { Apirequest, StyledAutocomplete } from "../../../../utils/lib";
+import {
+  Apirequest,
+  isSubmitting,
+  startLoading,
+  stopLoading,
+  StyledAutocomplete,
+} from "../../../../utils/lib";
 import toast from "react-hot-toast";
 
 const CalendarContainer = styled(Paper)(({ theme }) => ({
@@ -489,29 +495,41 @@ export default function MySchedulePage({
   };
 
   const handleScheduleSave = async () => {
-    if (scheduleDate) {
+    if (isSubmitting()) return;
+
+    if (!scheduleDate) {
+      console.error("Please select a schedule date.");
+      return;
+    }
+
+    startLoading();
+
+    try {
       const body = {
         preventiveScheduleDetailId: Number(scheduleId),
         rescheduleDate: dayjs(scheduleDate).format("YYYY-MM-DD"),
       };
+
       const { endpoint, method } = MainConfig.WorkOrder.Schedule.Reschedule;
+
       const response = await Apirequest(endpoint, method, body, "main").then(
         (res) => res.data
       );
+
       if (response?.statusCode === 200 || response?.statusCode === 201) {
         toast.success(response?.message);
-        setScheduleId("");
-        setScheduleDate(null);
-        setSelectedCalendar(null);
         setRefreshKey((prev) => prev + 1);
-        setSelectedEvent(null);
       } else {
         toast.error(response?.message);
-        setScheduleId("");
-        setScheduleDate(null);
-        setSelectedCalendar(null);
-        setSelectedEvent(null);
       }
+    } catch (error) {
+      console.error("Schedule save error:", error);
+    } finally {
+      stopLoading();
+      setScheduleId("");
+      setScheduleDate(null);
+      setSelectedCalendar(null);
+      setSelectedEvent(null);
     }
   };
 
@@ -1094,7 +1112,7 @@ export default function MySchedulePage({
               onClick={() => {
                 handleScheduleSave();
               }}
-              disabled={!scheduleDate}
+              disabled={!scheduleDate || isSubmitting()}
             >
               Save
             </MuiButton>

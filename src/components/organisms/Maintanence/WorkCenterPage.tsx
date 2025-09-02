@@ -12,8 +12,13 @@ import { RiDeleteBin6Line } from "react-icons/ri";
 import { useDebounce } from "../../../hooks/useDebounceHook";
 import DeleteConfirmation from "../../molecules/Master/DeleteConfirmation";
 import CreateWorkCenter from "../../molecules/Maintanence/CreateWorkCenter";
-import { WorkCenterProps } from "../../../maintanenceTypes";
-import { Apirequest } from "../../../utils/lib";
+import { WorkCenterProps } from "../../../types/maintanenceTypes";
+import {
+  Apirequest,
+  isSubmitting,
+  startLoading,
+  stopLoading,
+} from "../../../utils/lib";
 import { useRecoilValue } from "recoil";
 import { UserData } from "../../../utils/atoms";
 import { useDataFetchHook } from "../../../hooks/useDataFetchHook";
@@ -204,6 +209,7 @@ const WorkCenterPage = () => {
   };
   const AddWorkCenter = async () => {
     try {
+      startLoading();
       const body: any = {
         workCenterName: workCenterInput.workCenterName
           ?.trim()
@@ -236,11 +242,14 @@ const WorkCenterPage = () => {
       }
     } catch (err) {
       console.log(err);
+    } finally {
+      stopLoading();
     }
   };
 
   const UpdateWorkCenter = async () => {
     try {
+      startLoading();
       const body: any = {
         workCenterName: workCenterInput.workCenterName
           ?.trim()
@@ -276,37 +285,57 @@ const WorkCenterPage = () => {
     } catch (err) {
       GetWorkCenterList();
       console.log(err);
+    } finally {
+      stopLoading();
     }
   };
-  const handleSubmit = (e: React.MouseEvent<HTMLButtonElement>) => {
-    let temp: any = [];
-    Object.entries(workCenterInput).map(([key, value]) => {
-      if (
-        key === "workCenterCode" &&
-        typeof value == "string" &&
-        value?.length < 1
-      ) {
-        temp.push(key);
-      } else if (
-        key === "workCenterName" &&
-        typeof value == "string" &&
-        value?.length < 1
-      ) {
-        temp.push(key);
-      }
-      if (selectedDepartment === null) {
-        temp.push("departmentId");
-      }
-    });
+  const handleSubmit = async (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+
+    if (isSubmitting()) return;
+
+    let temp: string[] = [];
+
+    if (
+      !workCenterInput.workCenterCode ||
+      workCenterInput.workCenterCode.trim().length < 1
+    ) {
+      temp.push("workCenterCode");
+    }
+
+    if (
+      !workCenterInput.workCenterName ||
+      workCenterInput.workCenterName.trim().length < 1
+    ) {
+      temp.push("workCenterName");
+    }
+
+    if (!selectedDepartment) {
+      temp.push("departmentId");
+    }
+
     setError(temp);
-    if (temp.length === 0 && editFlag) {
-      UpdateWorkCenter();
-    } else {
-      if (temp.length === 0) {
-        AddWorkCenter();
+
+    if (temp.length > 0) {
+      console.error("Please fill all mandatory fields.");
+      return;
+    }
+
+    try {
+      startLoading();
+
+      if (editFlag) {
+        await UpdateWorkCenter();
+      } else {
+        await AddWorkCenter();
       }
+    } catch (error) {
+      console.error("Error saving work center:", error);
+    } finally {
+      stopLoading();
     }
   };
+
   const handleEdit = (row: any) => {
     setEditFlag(true);
     setOpen(true);

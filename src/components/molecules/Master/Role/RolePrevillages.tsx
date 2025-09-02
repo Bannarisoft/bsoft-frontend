@@ -10,7 +10,7 @@ import Paper from "@mui/material/Paper";
 import { Box, Checkbox } from "@mui/material";
 import ButtonComponent from "../../../atoms/Button";
 import MyCustomSwitch from "../../../atoms/Switch";
-import { RolePrevillagesProps } from "../../../../types";
+import { RolePrevillagesProps } from "../../../../types/types";
 
 const StyledTableCell = styled(TableCell)(({ theme }) => ({
   [`&.${tableCellClasses.head}`]: {
@@ -58,10 +58,10 @@ function RolePrevillages({
   switchState,
   handleSwitch,
 }: RolePrevillagesProps) {
-
   const isRowSelected = (chipId: number | string) => {
     const keys = [
       "canAdd",
+      "canView",
       "canUpdate",
       "canDelete",
       "canExport",
@@ -70,11 +70,11 @@ function RolePrevillages({
     return keys.every((key) => switchState[chipId as any]?.[key]);
   };
 
-  
   const handleRowCheckboxChange = (event: any, chipId: number | string) => {
     const checked = event.target.checked;
     const keys = [
       "canAdd",
+      "canView",
       "canUpdate",
       "canDelete",
       "canExport",
@@ -82,11 +82,10 @@ function RolePrevillages({
     ];
 
     keys.forEach((key) => {
-      
       const event = {
-        target: Object.assign(document.createElement('input'), {
-          checked
-        })
+        target: Object.assign(document.createElement("input"), {
+          checked,
+        }),
       } as React.ChangeEvent<HTMLInputElement>;
       handleSwitch(event, Number(chipId), key);
     });
@@ -103,6 +102,7 @@ function RolePrevillages({
           <ScrollableTableRow>
             <StyledTableHeadCell>List of Menu</StyledTableHeadCell>
             <StyledTableHeadCell align="center">Add</StyledTableHeadCell>
+            <StyledTableHeadCell align="center">View</StyledTableHeadCell>
             <StyledTableHeadCell align="center">Update</StyledTableHeadCell>
             <StyledTableHeadCell align="center">Delete</StyledTableHeadCell>
             <StyledTableHeadCell align="center">Export</StyledTableHeadCell>
@@ -137,6 +137,7 @@ function RolePrevillages({
                 </StyledTableCell>
                 {[
                   { key: "canAdd", label: "Add" },
+                  { key: "canView", label: "View" },
                   { key: "canUpdate", label: "Update" },
                   { key: "canDelete", label: "Delete" },
                   { key: "canExport", label: "Export" },

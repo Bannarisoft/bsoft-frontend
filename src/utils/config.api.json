@@ -479,6 +479,164 @@
     "Detail": {
       "endpoint": "api/NotificationDetail/detail/{userId}",
       "method": "GET"
+    },
+    "NotificationConfig": {
+      "endpoint": "api/NotificationConfig?PageNumber={page}&PageSize={size}&SearchTerm={searchTerm}",
+      "method": "GET",
+      "GetByNotificationConfig": {
+        "endpoint": "api/NotificationConfig/by-name",
+        "method": "GET"
+      },
+      "AddNotificationConfig": {
+        "endpoint": "api/NotificationConfig",
+        "method": "POST"
+      },
+      "UpdateNotificationConfig": {
+        "endpoint": "api/NotificationConfig",
+        "method": "PUT"
+      },
+      "DeleteNotificationConfig": {
+        "endpoint": "api/NotificationConfig?id={id}",
+        "method": "DELETE"
+      }
+    },
+    "NotificationEventRule": {
+      "endpoint": "api/NotificationEventRule?PageNumber={page}&PageSize={size}&SearchTerm={searchTerm}",
+      "method": "GET",
+      "AddNotificationEventRule": {
+        "endpoint": "api/NotificationEventRule",
+        "method": "POST"
+      },
+      "UpdateNotificationEventRule": {
+        "endpoint": "api/NotificationEventRule",
+        "method": "PUT"
+      },
+      "DeleteNotificationEventRule": {
+        "endpoint": "api/NotificationEventRule/{id}",
+        "method": "DELETE"
+      }
+    },
+    "NotificationGroupMember": {
+      "endpoint": "api/NotificationGroupMember?PageNumber={page}&PageSize={size}&SearchTerm={searchTerm}",
+      "method": "GET",
+      "AddNotificationGroupMember": {
+        "endpoint": "api/NotificationGroupMember",
+        "method": "POST"
+      },
+      "UpdateNotificationGroupMember": {
+        "endpoint": "api/NotificationGroupMember",
+        "method": "PUT"
+      },
+      "DeleteNotificationGroupMember": {
+        "endpoint": "api/NotificationGroupMember?id={id}",
+        "method": "DELETE"
+      }
+    },
+    "NotificationGroup": {
+      "endpoint": "api/NotificationGroup?PageNumber={page}&PageSize={size}&SearchTerm={searchTerm}",
+      "method": "GET",
+      "AddNotificationGroup": {
+        "endpoint": "api/NotificationGroup",
+        "method": "POST"
+      },
+      "UpdateNotificationGroup": {
+        "endpoint": "api/NotificationGroup",
+        "method": "PUT"
+      },
+      "DeleteNotificationGroup": {
+        "endpoint": "api/NotificationGroup?id={id}",
+        "method": "DELETE"
+      },
+      "GetByNotificationGroup": {
+        "endpoint": "api/NotificationGroup/by-name",
+        "method": "GET"
+      }
+    },
+    "NotificationTemplate": {
+      "endpoint": "api/NotificationTemplate?PageNumber={page}&PageSize={size}&SearchTerm={searchTerm}",
+      "method": "GET",
+      "GetByNotificationTemplet": {
+        "endpoint": "api/NotificationTemplate/by-name",
+        "method": "GET"
+      },
+      "AddNotificationTemplet": {
+        "endpoint": "api/NotificationTemplate",
+        "method": "POST"
+      },
+      "UpdateNotificationTemplet": {
+        "endpoint": "api/NotificationTemplate",
+        "method": "PUT"
+      },
+      "DeleteNotificationTemplet": {
+        "endpoint": "api/NotificationTemplate?id={id}",
+        "method": "DELETE"
+      }
+    }
+  },
+  "Workflow": {
+    "WorkflowType": {
+      "endpoint": "api/WorkflowType?PageNumber={page}&PageSize={size}&SearchTerm={searchTerm}",
+      "method": "GET",
+      "AddWorkflowType": {
+        "endpoint": "api/WorkflowType",
+        "method": "POST"
+      },
+      "UpdateWorkflowType": {
+        "endpoint": "api/WorkflowType",
+        "method": "PUT"
+      },
+      "DeleteWorkflowType": {
+        "endpoint": "api/WorkflowType?id={id}",
+        "method": "DELETE"
+      },
+      "GetByWorkflowType": {
+        "endpoint": "api/WorkflowType/by-name",
+        "method": "GET"
+      }
+    },
+    "ApprovalRule": {
+      "endpoint": "api/ApprovalRule?PageNumber={page}&PageSize={size}&SearchTerm={searchTerm}",
+      "method": "GET",
+      "AddApprovalRule": {
+        "endpoint": "api/ApprovalRule",
+        "method": "POST"
+      },
+      "UpdateApprovalRule": {
+        "endpoint": "api/ApprovalRule",
+        "method": "PUT"
+      },
+      "DeleteApprovalRule": {
+        "endpoint": "api/ApprovalRule?id={id}",
+        "method": "DELETE"
+      },
+      "GetByApprovalRule": {
+        "endpoint": "api/ApprovalRule/by-name",
+        "method": "GET"
+      }
+    },
+    "ApprovalDetail": {
+      "endpoint": "api/ApprovalStepDetail?PageNumber={page}&PageSize={size}&SearchTerm={searchTerm}",
+      "method": "GET",
+      "AddApprovalDetail": {
+        "endpoint": "api/ApprovalStepDetail",
+        "method": "POST"
+      },
+      "UpdateApprovalDetail": {
+        "endpoint": "api/ApprovalStepDetail",
+        "method": "PUT"
+      },
+      "DeleteApprovalDetail": {
+        "endpoint": "api/ApprovalStepDetail?id={id}",
+        "method": "DELETE"
+      },
+      "getoveralLDetail": {
+        "endpoint": "api/ApprovalStepDetail/{id}",
+        "method": "GET"
+      }
+    },
+    "Misc": {
+      "endpoint": "api/MiscMaster/by-name?MiscTypeCode={type}",
+      "method": "GET"
     }
   }
 }

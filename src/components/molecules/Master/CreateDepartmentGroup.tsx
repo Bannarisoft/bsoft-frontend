@@ -8,13 +8,14 @@ import { TransitionProps } from "@mui/material/transitions";
 import { Box, FormGroup, Grid2 } from "@mui/material";
 import { IoClose } from "react-icons/io5";
 
-import { CreateDepartmentGroupType } from "../../../types";
+import { CreateDepartmentGroupType } from "../../../types/types";
 import {
   MuiButton,
   MuiInputField,
   MuiSwitch,
   MuiText,
 } from "bsoft-base-elements";
+import { isSubmitting } from "../../../utils/lib";
 
 const Transition = React.forwardRef(function Transition(
   props: TransitionProps & {
@@ -64,7 +65,7 @@ const CreateDepartmentGroup = ({
           <Grid2 container spacing={2}>
             <Grid2 size={6}>
               <MuiText variant="h6" my={1} className="admin-label-title">
-              Department Group Code <span className="mandatory-sign">*</span>
+                Department Group Code <span className="mandatory-sign">*</span>
               </MuiText>
               <MuiInputField
                 fullWidth
@@ -150,7 +151,11 @@ const CreateDepartmentGroup = ({
             >
               Cancel
             </MuiButton>
-            <MuiButton className="filled-icon-btn" onClick={handleSubmit}>
+            <MuiButton
+              className="filled-icon-btn"
+              disabled={isSubmitting()}
+              onClick={handleSubmit}
+            >
               Submit
             </MuiButton>
           </Box>

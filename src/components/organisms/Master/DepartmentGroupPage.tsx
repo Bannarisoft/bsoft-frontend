@@ -7,8 +7,13 @@ import IconBreadcrumbs from "../../molecules/AdminLayout/BreadCrumbs";
 import GlobalSearch from "../../molecules/AdminLayout/GlobalSearch";
 import { GoPlus } from "react-icons/go";
 import Config from "../../../utils/config.api.json";
-import { DepartmentGroupProps } from "../../../types";
-import { Apirequest } from "../../../utils/lib";
+import { DepartmentGroupProps } from "../../../types/types";
+import {
+  Apirequest,
+  isSubmitting,
+  startLoading,
+  stopLoading,
+} from "../../../utils/lib";
 import { useDebounce } from "../../../hooks/useDebounceHook";
 import { MuiButton, MuiTable } from "bsoft-base-elements";
 import { usePrivilegeCheck } from "../../../hooks/usePrivilegeCheck";
@@ -159,35 +164,45 @@ function DepartmentGroupPageTable() {
       ? setDepartmentGroupInput({ ...departmentGroupInput, isActive: 1 })
       : setDepartmentGroupInput({ ...departmentGroupInput, isActive: 0 });
   };
-  const handleSubmit = (e: React.MouseEvent<HTMLButtonElement>) => {
+  const handleSubmit = async (e: React.MouseEvent<HTMLButtonElement>) => {
     let temp: any = [];
+    if (isSubmitting()) return;
+
     Object.entries(departmentGroupInput).map(([key, value]) => {
       if (
         key === "departmentGroupCode" &&
         (!value || typeof value !== "string" || value.trim().length < 0)
       ) {
         temp.push(key);
-        console.log("Invalid departmentGroupCode");
       } else if (
         key === "departmentGroupName" &&
         (!value || typeof value !== "string" || value.trim().length < 0)
       ) {
         temp.push(key);
-        console.log("Invalid departmentGroupName");
       }
     });
     setError(temp);
-    if (temp.length === 0 && editFlag) {
-      UpdateDepartmentGroup();
-    } else {
-      if (temp.length === 0) {
-        AddDepartmentGroup();
-        setLoading(false);
+
+    if (temp.length === 0) {
+      try {
+        if (editFlag) {
+          await UpdateDepartmentGroup();
+        } else {
+          await AddDepartmentGroup();
+        }
+      } catch (err) {
+        console.error("Error in handleSubmit:", err);
+      } finally {
+        stopLoading();
       }
+    } else {
+      toast.error("Please fill all required fields");
+      stopLoading();
     }
   };
   const AddDepartmentGroup = async () => {
     try {
+      startLoading();
       const body = {
         departmentGroupCode: departmentGroupInput.departmentGroupCode
           ?.trim()
@@ -221,10 +236,13 @@ function DepartmentGroupPageTable() {
       }
     } catch (err) {
       console.log(err);
+    } finally {
+      stopLoading();
     }
   };
   const UpdateDepartmentGroup = async () => {
     try {
+      startLoading();
       const body = {
         departmentGroupCode: departmentGroupInput.departmentGroupCode
           ?.trim()
@@ -254,12 +272,14 @@ function DepartmentGroupPageTable() {
       } else {
         toast.error(response.message);
         if (Array.isArray(response.errors) && response.errors.length > 0) {
-          setErrorModalOpen(true);  
+          setErrorModalOpen(true);
           setErrorMessages(response.errors);
         }
       }
     } catch (err) {
       console.log(err);
+    } finally {
+      stopLoading();
     }
   };
 

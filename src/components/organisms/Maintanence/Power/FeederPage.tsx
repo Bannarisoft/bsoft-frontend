@@ -8,14 +8,19 @@ import NoDataFound from "../../../molecules/AdminLayout/NoDataFound";
 import CreateFeeder from "../../../molecules/Maintanence/Power/CreateFeeder";
 import { FiEdit } from "react-icons/fi";
 import { RiDeleteBin6Line } from "react-icons/ri";
-import { FeederProps } from "../../../../maintanenceTypes";
+import { FeederProps } from "../../../../types/maintanenceTypes";
 import DeleteConfirmation from "../../../molecules/Master/DeleteConfirmation";
 import { useDebounce } from "../../../../hooks/useDebounceHook";
 import { usePrivilegeCheck } from "../../../../hooks/usePrivilegeCheck";
 import { useDataFetchHook } from "../../../../hooks/useDataFetchHook";
 import MainConfig from "../../../../utils/main.api.json";
 import Config from "../../../../utils/config.api.json";
-import { Apirequest } from "../../../../utils/lib";
+import {
+  Apirequest,
+  isSubmitting,
+  startLoading,
+  stopLoading,
+} from "../../../../utils/lib";
 import SkeletonLoader from "../../../molecules/AdminLayout/SkeletonLoader";
 import { useRecoilValue } from "recoil";
 import { UserData } from "../../../../utils/atoms";
@@ -226,12 +231,17 @@ function FeederPage() {
     }
   };
 
-  const handleSubmit = (e: React.MouseEvent<HTMLButtonElement>) => {
-    let temp: any = [];
-    Object.entries(feederInput).map(([key, value]) => {
+  const handleSubmit = async (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+
+    if (isSubmitting()) return;
+
+    let temp: string[] = [];
+
+    Object.entries(feederInput).forEach(([key, value]) => {
       if (
-        (key === "feederCode" && !value?.length) ||
-        (key === "feederName" && !value?.length) ||
+        (key === "feederCode" && !value?.toString().trim().length) ||
+        (key === "feederName" && !value?.toString().trim().length) ||
         (key === "effectiveDate" && !value) ||
         (key === "openingReading" && !value) ||
         (key === "target" && !value) ||
@@ -244,34 +254,30 @@ function FeederPage() {
     if (!feederTypeFlag && !selectedValues["parentFeederId"]?.length) {
       temp.push("parentFeederId");
     }
-    if (
-      !selectedValues["feederGroupId"] ||
-      selectedValues["feederGroupId"].length === 0
-    ) {
-      temp.push("feederGroupId");
-    }
 
-    if (
-      !selectedValues["feederTypeId"] ||
-      selectedValues["feederTypeId"].length === 0
-    ) {
-      temp.push("feederTypeId");
-    }
-    if (
-      !selectedValues["departmentId"] ||
-      selectedValues["departmentId"].length === 0
-    ) {
-      temp.push("departmentId");
-    }
+    if (!selectedValues["feederGroupId"]?.length) temp.push("feederGroupId");
+    if (!selectedValues["feederTypeId"]?.length) temp.push("feederTypeId");
+    if (!selectedValues["departmentId"]?.length) temp.push("departmentId");
 
     setError(temp);
 
-    if (temp.length === 0 && editFlag) {
-      UpdateFeeder();
-    } else {
-      if (temp.length === 0) {
-        AddFeeder();
+    if (temp.length > 0) {
+      console.error("Please fill all mandatory fields.");
+      return;
+    }
+
+    try {
+      startLoading();
+
+      if (editFlag) {
+        await UpdateFeeder();
+      } else {
+        await AddFeeder();
       }
+    } catch (error) {
+      console.error("Error saving feeder:", error);
+    } finally {
+      stopLoading();
     }
   };
 
@@ -336,7 +342,7 @@ function FeederPage() {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     let { name, value } = e.target;
-     const filteredValue =
+    const filteredValue =
       name === "feederCode" ? value.replace(/[^a-zA-Z0-9]/g, "") : value;
     setFeederInput({ ...feederInput, [name]: filteredValue });
     setError([]);
@@ -397,7 +403,6 @@ function FeederPage() {
     MainConfig.Feeder.MeterType.method,
     "main"
   );
-
 
   const handleAutocompleteChange = (
     e: React.SyntheticEvent | React.ChangeEvent<HTMLInputElement>,
@@ -534,9 +539,12 @@ function FeederPage() {
 
   const AddFeeder = async () => {
     try {
+      startLoading();
       const body: any = {
         feederCode: feederInput.feederCode?.trim()?.toUpperCase(),
-        feederName: feederInput.feederName?.trim().replace(/\b\w/g, (char:any) => char.toUpperCase()),
+        feederName: feederInput.feederName
+          ?.trim()
+          .replace(/\b\w/g, (char: any) => char.toUpperCase()),
         parentFeederId: selectedValues["parentFeederId"]?.[0]?.id ?? null,
         feederGroupId: selectedValues["feederGroupId"]?.[0]?.id || 0,
         feederTypeId: selectedValues["feederTypeId"]?.[0]?.id || 0,
@@ -573,14 +581,19 @@ function FeederPage() {
       }
     } catch (err) {
       console.log(err);
+    } finally {
+      stopLoading();
     }
   };
 
   const UpdateFeeder = async () => {
     try {
+      startLoading();
       const body: any = {
         feederCode: feederInput.feederCode?.trim()?.toUpperCase(),
-        feederName: feederInput.feederName?.trim().replace(/\b\w/g, (char:any) => char.toUpperCase()),
+        feederName: feederInput.feederName
+          ?.trim()
+          .replace(/\b\w/g, (char: any) => char.toUpperCase()),
         parentFeederId: selectedValues["parentFeederId"]?.[0]?.id ?? null,
         feederGroupId: selectedValues["feederGroupId"]?.[0]?.id || 0,
         feederTypeId: selectedValues["feederTypeId"]?.[0]?.id || 0,
@@ -617,6 +630,8 @@ function FeederPage() {
       }
     } catch (err) {
       console.log(err);
+    } finally {
+      stopLoading();
     }
   };
 

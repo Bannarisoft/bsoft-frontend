@@ -2,7 +2,6 @@ import axios, { AxiosRequestConfig } from "axios";
 import { NextResponse } from "next/server";
 import Cookies from "js-cookie";
 import { jwtDecode } from "jwt-decode";
-import { MenuItem } from "./menu";
 import dayjs, { Dayjs } from "dayjs";
 import {
   Autocomplete,
@@ -11,24 +10,13 @@ import {
   TableCell,
   tableCellClasses,
   TableRow,
+  TextField,
 } from "@mui/material";
 import { MuiButton } from "bsoft-base-elements";
 import * as signalR from "@microsoft/signalr";
+import { getBaseUrl } from "./apiBaseUrl";
 
-type ApiResponse<T = any> = T;
-
-const getBaseUrl = (module: string) => {
-  switch (module) {
-    case "fam":
-      return `${process.env.NEXT_PUBLIC_FAM_BASE_URL}`;
-    case "main":
-      return `${process.env.NEXT_PUBLIC_MAINTANENCE_BASE_URL}`;
-    case "bg":
-      return `${process.env.NEXT_PUBLIC_SERVICE_URL}`;
-    default:
-      return `${process.env.NEXT_PUBLIC_BASE_URL}`;
-  }
-};
+export type ApiResponse<T = any> = T;
 
 export const Apirequest = async <T = any>(
   endpoint: string,
@@ -36,9 +24,10 @@ export const Apirequest = async <T = any>(
   data?: Record<string, any> | FormData | null,
   module?: string
 ): Promise<ApiResponse<T> | NextResponse> => {
-  const baseURL = module
-    ? getBaseUrl(module)
-    : `${process.env.NEXT_PUBLIC_BASE_URL}`;
+  const mod = module || "base";
+
+  const baseURL = getBaseUrl(mod);
+
   const token = Cookies.get("bsoft");
 
   const isAuthPage =
@@ -50,13 +39,10 @@ export const Apirequest = async <T = any>(
     if (typeof window !== "undefined") {
       window.location.href = "/bsoft/login";
     } else {
-      return NextResponse.redirect(
-        new URL("/bsoft/login", process.env.NEXT_PUBLIC_BASE_URL)
-      );
+      return NextResponse.redirect(new URL("/bsoft/login", baseURL));
     }
     return Promise.reject("Token not found, redirecting to login...");
   }
-
   const config: AxiosRequestConfig = {
     url: `${baseURL}/${endpoint}`,
     method,
@@ -71,12 +57,11 @@ export const Apirequest = async <T = any>(
     return response as ApiResponse<T>;
   } catch (error: any) {
     console.error("API Request Error:", error);
-    if (
-      typeof error.response.statusText === "string" &&
-      error.response.statusText.toLowerCase() === "unauthorized"
-    ) {
+    if (error.response?.statusText?.toLowerCase() === "unauthorized") {
       Cookies.remove("bsoft");
-      window.location.href = "/bsoft/login";
+      if (typeof window !== "undefined") {
+        window.location.href = "/bsoft/login";
+      }
     }
     return error?.response;
   }
@@ -128,7 +113,7 @@ export const tinRegex = /^[0-9]{11}$|^[0-9]{10}[A-Z]{1}$/;
 export const tanRegex = /^[A-Z]{4}[0-9]{5}[A-Z]{1}$/;
 
 export const websiteRegex =
-  /^(http|https):\/\/([a-zA-Z0-9.-]+\.[a-zA-Z]{2,})([\/\w\.-]*)*\/?$/;
+  /^(https?:\/\/)?(www\.)?[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}(\/[^\s]*)?$/;
 
 export const tokenDecode = (token: string) => {
   try {
@@ -320,19 +305,57 @@ export const StyledButton = styled(MuiButton)(({ theme }) => ({
   },
 }));
 
-export const StyledAutocomplete = styled(Autocomplete)(({ theme }) => ({
+export const StyledDatePickerTextField = styled(TextField)(({ theme }) => ({
   "& .MuiOutlinedInput-root": {
+    height: "44px",
+    fontSize: "0.9rem",
+    backgroundColor: theme.palette.background.paper,
     borderRadius: "8px",
-    transition: "all 0.2s ease",
+    transition: "all 0.2s ease-in-out",
     "&:hover": {
-      borderColor: "#3a8484",
+      boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
     },
     "&.Mui-focused": {
-      borderColor: "#3a8484",
-      boxShadow: "0 0 0 2px rgba(24, 138, 113, 0.1)",
+      boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
     },
-    fontSize: "14px",
-    fontFamily: "var(--poppins-font)",
+    "& fieldset": {
+      borderColor: theme.palette.grey[300],
+      borderWidth: "1px",
+    },
+    "&:hover fieldset": {
+      borderColor: theme.palette.primary.main,
+    },
+    "&.Mui-focused fieldset": {
+      borderColor: theme.palette.primary.main,
+      borderWidth: "2px",
+    },
+  },
+}));
+
+export const StyledAutocomplete = styled(Autocomplete)(({ theme }) => ({
+  "& .MuiOutlinedInput-root": {
+    // height: "40px",
+    fontSize: "0.9rem",
+    backgroundColor: theme.palette.background.paper,
+    borderRadius: "8px",
+    transition: "all 0.2s ease-in-out",
+    "&:hover": {
+      boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+    },
+    "&.Mui-focused": {
+      boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+    },
+    "& fieldset": {
+      borderColor: theme.palette.grey[300],
+      borderWidth: "1px",
+    },
+    "&:hover fieldset": {
+      borderColor: theme.palette.primary.main,
+    },
+    "&.Mui-focused fieldset": {
+      borderColor: theme.palette.primary.main,
+      borderWidth: "2px",
+    },
   },
 }));
 
@@ -515,3 +538,24 @@ export const disconnectFromHub = async (): Promise<void> => {
     connection = null;
   }
 };
+
+class SubmitManager {
+  private submitting = false;
+  startLoading() {
+    this.submitting = true;
+  }
+  stopLoading() {
+    this.submitting = false;
+  }
+  isSubmitting() {
+    return this.submitting;
+  }
+}
+const submitManager = new SubmitManager();
+export const startLoading = () => submitManager.startLoading();
+export const stopLoading = () => submitManager.stopLoading();
+export const isSubmitting = () => submitManager.isSubmitting();
+
+export function validateArray(arr: any[]) {
+  return Array.isArray(arr);
+}

@@ -3,11 +3,16 @@ import React, { useEffect, useState } from "react";
 import IconBreadcrumbs from "../../molecules/AdminLayout/BreadCrumbs";
 import GlobalSearch from "../../molecules/AdminLayout/GlobalSearch";
 import { GoPlus } from "react-icons/go";
-import { StateProps } from "../../../types";
+import { StateProps } from "../../../types/types";
 import CreateNewState from "../../molecules/Master/CreateNewState";
 import dayjs from "dayjs";
 import Config from "../../../utils/config.api.json";
-import { Apirequest } from "../../../utils/lib";
+import {
+  Apirequest,
+  isSubmitting,
+  startLoading,
+  stopLoading,
+} from "../../../utils/lib";
 import { FiEdit } from "react-icons/fi";
 import { RiDeleteBin6Line } from "react-icons/ri";
 import DeleteConfirmation from "../../molecules/Master/DeleteConfirmation";
@@ -179,40 +184,54 @@ function StatePageTable() {
     setError([]);
   };
 
-  const handleSubmit = (e: React.MouseEvent<HTMLButtonElement>) => {
-    let temp: any = [];
-    Object.entries(stateInput).map(([key, value]) => {
+  const handleSubmit = async (e: React.MouseEvent<HTMLButtonElement>) => {
+    let temp: string[] = [];
+    if (isSubmitting()) return;
+    startLoading();
+
+    Object.entries(stateInput).forEach(([key, value]) => {
       if (
         key === "stateCode" &&
         (!value || typeof value !== "string" || value.trim().length < 2)
       ) {
         temp.push(key);
-        console.log("Invalid stateCode");
       } else if (
         key === "stateName" &&
         (!value || typeof value !== "string" || value.trim().length < 3)
       ) {
         temp.push(key);
-        console.log("Invalid stateName");
       } else if (key === "countryId" && (!value || value === 0)) {
         temp.push(key);
-        console.log("Invalid id");
       }
     });
+
     setError(temp);
-    if (temp.length === 0 && editFlag) {
-      UpdateState();
-    } else {
-      if (temp.length === 0) {
-        AddState();
+
+    if (temp.length > 0) {
+      toast.error("Please fill all required fields");
+      stopLoading();
+      return;
+    }
+
+    try {
+      if (editFlag) {
+        await UpdateState();
+      } else {
+        await AddState();
         setSelectedCounty(null);
         setLoading(false);
       }
+    } catch (err) {
+      console.error("Error in handleSubmit:", err);
+      toast.error("Failed to save state");
+    } finally {
+      stopLoading();
     }
   };
 
   const AddState = async () => {
     try {
+      startLoading();
       const body = {
         ...stateInput,
         stateCode: stateInput.stateCode?.trim().toUpperCase(),
@@ -246,11 +265,14 @@ function StatePageTable() {
       }
     } catch (err) {
       console.log(err);
+    } finally {
+      stopLoading();
     }
   };
 
   const UpdateState = async () => {
     try {
+      startLoading();
       const body = {
         ...stateInput,
         stateCode: stateInput.stateCode?.trim().toUpperCase(),
@@ -284,6 +306,8 @@ function StatePageTable() {
       }
     } catch (err) {
       console.log(err);
+    } finally {
+      stopLoading();
     }
   };
 
@@ -331,7 +355,9 @@ function StatePageTable() {
         setEditFlag(false);
         GetstateList();
       } else {
-        toast.error(response.message || "Something went wrong, please try again later");
+        toast.error(
+          response.message || "Something went wrong, please try again later"
+        );
         if (Array.isArray(response.errors) && response.errors.length > 0) {
           setErrorModalOpen(true);
           setErrorMessages(response.errors);

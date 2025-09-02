@@ -1,13 +1,13 @@
-'use client'
-import React from 'react'
-import ActivityMasterPage from '../../../../components/organisms/Maintanence/ActivityMasterPage'
+"use client";
+import React from "react";
+import ActivityMasterPage from "../../../../components/organisms/Maintanence/ActivityMasterPage";
 
 function page() {
   return (
     <div>
-        <ActivityMasterPage />
+      <ActivityMasterPage />
     </div>
-  )
+  );
 }
 
-export default page
+export default page;
