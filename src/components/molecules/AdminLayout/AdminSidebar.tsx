@@ -89,7 +89,7 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ modules }) => {
     hover: {
       scale: 1.035,
       transition: {
-        type: "spring",
+        type: "spring" as const,
         stiffness: 500,
         damping: 20,
       },
