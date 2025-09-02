@@ -114,6 +114,7 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ modules }) => {
         px: { xs: 1, sm: 1.5, md: 2 },
         py: { xs: 1.5, sm: 2 },
         color: "#fff",
+        // background: `#3a8484`,
         height: "92dvh",
         overflowY: "auto",
         "&::-webkit-scrollbar": {
