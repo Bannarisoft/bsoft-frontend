@@ -25,7 +25,6 @@ export interface CreateUomPropTypes {
   handleSwitch: (e: React.ChangeEvent<HTMLInputElement>) => void;
   editFlag: boolean;
 }
-//-------------------------------------------------------------------//
 
 //----------------------UOM Coversion---------------------------------//
 export interface GetByUom {
