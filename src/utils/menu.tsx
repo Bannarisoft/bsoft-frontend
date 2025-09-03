@@ -12,7 +12,6 @@ export interface MenuItem {
   icon: ReactNode;
   Items?: MenuItem[];
 }
-
 export const MenuList: MenuItem[] = [
   {
     id: 1,
