@@ -53,9 +53,9 @@ export const apiDomainConfig: Record<string, Record<string, string>> = {
 
   "121.200.49.254": {
     base: "http://121.200.49.254:30574",
-    fam: "http://121.200.49.254:92",
-    main: "http://121.200.49.254:93",
-    bg: "http://121.200.49.254:84",
+    fam: "http://121.200.49.254:30594",
+    main: "http://121.200.49.254:30593",
+    bg: "http://121.200.49.254:30511",
     party: "http://121.200.49.254:89",
     inventory: "http://121.200.49.254:201",
     purchase: "http://121.200.49.254:86",
