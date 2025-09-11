@@ -15,8 +15,24 @@ import {
 import { MuiButton } from "bsoft-base-elements";
 import * as signalR from "@microsoft/signalr";
 import { getBaseUrl } from "./apiBaseUrl";
+import { apiDomainConfig } from "./apiDomains";
 
 export type ApiResponse<T = any> = T;
+
+export function getApiBaseUrl(mod: string): string {
+  const hostname = window.location.hostname;
+  const config = apiDomainConfig[hostname] || apiDomainConfig["121.200.49.254"];
+  switch (mod) {
+    case "fam":
+      return config.fam || config.base || "";
+    case "main":
+      return config.main || config.base || "";
+    case "bg":
+      return config.bg || config.base || "";
+    default:
+      return config.base || "";
+  }
+}
 
 export const Apirequest = async <T = any>(
   endpoint: string,
@@ -26,7 +42,7 @@ export const Apirequest = async <T = any>(
 ): Promise<ApiResponse<T> | NextResponse> => {
   const mod = module || "base";
 
-  const baseURL = getBaseUrl(mod);
+  const baseURL = getApiBaseUrl(mod);
 
   const token = Cookies.get("bsoft");
 
