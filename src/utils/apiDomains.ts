@@ -7,17 +7,32 @@
 //   },
 // };
 
+// export const apiDomainConfig: Record<string, Record<string, string>> = {
+//   "121.200.49.254": {
+//     base: "http://usermanagement-service:5174",
+//     fam: "http://fixedasset-service:5194",
+//     main: "http://maintenance-service:5293",
+//     bg: "http://background-service:5011",
+//   },
+//   localhost: {
+//     base: "http://usermanagement-service:5174",
+//     fam: "http://fixedasset-service:5194",
+//     main: "http://maintenance-service:5293",
+//     bg: "http://background-service:5011",
+//   },
+// };
+
 export const apiDomainConfig: Record<string, Record<string, string>> = {
   "121.200.49.254": {
-    base: "http://usermanagement-service:5174",
-    fam: "http://fixedasset-service:5194",
-    main: "http://maintenance-service:5293",
-    bg: "http://background-service:5011",
+    base: "/api",
+    fam: "/api",
+    main: "/api",
+    bg: "/api",
   },
   localhost: {
-    base: "http://usermanagement-service:5174",
-    fam: "http://fixedasset-service:5194",
-    main: "http://maintenance-service:5293",
-    bg: "http://background-service:5011",
+    base: "/api",
+    fam: "/api",
+    main: "/api",
+    bg: "/api",
   },
 };
