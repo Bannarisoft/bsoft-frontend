@@ -154,4 +154,5 @@ export interface PutawayRuleBody {
 export interface PutawayRuleRequest {
   body: PutawayRuleBody;
 }
+
 //-------------------------------------------------------------------//
