@@ -1,13 +1,13 @@
 export const apiDomainConfig: Record<string, Record<string, string>> = {
-  "192.168.1.128": {
-    base: "http://192.168.1.128:30574",
-    fam: "http://192.168.1.128:82",
-    main: "http://192.168.1.128:83",
-    bg: "http://192.168.1.128:84",
-    party: "http://192.168.1.128:89",
-    inventory: "http://192.168.1.128:201",
-    purchase: "http://192.168.1.128:86",
-    warehouse: "http://192.168.1.128:202",
+  "http://121.200.49.254": {
+    base: "http://121.200.49.254:30574",
+    fam: "http://121.200.49.254:82",
+    main: "http://121.200.49.254:83",
+    bg: "http://121.200.49.254:84",
+    party: "http://121.200.49.254:89",
+    inventory: "http://121.200.49.254:201",
+    purchase: "http://121.200.49.254:86",
+    warehouse: "http://121.200.49.254:202",
   },
 
   "192.168.1.130": {
@@ -52,13 +52,13 @@ export const apiDomainConfig: Record<string, Record<string, string>> = {
   },
 
   localhost: {
-    base: "http://192.168.1.128:30574",
-    fam: "http://192.168.1.128:82",
-    main: "http://192.168.1.128:83",
-    bg: "http://192.168.1.128:84",
-    party: "http://192.168.1.128:89",
-    inventory: "http://192.168.1.128:201",
-    purchase: "http://192.168.1.128:86",
-    warehouse: "http://192.168.1.128:202",
+    base: "http://121.200.49.254:30574",
+    fam: "http://121.200.49.254:82",
+    main: "http://121.200.49.254:83",
+    bg: "http://121.200.49.254:84",
+    party: "http://121.200.49.254:89",
+    inventory: "http://121.200.49.254:201",
+    purchase: "http://121.200.49.254:86",
+    warehouse: "http://121.200.49.254:202",
   },
 };
