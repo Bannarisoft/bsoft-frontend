@@ -60,9 +60,5 @@ export const apiDomainConfig: Record<string, Record<string, string>> = {
     inventory: "http://192.168.1.126:201",
     purchase: "http://192.168.1.126:86",
     warehouse: "http://192.168.1.126:202",
-    base: "http://121.200.49.254:30574",
-    fam: "http://121.200.49.254:30594",
-    main: "http://121.200.49.254:30593",
-    bg: "http://121.200.49.254:30511",
   },
 };
