@@ -1,5 +1,5 @@
 export const apiDomainConfig: Record<string, Record<string, string>> = {
-  "http://121.200.49.254": {
+  "121.200.49.254": {
     base: "http://121.200.49.254:30574",
     fam: "http://121.200.49.254:30594",
     main: "http://121.200.49.254:30593",
