@@ -1,4 +1,3 @@
-const hostname = window.location.hostname;
 export const apiDomainConfig: Record<string, Record<string, string>> = {
   "121.200.49.254": {
     base: "http://121.200.49.254:30574",
@@ -19,4 +18,3 @@ export const apiDomainConfig: Record<string, Record<string, string>> = {
     bg: "http://121.200.49.254:30511",
   },
 };
-export const currentApi = apiDomainConfig[hostname];
