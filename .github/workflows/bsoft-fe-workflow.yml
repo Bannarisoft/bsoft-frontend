@@ -24,25 +24,25 @@ jobs:
             echo "IMAGE_TAG=dev" >> $GITHUB_OUTPUT
             echo "NAMESPACE=dev" >> $GITHUB_OUTPUT
             echo "DEPLOYMENT_NAME=bsoft-frontend-dev" >> $GITHUB_OUTPUT
-            echo "KUBE_PATH=kubernetes/frontend/dev" >> $GITHUB_OUTPUT
+            echo "KUBE_PATH=kubernetes/dev" >> $GITHUB_OUTPUT
           elif [[ "${{ github.ref_name }}" == "QA" ]]; then
             echo "ENVIRONMENT=qa" >> $GITHUB_OUTPUT
             echo "IMAGE_TAG=qa" >> $GITHUB_OUTPUT
             echo "NAMESPACE=qa" >> $GITHUB_OUTPUT
             echo "DEPLOYMENT_NAME=bsoft-frontend-qa" >> $GITHUB_OUTPUT
-            echo "KUBE_PATH=kubernetes/frontend/qa" >> $GITHUB_OUTPUT
+            echo "KUBE_PATH=kubernetes/qa" >> $GITHUB_OUTPUT
           elif [[ "${{ github.ref_name }}" == "main" ]]; then
             echo "ENVIRONMENT=prod" >> $GITHUB_OUTPUT
             echo "IMAGE_TAG=latest" >> $GITHUB_OUTPUT
             echo "NAMESPACE=prod" >> $GITHUB_OUTPUT
             echo "DEPLOYMENT_NAME=bsoft-frontend-prod" >> $GITHUB_OUTPUT
-            echo "KUBE_PATH=kubernetes/frontend/prod" >> $GITHUB_OUTPUT
+            echo "KUBE_PATH=kubernetes/prod" >> $GITHUB_OUTPUT
           else
             echo "ENVIRONMENT=unknown" >> $GITHUB_OUTPUT
             echo "IMAGE_TAG=dev" >> $GITHUB_OUTPUT
             echo "NAMESPACE=default" >> $GITHUB_OUTPUT
             echo "DEPLOYMENT_NAME=bsoft-frontend" >> $GITHUB_OUTPUT
-            echo "KUBE_PATH=kubernetes/frontend" >> $GITHUB_OUTPUT
+            echo "KUBE_PATH=kubernetes" >> $GITHUB_OUTPUT
           fi
 
       - name: ⚙️ Setup Kubeconfig and check cluster
