@@ -1,13 +1,15 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: bsoft-frontend
+  name: bsoft-frontend-qa
+  namespace: qa
 spec:
   selector:
     app: bsoft-frontend
+    environment: qa
   ports:
     - protocol: TCP
       port: 80
       targetPort: 3000
-      nodePort: 30080  # Optional: static NodePort (between 30000–32767)
+      nodePort: 30082
   type: NodePort

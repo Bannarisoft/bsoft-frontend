@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: bsoft-frontend-prod
+  namespace: prod
+spec:
+  selector:
+    app: bsoft-frontend
+    environment: prod
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 3000
+      nodePort: 30080
+  type: NodePort

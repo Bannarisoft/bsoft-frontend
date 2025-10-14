@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bsoft-frontend-qa
+  namespace: qa
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: bsoft-frontend
+      environment: qa
+  template:
+    metadata:
+      labels:
+        app: bsoft-frontend
+        environment: qa
+    spec:
+      containers:
+        - name: bsoft-frontend
+          image: docker.io/bannarisoft/bsoft-frontend:qa
+          ports:
+            - containerPort: 80
+          envFrom:
+            - configMapRef:
+                name: frontend-env-qa
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "200m"
+            limits:
+              memory: "512Mi"
+              cpu: "400m"

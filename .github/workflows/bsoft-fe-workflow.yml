@@ -4,6 +4,8 @@ on:
   push:
     branches:
       - Development
+      - QA
+      - main
 
 jobs:
   build-push-deploy:
@@ -12,6 +14,36 @@ jobs:
     steps:
       - name: 🧾 Checkout Code
         uses: actions/checkout@v3
+
+      - name: 🏷️ Set Environment Variables
+        id: env
+        shell: bash
+        run: |
+          if [[ "${{ github.ref_name }}" == "Development" ]]; then
+            echo "ENVIRONMENT=dev" >> $GITHUB_OUTPUT
+            echo "IMAGE_TAG=dev" >> $GITHUB_OUTPUT
+            echo "NAMESPACE=dev" >> $GITHUB_OUTPUT
+            echo "DEPLOYMENT_NAME=bsoft-frontend-dev" >> $GITHUB_OUTPUT
+            echo "KUBE_PATH=kubernetes/frontend/dev" >> $GITHUB_OUTPUT
+          elif [[ "${{ github.ref_name }}" == "QA" ]]; then
+            echo "ENVIRONMENT=qa" >> $GITHUB_OUTPUT
+            echo "IMAGE_TAG=qa" >> $GITHUB_OUTPUT
+            echo "NAMESPACE=qa" >> $GITHUB_OUTPUT
+            echo "DEPLOYMENT_NAME=bsoft-frontend-qa" >> $GITHUB_OUTPUT
+            echo "KUBE_PATH=kubernetes/frontend/qa" >> $GITHUB_OUTPUT
+          elif [[ "${{ github.ref_name }}" == "main" ]]; then
+            echo "ENVIRONMENT=prod" >> $GITHUB_OUTPUT
+            echo "IMAGE_TAG=latest" >> $GITHUB_OUTPUT
+            echo "NAMESPACE=prod" >> $GITHUB_OUTPUT
+            echo "DEPLOYMENT_NAME=bsoft-frontend-prod" >> $GITHUB_OUTPUT
+            echo "KUBE_PATH=kubernetes/frontend/prod" >> $GITHUB_OUTPUT
+          else
+            echo "ENVIRONMENT=unknown" >> $GITHUB_OUTPUT
+            echo "IMAGE_TAG=dev" >> $GITHUB_OUTPUT
+            echo "NAMESPACE=default" >> $GITHUB_OUTPUT
+            echo "DEPLOYMENT_NAME=bsoft-frontend" >> $GITHUB_OUTPUT
+            echo "KUBE_PATH=kubernetes/frontend" >> $GITHUB_OUTPUT
+          fi
 
       - name: ⚙️ Setup Kubeconfig and check cluster
         shell: bash
@@ -56,7 +88,18 @@ jobs:
           context: .
           file: ./Dockerfile
           push: true
-          tags: docker.io/${{ secrets.DOCKER_USERNAME }}/bsoft-frontend:latest
+          tags: |
+            docker.io/${{ secrets.DOCKER_USERNAME }}/bsoft-frontend:${{ steps.env.outputs.IMAGE_TAG }}
+            docker.io/${{ secrets.DOCKER_USERNAME }}/bsoft-frontend:${{ steps.env.outputs.IMAGE_TAG }}-${{ github.sha }}
+
+      - name: 📦 Create/Verify Namespace
+        shell: bash
+        run: |
+          set -euo pipefail
+          export KUBECONFIG="$PWD/kubeconfig.yaml"
+          
+          echo "Ensuring namespace ${{ steps.env.outputs.NAMESPACE }} exists..."
+          kubectl create namespace ${{ steps.env.outputs.NAMESPACE }} --dry-run=client -o yaml | kubectl apply -f - --insecure-skip-tls-verify=true
 
       - name: 🚀 Deploy to Kubernetes
         shell: bash
@@ -64,7 +107,8 @@ jobs:
           set -euo pipefail
           export KUBECONFIG="$PWD/kubeconfig.yaml"
           
-          echo "Applying manifests..."
+          echo "Deploying to ${{ steps.env.outputs.ENVIRONMENT }} environment..."
+          echo "Using manifests from: ${{ steps.env.outputs.KUBE_PATH }}"
           
           # Test kubectl connectivity first
           if ! timeout 30 kubectl get namespaces --insecure-skip-tls-verify=true > /dev/null 2>&1; then
@@ -74,13 +118,17 @@ jobs:
           fi
           
           # Apply manifests with timeout
-          timeout 120 kubectl apply -f kubernetes/frontend/ --validate=false --insecure-skip-tls-verify=true
+          timeout 120 kubectl apply -f ${{ steps.env.outputs.KUBE_PATH }}/ --validate=false --insecure-skip-tls-verify=true
+          
+          # Wait for rollout to complete
+          echo "Waiting for deployment to be ready..."
+          timeout 300 kubectl rollout status deployment/${{ steps.env.outputs.DEPLOYMENT_NAME }} -n ${{ steps.env.outputs.NAMESPACE }} --insecure-skip-tls-verify=true
 
       - name: 🌐 Get Service URL (NodePort)
         shell: bash
         run: |
           export KUBECONFIG="$PWD/kubeconfig.yaml"
-          timeout 30 kubectl get svc bsoft-frontend -o wide --insecure-skip-tls-verify=true || {
+          timeout 30 kubectl get svc -n ${{ steps.env.outputs.NAMESPACE }} -o wide --insecure-skip-tls-verify=true || {
             echo "Warning: Unable to get service info"
             exit 0
           }
@@ -94,15 +142,18 @@ jobs:
           ignore_cert: true
           username: ${{ secrets.EMAIL_USERNAME }}
           password: ${{ secrets.EMAIL_PASSWORD }}
-          subject: "✅ Frontend Deployed to Kubernetes - ${{ github.ref_name }}"
+          subject: "✅ Frontend Deployed to ${{ steps.env.outputs.ENVIRONMENT }} - ${{ github.ref_name }}"
           to: ${{ secrets.EMAIL_TO }}
           from: "CI/CD Bot <${{ secrets.EMAIL_USERNAME }}>"
           html_body: |
             <h3>✅ Deployment Success</h3>
+            <p><strong>Environment:</strong> ${{ steps.env.outputs.ENVIRONMENT }}</p>
             <p><strong>Repository:</strong> ${{ github.repository }}</p>
             <p><strong>Branch:</strong> ${{ github.ref_name }}</p>
             <p><strong>Commit:</strong> ${{ github.sha }}</p>
+            <p><strong>Image Tag:</strong> ${{ steps.env.outputs.IMAGE_TAG }}</p>
             <p><strong>Triggered by:</strong> ${{ github.actor }}</p>
+            <p><strong>Namespace:</strong> ${{ steps.env.outputs.NAMESPACE }}</p>
             <p><strong>Status:</strong> Deployment succeeded.</p>
 
       - name: 📧 Send Failure Email
@@ -114,11 +165,12 @@ jobs:
           ignore_cert: true
           username: ${{ secrets.EMAIL_USERNAME }}
           password: ${{ secrets.EMAIL_PASSWORD }}
-          subject: "❌ Frontend Deployment Failed - ${{ github.ref_name }}"
+          subject: "❌ Frontend Deployment Failed - ${{ steps.env.outputs.ENVIRONMENT }} - ${{ github.ref_name }}"
           to: ${{ secrets.EMAIL_TO }}
           from: "CI/CD Bot <${{ secrets.EMAIL_USERNAME }}>"
           html_body: |
             <h3>🚨 Deployment Failed</h3>
+            <p><strong>Environment:</strong> ${{ steps.env.outputs.ENVIRONMENT }}</p>
             <p><strong>Repository:</strong> ${{ github.repository }}</p>
             <p><strong>Branch:</strong> ${{ github.ref_name }}</p>
             <p><strong>Commit:</strong> ${{ github.sha }}</p>
@@ -131,7 +183,7 @@ jobs:
         run: |
           echo "Deployment failed. Rolling back to previous revision..."
           export KUBECONFIG="$PWD/kubeconfig.yaml"
-          timeout 60 kubectl rollout undo deployment bsoft-frontend --insecure-skip-tls-verify=true || {
+          timeout 60 kubectl rollout undo deployment/${{ steps.env.outputs.DEPLOYMENT_NAME }} -n ${{ steps.env.outputs.NAMESPACE }} --insecure-skip-tls-verify=true || {
             echo "Warning: Rollback failed or deployment doesn't exist"
             exit 0
           }
