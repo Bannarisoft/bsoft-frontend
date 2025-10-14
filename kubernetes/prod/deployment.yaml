@@ -21,8 +21,8 @@ spec:
           ports:
             - containerPort: 80
           envFrom:
-            - configMapRef:
-                name: frontend-env-prod
+            # - configMapRef:
+            #     name: frontend-env-prod
           resources:
             requests:
               memory: "512Mi"
