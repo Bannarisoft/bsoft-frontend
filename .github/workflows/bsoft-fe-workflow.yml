@@ -14,7 +14,6 @@ jobs:
     runs-on: [self-hosted, Linux]
 
     env:
-      # ---- Common secrets/vars ----
       EMAIL_TO: ${{ secrets.EMAIL_TO }}
       EMAIL_FROM: ${{ secrets.EMAIL_FROM }}
       SMTP_HOST: ${{ secrets.SMTP_HOST }}
@@ -33,9 +32,8 @@ jobs:
         id: env
         shell: bash
         run: |
-          set -euo pipefail
+          set -eo pipefail
           BRANCH="${{ github.ref_name }}"
-
           if [[ "$BRANCH" == "Development" ]]; then
             ENV_NAME="dev"
             IMAGE_TAG="dev"
@@ -68,17 +66,12 @@ jobs:
           echo "DEPLOYMENT_NAME=${DEPLOYMENT_NAME}" >> $GITHUB_OUTPUT
           echo "KUBE_PATH=${KUBE_PATH}" >> $GITHUB_OUTPUT
 
-          echo "Environment: ${ENV_NAME}"
-          echo "Image Tag: ${IMAGE_TAG}"
-          echo "Namespace: ${KUBE_NS}"
-
       - name: 🛡️ Setup Kubeconfig (Base64 Decode)
         shell: bash
         run: |
-          set -euo pipefail
+          set -eo pipefail
           printf '%s' "${{ secrets.KUBECONFIG }}" | tr -d '\r' | base64 --decode > "${{ env.KUBECONFIG }}"
           chmod 600 "${{ env.KUBECONFIG }}"
-
           export KUBECONFIG="${{ env.KUBECONFIG }}"
           kubectl version --client --insecure-skip-tls-verify=true
           echo "Testing cluster connectivity..."
@@ -89,6 +82,7 @@ jobs:
 
       - name: 🧪 Docker Version Check
         run: |
+          set -eo pipefail
           docker version
           docker buildx version || echo "🟡 buildx not installed, skipping..."
 
@@ -98,25 +92,23 @@ jobs:
           DH_USER: ${{ secrets.DOCKER_USERNAME }}
           DH_PASS: ${{ secrets.DOCKER_PASSWORD }}
         run: |
-          set -euo pipefail
+          set -eo pipefail
           if ! command -v jq >/dev/null; then
             JQ_BIN="$(mktemp -d)/jq"
             curl -fsSL -o "$JQ_BIN" https://github.com/jqlang/jq/releases/download/jq-1.7.1/jq-linux-amd64
             chmod +x "$JQ_BIN"
             export PATH="$(dirname "$JQ_BIN"):$PATH"
           fi
-
           LOGIN_RES="$(curl -fsS -H 'Content-Type: application/json' \
             -d "{\"username\":\"$DH_USER\",\"password\":\"$DH_PASS\"}" \
             https://hub.docker.com/v2/users/login/ || true)"
           TOK="$(echo "$LOGIN_RES" | jq -r '.token // empty')"
-
           if [[ -z "$TOK" ]]; then
             echo "❌ Failed to get Docker Hub API token"; exit 1
           fi
 
           ensure_repo() {
-            local repo="$1"
+            local repo="${1:-bsoft-frontend}"
             STATUS="$(curl -s -o /dev/null -w '%{http_code}' \
               -H "Authorization: JWT $TOK" \
               "https://hub.docker.com/v2/repositories/$DH_USER/$repo/")"
@@ -126,35 +118,42 @@ jobs:
               -d "{\"namespace\":\"$DH_USER\",\"name\":\"$repo\",\"is_private\":true}" \
               https://hub.docker.com/v2/repositories/ || true
           }
-
           ensure_repo "bsoft-frontend"
 
       - name: 🐳 Build Docker Image
         shell: bash
         run: |
+          set -eo pipefail
           TAG="${{ steps.env.outputs.IMAGE_TAG }}"
+          TAG="${TAG:-dev}"
           docker build -t docker.io/${{ env.DOCKER_USERNAME }}/bsoft-frontend:$TAG -f ./Dockerfile .
           echo "✅ Built image docker.io/${{ env.DOCKER_USERNAME }}/bsoft-frontend:$TAG"
 
       - name: 📤 Push Docker Image
         shell: bash
         run: |
+          set -eo pipefail
           TAG="${{ steps.env.outputs.IMAGE_TAG }}"
+          TAG="${TAG:-dev}"
           docker push docker.io/${{ env.DOCKER_USERNAME }}/bsoft-frontend:$TAG
           echo "✅ Image pushed to Docker Hub"
 
       - name: 📦 Create/Verify Namespace
         shell: bash
         run: |
+          set -eo pipefail
           export KUBECONFIG="${{ env.KUBECONFIG }}"
           NS="${{ steps.env.outputs.KUBE_NS }}"
+          NS="${NS:-dev}"
           kubectl get ns "$NS" --insecure-skip-tls-verify=true >/dev/null 2>&1 || kubectl create ns "$NS"
           echo "✅ Namespace $NS ready"
 
       - name: 🔍 Verify Deployment Files
         shell: bash
         run: |
+          set -eo pipefail
           KUBE_PATH="${{ steps.env.outputs.KUBE_PATH }}"
+          KUBE_PATH="${KUBE_PATH:-kubernetes/dev}"
           echo "Checking files in $KUBE_PATH..."
           ls -la "$KUBE_PATH" || exit 1
           cat "$KUBE_PATH"/deployment.yaml
@@ -163,11 +162,14 @@ jobs:
       - name: 🚢 Deploy to Kubernetes
         shell: bash
         run: |
+          set -eo pipefail
           export KUBECONFIG="${{ env.KUBECONFIG }}"
           NS="${{ steps.env.outputs.KUBE_NS }}"
+          NS="${NS:-dev}"
           DEPLOY="${{ steps.env.outputs.DEPLOYMENT_NAME }}"
+          DEPLOY="${DEPLOY:-bsoft-frontend}"
           KUBE_PATH="${{ steps.env.outputs.KUBE_PATH }}"
-
+          KUBE_PATH="${KUBE_PATH:-kubernetes/dev}"
           kubectl apply -n "$NS" -f "$KUBE_PATH"
           kubectl rollout status deployment/"$DEPLOY" -n "$NS" --timeout=600s || {
             echo "❌ Rollout failed"
@@ -180,6 +182,7 @@ jobs:
         if: always()
         shell: bash
         run: |
+          set -eo pipefail
           TO="${{ secrets.EMAIL_TO }}"
           FROM="${{ secrets.EMAIL_FROM }}"
           USER="${{ secrets.EMAIL_USERNAME }}"
@@ -187,6 +190,7 @@ jobs:
           HOST="${{ secrets.SMTP_HOST }}"
           PORT="${{ secrets.SMTP_PORT }}"
           ENV="${{ steps.env.outputs.ENV_NAME }}"
+          ENV="${ENV:-dev}"
 
           cat <<EOF > ~/.msmtprc
           defaults
@@ -214,34 +218,16 @@ jobs:
           "
           echo -e "$BODY" | msmtp "$TO"
 
-      - name: 📢 Slack Notification
-        if: always()
-        shell: bash
-        env:
-          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
-        run: |
-          STATUS="${{ job.status }}"
-          ENV_NAME="${{ steps.env.outputs.ENV_NAME }}"
-          COLOR="#36a64f"; [ "$STATUS" = "failure" ] && COLOR="#ff0000" || true
-          jq -n \
-            --arg color "$COLOR" \
-            --arg status "$STATUS" \
-            --arg branch "${GITHUB_REF#refs/heads/}" \
-            --arg env "$ENV_NAME" \
-            --arg url "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}" \
-            '{attachments:[{color:$color,title:"🚀 Frontend CI/CD - \($status)",
-              fields:[{title:"Branch",value:$branch,short:true},{title:"Environment",value:$env,short:true}],
-              footer:"GitHub Actions",actions:[{type:"button",text:"View Run",url:$url}]}]}' > payload.json
-
-          [ -n "$SLACK_WEBHOOK" ] && curl -X POST -H 'Content-type: application/json' --data-binary @payload.json "$SLACK_WEBHOOK" || echo "ℹ️ Slack webhook missing"
-
       - name: 🧼 Docker Cleanup
         if: always()
         run: |
+          set -eo pipefail
           docker system prune -af
           docker builder prune -af
 
       - name: 🧹 Cleanup Kubeconfig
         if: always()
         shell: bash
-        run: rm -f "${{ env.KUBECONFIG }}"
+        run: |
+          set -eo pipefail
+          rm -f "${{ env.KUBECONFIG }}"
