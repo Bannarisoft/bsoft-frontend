@@ -33,35 +33,45 @@ jobs:
         id: env
         shell: bash
         run: |
-          if [[ "${{ github.ref_name }}" == "Development" ]]; then
-            echo "ENV_NAME=dev" >> $GITHUB_OUTPUT
-            echo "IMAGE_TAG=dev" >> $GITHUB_OUTPUT
-            echo "KUBE_NS=dev" >> $GITHUB_OUTPUT
-            echo "DEPLOYMENT_NAME=bsoft-frontend-dev" >> $GITHUB_OUTPUT
-            echo "KUBE_PATH=kubernetes/dev" >> $GITHUB_OUTPUT
-          elif [[ "${{ github.ref_name }}" == "QA" ]]; then
-            echo "ENV_NAME=qa" >> $GITHUB_OUTPUT
-            echo "IMAGE_TAG=qa" >> $GITHUB_OUTPUT
-            echo "KUBE_NS=qa" >> $GITHUB_OUTPUT
-            echo "DEPLOYMENT_NAME=bsoft-frontend-qa" >> $GITHUB_OUTPUT
-            echo "KUBE_PATH=kubernetes/qa" >> $GITHUB_OUTPUT
-          elif [[ "${{ github.ref_name }}" == "main" ]]; then
-            echo "ENV_NAME=prod" >> $GITHUB_OUTPUT
-            echo "IMAGE_TAG=latest" >> $GITHUB_OUTPUT
-            echo "KUBE_NS=prod" >> $GITHUB_OUTPUT
-            echo "DEPLOYMENT_NAME=bsoft-frontend-prod" >> $GITHUB_OUTPUT
-            echo "KUBE_PATH=kubernetes/prod" >> $GITHUB_OUTPUT
+          set -euo pipefail
+          
+          BRANCH="${{ github.ref_name }}"
+          
+          if [[ "$BRANCH" == "Development" ]]; then
+            ENV_NAME="dev"
+            IMAGE_TAG="dev"
+            KUBE_NS="dev"
+            DEPLOYMENT_NAME="bsoft-frontend-dev"
+            KUBE_PATH="kubernetes/dev"
+          elif [[ "$BRANCH" == "QA" ]]; then
+            ENV_NAME="qa"
+            IMAGE_TAG="qa"
+            KUBE_NS="qa"
+            DEPLOYMENT_NAME="bsoft-frontend-qa"
+            KUBE_PATH="kubernetes/qa"
+          elif [[ "$BRANCH" == "main" ]]; then
+            ENV_NAME="prod"
+            IMAGE_TAG="latest"
+            KUBE_NS="prod"
+            DEPLOYMENT_NAME="bsoft-frontend-prod"
+            KUBE_PATH="kubernetes/prod"
           else
-            echo "ENV_NAME=dev" >> $GITHUB_OUTPUT
-            echo "IMAGE_TAG=dev" >> $GITHUB_OUTPUT
-            echo "KUBE_NS=default" >> $GITHUB_OUTPUT
-            echo "DEPLOYMENT_NAME=bsoft-frontend" >> $GITHUB_OUTPUT
-            echo "KUBE_PATH=kubernetes/dev" >> $GITHUB_OUTPUT
+            ENV_NAME="dev"
+            IMAGE_TAG="dev"
+            KUBE_NS="default"
+            DEPLOYMENT_NAME="bsoft-frontend"
+            KUBE_PATH="kubernetes/dev"
           fi
           
-          echo "Environment: $(cat $GITHUB_OUTPUT | grep ENV_NAME | cut -d'=' -f2)"
-          echo "Image Tag: $(cat $GITHUB_OUTPUT | grep IMAGE_TAG | cut -d'=' -f2)"
-          echo "Namespace: $(cat $GITHUB_OUTPUT | grep KUBE_NS | cut -d'=' -f2)"
+          echo "ENV_NAME=${ENV_NAME}" >> $GITHUB_OUTPUT
+          echo "IMAGE_TAG=${IMAGE_TAG}" >> $GITHUB_OUTPUT
+          echo "KUBE_NS=${KUBE_NS}" >> $GITHUB_OUTPUT
+          echo "DEPLOYMENT_NAME=${DEPLOYMENT_NAME}" >> $GITHUB_OUTPUT
+          echo "KUBE_PATH=${KUBE_PATH}" >> $GITHUB_OUTPUT
+          
+          echo "Environment: ${ENV_NAME}"
+          echo "Image Tag: ${IMAGE_TAG}"
+          echo "Namespace: ${KUBE_NS}"
 
       - name: 🛡️ Setup Kubeconfig (Base64 Decode)
         shell: bash
@@ -161,7 +171,7 @@ jobs:
           NS="${{ steps.env.outputs.KUBE_NS }}"
           
           echo "Ensuring namespace $NS exists..."
-          kubectl get ns "$NS" >/dev/null 2>&1 || kubectl create ns "$NS"
+          kubectl get ns "$NS" --insecure-skip-tls-verify=true >/dev/null 2>&1 || kubectl create ns "$NS" --insecure-skip-tls-verify=true
           echo "✅ Namespace $NS ready"
 
       - name: 🔍 Verify Deployment Files
@@ -191,11 +201,11 @@ jobs:
           debug_dump() {
             {
               echo "===== DEBUG for frontend (ns=$NS) ====="
-              kubectl get pods -n "$NS" -l app=bsoft-frontend -o wide || true
-              kubectl describe deployment -n "$NS" "$DEPLOY" || true
-              kubectl describe pods -n "$NS" -l app=bsoft-frontend || true
-              for p in $(kubectl get pods -n "$NS" -l app=bsoft-frontend -o jsonpath='{.items[*].metadata.name}'); do
-                echo "--- logs ($p)"; kubectl logs -n "$NS" "$p" --tail=100 || true
+              kubectl get pods -n "$NS" -l app=bsoft-frontend --insecure-skip-tls-verify=true -o wide || true
+              kubectl describe deployment -n "$NS" "$DEPLOY" --insecure-skip-tls-verify=true || true
+              kubectl describe pods -n "$NS" -l app=bsoft-frontend --insecure-skip-tls-verify=true || true
+              for p in $(kubectl get pods -n "$NS" -l app=bsoft-frontend --insecure-skip-tls-verify=true -o jsonpath='{.items[*].metadata.name}'); do
+                echo "--- logs ($p)"; kubectl logs -n "$NS" "$p" --insecure-skip-tls-verify=true --tail=100 || true
               done
             } >> artifacts/rollback-log.txt 2>&1
           }
@@ -203,57 +213,57 @@ jobs:
           echo "🚀 Deploying frontend to $ENV environment"
 
           # Apply manifests
-          kubectl apply --dry-run=server -n "$NS" -f "$KUBE_PATH" > /dev/null
-          kubectl apply -n "$NS" -f "$KUBE_PATH"
+          kubectl apply --dry-run=server -n "$NS" -f "$KUBE_PATH" --insecure-skip-tls-verify=true > /dev/null
+          kubectl apply -n "$NS" -f "$KUBE_PATH" --insecure-skip-tls-verify=true
 
           # Add timestamp annotation to force rollout
           ts=$(date +%s)
-          kubectl patch -n "$NS" deployment "$DEPLOY" \
+          kubectl patch -n "$NS" deployment "$DEPLOY" --insecure-skip-tls-verify=true \
             -p "{\"spec\":{\"template\":{\"metadata\":{\"annotations\":{\"ci-timestamp\":\"$ts\"}}}}}" || true
-          kubectl annotate -n "$NS" deployment "$DEPLOY" \
+          kubectl annotate -n "$NS" deployment "$DEPLOY" --insecure-skip-tls-verify=true \
             "kubernetes.io/change-cause=CI/CD $(date -u +%FT%TZ)" --overwrite || true
 
           # Get new ReplicaSet hash
-          NEW_HASH="$(kubectl -n "$NS" get rs -l app=bsoft-frontend \
+          NEW_HASH="$(kubectl -n "$NS" get rs -l app=bsoft-frontend --insecure-skip-tls-verify=true \
             --sort-by=.metadata.creationTimestamp \
             -o jsonpath='{.items[-1].metadata.labels.pod-template-hash}' 2>/dev/null || true)"
 
           # Delete old pods
           if [[ -n "$NEW_HASH" ]]; then
-            mapfile -t OLD_PODS < <(kubectl -n "$NS" get pods -l app=bsoft-frontend \
+            mapfile -t OLD_PODS < <(kubectl -n "$NS" get pods -l app=bsoft-frontend --insecure-skip-tls-verify=true \
               -o jsonpath='{range .items[*]}{.metadata.name}{" "}{.metadata.labels.pod-template-hash}{"\n"}{end}' \
               | awk -v h="$NEW_HASH" '$2 != h {print $1}')
             if (( ${#OLD_PODS[@]} > 0 )); then
               echo "🧹 Deleting old pods: ${OLD_PODS[*]}"
-              kubectl -n "$NS" delete pod "${OLD_PODS[@]}" --grace-period=30 --wait=false || true
+              kubectl -n "$NS" delete pod "${OLD_PODS[@]}" --insecure-skip-tls-verify=true --grace-period=30 --wait=false || true
             fi
           fi
 
           # Check for unhealthy pods
-          BAD=$(kubectl -n "$NS" get pods -l app=bsoft-frontend \
+          BAD=$(kubectl -n "$NS" get pods -l app=bsoft-frontend --insecure-skip-tls-verify=true \
             -o jsonpath='{range .items[*]}{.metadata.name}{" "}{.status.containerStatuses[0].state.waiting.reason}{"\n"}{end}' \
             | grep -E "ImagePullBackOff|ErrImagePull|CrashLoopBackOff|CreateContainerConfigError|InvalidImageName" || true)
           
           if [[ -n "$BAD" ]]; then
             echo "❌ Frontend has unhealthy pods:"; echo "$BAD" | sed 's/^/   /'
             ONE=$(echo "$BAD" | head -n1 | awk '{print $1}')
-            echo "--- describe $ONE ---"; kubectl -n "$NS" describe pod "$ONE" || true
+            echo "--- describe $ONE ---"; kubectl -n "$NS" describe pod "$ONE" --insecure-skip-tls-verify=true || true
             debug_dump
             echo "🔁 Rolling back $DEPLOY (unhealthy)…"
-            kubectl rollout undo -n "$NS" deployment/"$DEPLOY" || true
+            kubectl rollout undo -n "$NS" deployment/"$DEPLOY" --insecure-skip-tls-verify=true || true
             exit 1
           fi
 
           echo "⏳ Waiting for rollout of $DEPLOY…"
-          if ! kubectl rollout status -n "$NS" deployment/"$DEPLOY" --timeout=600s; then
+          if ! kubectl rollout status -n "$NS" deployment/"$DEPLOY" --insecure-skip-tls-verify=true --timeout=600s; then
             echo "❌ Rollout timeout for frontend" | tee -a artifacts/rollback-log.txt
             debug_dump
             echo "🔁 Rolling back $DEPLOY…"
-            kubectl rollout undo -n "$NS" deployment/"$DEPLOY" || true
+            kubectl rollout undo -n "$NS" deployment/"$DEPLOY" --insecure-skip-tls-verify=true || true
             exit 1
           else
             echo "✅ Frontend deployment succeeded"
-            kubectl rollout history -n "$NS" deployment/"$DEPLOY" > "artifacts/frontend-revision-history.txt"
+            kubectl rollout history -n "$NS" deployment/"$DEPLOY" --insecure-skip-tls-verify=true > "artifacts/frontend-revision-history.txt"
           fi
 
       - name: 📤 Upload Rollback Logs
@@ -279,26 +289,26 @@ jobs:
           } > artifacts/health-summary.txt
 
           # Create curl pod for internal health check
-          kubectl delete pod/healthcheck-curl -n "$NS" --ignore-not-found >/dev/null 2>&1 || true
-          kubectl run healthcheck-curl -n "$NS" --image=curlimages/curl --restart=Never -- sleep 300
-          kubectl wait -n "$NS" --for=condition=Ready pod/healthcheck-curl --timeout=60s
+          kubectl delete pod/healthcheck-curl -n "$NS" --insecure-skip-tls-verify=true --ignore-not-found >/dev/null 2>&1 || true
+          kubectl run healthcheck-curl -n "$NS" --insecure-skip-tls-verify=true --image=curlimages/curl --restart=Never -- sleep 300
+          kubectl wait -n "$NS" --insecure-skip-tls-verify=true --for=condition=Ready pod/healthcheck-curl --timeout=60s
           
           # Get service port
-          P="$(kubectl get svc bsoft-frontend-${ENV} -n "$NS" -o jsonpath='{.spec.ports[0].port}' 2>/dev/null || echo "80")"
+          P="$(kubectl get svc bsoft-frontend-${ENV} -n "$NS" --insecure-skip-tls-verify=true -o jsonpath='{.spec.ports[0].port}' 2>/dev/null || echo "80")"
           
           # Internal health check
-          CODE="$(kubectl exec -n "$NS" healthcheck-curl -- sh -c \
+          CODE="$(kubectl exec -n "$NS" --insecure-skip-tls-verify=true healthcheck-curl -- sh -c \
             "curl -s -o /dev/null -w '%{http_code}' --max-time 6 http://bsoft-frontend-${ENV}.${NS}.svc.cluster.local:${P}/" || echo 000)"
           echo "  frontend (internal): ${CODE}" | tee -a artifacts/health-summary.txt
           
           # Get NodePort for external access
-          NODE_PORT="$(kubectl get svc bsoft-frontend-${ENV} -n "$NS" -o jsonpath='{.spec.ports[0].nodePort}' 2>/dev/null || true)"
+          NODE_PORT="$(kubectl get svc bsoft-frontend-${ENV} -n "$NS" --insecure-skip-tls-verify=true -o jsonpath='{.spec.ports[0].nodePort}' 2>/dev/null || true)"
           if [[ -n "$NODE_PORT" ]]; then
             echo "  NodePort: ${NODE_PORT}" | tee -a artifacts/health-summary.txt
           fi
           
           # Cleanup
-          kubectl delete pod/healthcheck-curl -n "$NS" --now --ignore-not-found >/dev/null 2>&1 || true
+          kubectl delete pod/healthcheck-curl -n "$NS" --insecure-skip-tls-verify=true --now --ignore-not-found >/dev/null 2>&1 || true
 
       - name: 📤 Upload Health Summary
         uses: actions/upload-artifact@v4
