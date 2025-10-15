@@ -44,6 +44,11 @@ jobs:
             echo "DEPLOYMENT_NAME=bsoft-frontend" >> $GITHUB_OUTPUT
             echo "KUBE_PATH=kubernetes" >> $GITHUB_OUTPUT
           fi
+          
+          # Output for verification
+          echo "Environment: $ENVIRONMENT"
+          echo "Image Tag: $IMAGE_TAG"
+          echo "Namespace: $NAMESPACE"
 
       - name: ⚙️ Setup Kubeconfig and check cluster
         shell: bash
@@ -89,8 +94,10 @@ jobs:
           file: ./Dockerfile
           push: true
           tags: |
-            docker.io/${{ secrets.DOCKER_USERNAME }}/bsoft-frontend:${{ steps.env.outputs.IMAGE_TAG }}
-            docker.io/${{ secrets.DOCKER_USERNAME }}/bsoft-frontend:${{ steps.env.outputs.IMAGE_TAG }}-${{ github.sha }}
+            ${{ secrets.DOCKER_USERNAME }}/bsoft-frontend:${{ steps.env.outputs.IMAGE_TAG }}
+            ${{ secrets.DOCKER_USERNAME }}/bsoft-frontend:${{ steps.env.outputs.IMAGE_TAG }}-${{ github.sha }}
+          cache-from: type=registry,ref=${{ secrets.DOCKER_USERNAME }}/bsoft-frontend:${{ steps.env.outputs.IMAGE_TAG }}
+          cache-to: type=inline
 
       - name: 📦 Create/Verify Namespace
         shell: bash
@@ -100,6 +107,15 @@ jobs:
           
           echo "Ensuring namespace ${{ steps.env.outputs.NAMESPACE }} exists..."
           kubectl create namespace ${{ steps.env.outputs.NAMESPACE }} --dry-run=client -o yaml | kubectl apply -f - --insecure-skip-tls-verify=true
+
+      - name: 🔍 Debug - Check Deployment Files
+        shell: bash
+        run: |
+          echo "Checking deployment files in ${{ steps.env.outputs.KUBE_PATH }}..."
+          ls -la ${{ steps.env.outputs.KUBE_PATH }}/ || echo "Directory not found!"
+          echo "---"
+          echo "Deployment YAML content:"
+          cat ${{ steps.env.outputs.KUBE_PATH }}/deployment.yaml || echo "File not found!"
 
       - name: 🚀 Deploy to Kubernetes
         shell: bash
@@ -120,18 +136,29 @@ jobs:
           # Apply manifests with timeout
           timeout 120 kubectl apply -f ${{ steps.env.outputs.KUBE_PATH }}/ --validate=false --insecure-skip-tls-verify=true
           
-          # Wait for rollout to complete
+          # Wait for rollout to complete with increased timeout
           echo "Waiting for deployment to be ready..."
-          timeout 300 kubectl rollout status deployment/${{ steps.env.outputs.DEPLOYMENT_NAME }} -n ${{ steps.env.outputs.NAMESPACE }} --insecure-skip-tls-verify=true
+          timeout 600 kubectl rollout status deployment/${{ steps.env.outputs.DEPLOYMENT_NAME }} -n ${{ steps.env.outputs.NAMESPACE }} --insecure-skip-tls-verify=true || {
+            echo "Deployment timed out. Checking pod status..."
+            kubectl get pods -n ${{ steps.env.outputs.NAMESPACE }}
+            kubectl describe pods -n ${{ steps.env.outputs.NAMESPACE }} -l app=bsoft-frontend,environment=${{ steps.env.outputs.ENVIRONMENT }}
+            kubectl logs -n ${{ steps.env.outputs.NAMESPACE }} -l app=bsoft-frontend,environment=${{ steps.env.outputs.ENVIRONMENT }} --tail=50 || echo "No logs available"
+            exit 1
+          }
 
       - name: 🌐 Get Service URL (NodePort)
         shell: bash
         run: |
           export KUBECONFIG="$PWD/kubeconfig.yaml"
+          echo "Services in ${{ steps.env.outputs.NAMESPACE }} namespace:"
           timeout 30 kubectl get svc -n ${{ steps.env.outputs.NAMESPACE }} -o wide --insecure-skip-tls-verify=true || {
             echo "Warning: Unable to get service info"
             exit 0
           }
+          
+          echo ""
+          echo "Pods in ${{ steps.env.outputs.NAMESPACE }} namespace:"
+          kubectl get pods -n ${{ steps.env.outputs.NAMESPACE }} --insecure-skip-tls-verify=true || echo "Unable to get pods"
 
       - name: 📧 Send Success Email
         if: success()
@@ -152,6 +179,7 @@ jobs:
             <p><strong>Branch:</strong> ${{ github.ref_name }}</p>
             <p><strong>Commit:</strong> ${{ github.sha }}</p>
             <p><strong>Image Tag:</strong> ${{ steps.env.outputs.IMAGE_TAG }}</p>
+            <p><strong>Docker Image:</strong> ${{ secrets.DOCKER_USERNAME }}/bsoft-frontend:${{ steps.env.outputs.IMAGE_TAG }}</p>
             <p><strong>Triggered by:</strong> ${{ github.actor }}</p>
             <p><strong>Namespace:</strong> ${{ steps.env.outputs.NAMESPACE }}</p>
             <p><strong>Status:</strong> Deployment succeeded.</p>
@@ -174,8 +202,9 @@ jobs:
             <p><strong>Repository:</strong> ${{ github.repository }}</p>
             <p><strong>Branch:</strong> ${{ github.ref_name }}</p>
             <p><strong>Commit:</strong> ${{ github.sha }}</p>
+            <p><strong>Image Tag:</strong> ${{ steps.env.outputs.IMAGE_TAG }}</p>
             <p><strong>Triggered by:</strong> ${{ github.actor }}</p>
-            <p>⚠️ Deployment failed and a rollback was attempted.</p>
+            <p>⚠️ Deployment failed. Please check the logs.</p>
 
       - name: 🔁 Rollback on Failure
         if: failure()
