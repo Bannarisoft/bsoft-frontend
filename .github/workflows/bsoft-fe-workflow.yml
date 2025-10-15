@@ -170,7 +170,10 @@ jobs:
           DEPLOY="${DEPLOY:-bsoft-frontend}"
           KUBE_PATH="${{ steps.env.outputs.KUBE_PATH }}"
           KUBE_PATH="${KUBE_PATH:-kubernetes/dev}"
-          kubectl apply -n "$NS" -f "$KUBE_PATH"
+
+          kubectl apply -n "$NS" -f "$KUBE_PATH/deployment.yaml" --validate=false
+          kubectl apply -n "$NS" -f "$KUBE_PATH/service.yaml" --validate=false
+
           kubectl rollout status deployment/"$DEPLOY" -n "$NS" --timeout=600s || {
             echo "❌ Rollout failed"
             kubectl rollout undo deployment/"$DEPLOY" -n "$NS"
@@ -178,45 +181,28 @@ jobs:
           }
           echo "✅ Frontend deployment succeeded"
 
-      - name: 📧 Send Email
+      - name: 📢 Slack Notification
         if: always()
         shell: bash
+        env:
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
         run: |
           set -eo pipefail
-          TO="${{ secrets.EMAIL_TO }}"
-          FROM="${{ secrets.EMAIL_FROM }}"
-          USER="${{ secrets.EMAIL_USERNAME }}"
-          PASS="${{ secrets.EMAIL_PASSWORD }}"
-          HOST="${{ secrets.SMTP_HOST }}"
-          PORT="${{ secrets.SMTP_PORT }}"
-          ENV="${{ steps.env.outputs.ENV_NAME }}"
-          ENV="${ENV:-dev}"
+          STATUS="${{ job.status }}"
+          ENV_NAME="${{ steps.env.outputs.ENV_NAME }}"
+          ENV_NAME="${ENV_NAME:-dev}"
+          COLOR="#36a64f"; [ "$STATUS" = "failure" ] && COLOR="#ff0000" || true
+          jq -n \
+            --arg color "$COLOR" \
+            --arg status "$STATUS" \
+            --arg branch "${GITHUB_REF#refs/heads/}" \
+            --arg env "$ENV_NAME" \
+            --arg url "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}" \
+            '{attachments:[{color:$color,title:"🚀 Frontend CI/CD - \($status)",
+              fields:[{title:"Branch",value:$branch,short:true},{title:"Environment",value:$env,short:true}],
+              footer:"GitHub Actions",actions:[{type:"button",text:"View Run",url:$url}]}]}' > payload.json
 
-          cat <<EOF > ~/.msmtprc
-          defaults
-          auth on
-          tls on
-          tls_certcheck off
-          logfile ~/.msmtp.log
-          account default
-          host ${HOST}
-          port ${PORT}
-          from ${FROM}
-          user ${USER}
-          password ${PASS}
-          EOF
-          chmod 600 ~/.msmtprc
-
-          BODY="Subject: 🔔 Frontend CI/CD (${ENV}) - ${{ job.status }}
-          To: ${TO}
-          Status: ${{ job.status }}
-          Branch: ${{ github.ref_name }}
-          Commit: ${{ github.sha }}
-          Environment: ${ENV}
-          Image: ${{ env.DOCKER_USERNAME }}/bsoft-frontend:${{ steps.env.outputs.IMAGE_TAG }}
-          Time: $(date)
-          "
-          echo -e "$BODY" | msmtp "$TO"
+          [ -n "$SLACK_WEBHOOK" ] && curl -X POST -H 'Content-type: application/json' --data-binary @payload.json "$SLACK_WEBHOOK" || echo "ℹ️ Slack webhook missing"
 
       - name: 🧼 Docker Cleanup
         if: always()
