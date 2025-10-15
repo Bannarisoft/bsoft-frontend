@@ -106,7 +106,6 @@ jobs:
           if [[ -z "$TOK" ]]; then
             echo "❌ Failed to get Docker Hub API token"; exit 1
           fi
-
           ensure_repo() {
             local repo="${1:-bsoft-frontend}"
             STATUS="$(curl -s -o /dev/null -w '%{http_code}' \
