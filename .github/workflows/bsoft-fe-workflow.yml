@@ -1,4 +1,4 @@
-name: Frontend Deploy (Kubernetes + Docker)
+name: Deploy Frontend to Kubernetes
 
 on:
   push:
@@ -6,190 +6,147 @@ on:
       - Development
       - QA
       - main
-  workflow_dispatch:
 
 jobs:
-  build-test-deploy:
-    name: Build, Test and Deploy Frontend
+  build-push-deploy:
     runs-on: [self-hosted, Linux]
 
-    env:
-      EMAIL_TO: ${{ secrets.EMAIL_TO }}
-      EMAIL_FROM: ${{ secrets.EMAIL_FROM }}
-      SMTP_HOST: ${{ secrets.SMTP_HOST }}
-      SMTP_PORT: ${{ secrets.SMTP_PORT }}
-      EMAIL_USERNAME: ${{ secrets.EMAIL_USERNAME }}
-      EMAIL_PASSWORD: ${{ secrets.EMAIL_PASSWORD }}
-      KUBECONFIG: ${{ github.workspace }}/kubeconfig
-      DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
-      DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
-
     steps:
-      - name: ✅ Checkout Code
+      - name: 🧾 Checkout Code
         uses: actions/checkout@v3
 
       - name: 🏷️ Set Environment Variables
         id: env
         shell: bash
         run: |
-          set -eo pipefail
-          BRANCH="${{ github.ref_name }}"
-          if [[ "$BRANCH" == "Development" ]]; then
-            ENV_NAME="dev"
-            IMAGE_TAG="dev"
-            KUBE_NS="dev"
-            DEPLOYMENT_NAME="bsoft-frontend-dev"
-            KUBE_PATH="kubernetes/dev"
-          elif [[ "$BRANCH" == "QA" ]]; then
-            ENV_NAME="qa"
-            IMAGE_TAG="qa"
-            KUBE_NS="qa"
-            DEPLOYMENT_NAME="bsoft-frontend-qa"
-            KUBE_PATH="kubernetes/qa"
-          elif [[ "$BRANCH" == "main" ]]; then
-            ENV_NAME="prod"
-            IMAGE_TAG="latest"
-            KUBE_NS="prod"
-            DEPLOYMENT_NAME="bsoft-frontend-prod"
-            KUBE_PATH="kubernetes/prod"
+          if [[ "${{ github.ref_name }}" == "Development" ]]; then
+            echo "ENVIRONMENT=dev" >> $GITHUB_OUTPUT
+            echo "IMAGE_TAG=dev" >> $GITHUB_OUTPUT
+            echo "NAMESPACE=dev" >> $GITHUB_OUTPUT
+            echo "DEPLOYMENT_NAME=bsoft-frontend-dev" >> $GITHUB_OUTPUT
+            echo "KUBE_PATH=kubernetes/dev" >> $GITHUB_OUTPUT
+            echo "IMAGE_TAGS=dev" >> $GITHUB_OUTPUT
+          elif [[ "${{ github.ref_name }}" == "QA" ]]; then
+            echo "ENVIRONMENT=qa" >> $GITHUB_OUTPUT
+            echo "IMAGE_TAG=qa" >> $GITHUB_OUTPUT
+            echo "NAMESPACE=qa" >> $GITHUB_OUTPUT
+            echo "DEPLOYMENT_NAME=bsoft-frontend-qa" >> $GITHUB_OUTPUT
+            echo "KUBE_PATH=kubernetes/qa" >> $GITHUB_OUTPUT
+            # Multiple tags for QA
+            echo "IMAGE_TAGS='qa latest'" >> $GITHUB_OUTPUT
+          elif [[ "${{ github.ref_name }}" == "main" ]]; then
+            echo "ENVIRONMENT=prod" >> $GITHUB_OUTPUT
+            echo "IMAGE_TAG=latest" >> $GITHUB_OUTPUT
+            echo "NAMESPACE=prod" >> $GITHUB_OUTPUT
+            echo "DEPLOYMENT_NAME=bsoft-frontend-prod" >> $GITHUB_OUTPUT
+            echo "KUBE_PATH=kubernetes/prod" >> $GITHUB_OUTPUT
+            echo "IMAGE_TAGS=latest" >> $GITHUB_OUTPUT
           else
-            ENV_NAME="dev"
-            IMAGE_TAG="dev"
-            KUBE_NS="default"
-            DEPLOYMENT_NAME="bsoft-frontend"
-            KUBE_PATH="kubernetes/dev"
-          fi
+            echo "ENVIRONMENT=unknown" >> $GITHUB_OUTPUT
+            echo "IMAGE_TAG=dev" >> $GITHUB_OUTPUT
+            echo "NAMESPACE=default" >> $GITHUB_OUTPUT
+            echo "DEPLOYMENT_NAME=bsoft-frontend" >> $GITHUB_OUTPUT
+            echo "KUBE_PATH=kubernetes" >> $GITHUB_OUTPUT
+            echo "IMAGE_TAGS=dev" >> $GITHUB_OUTPUT
 
-          echo "ENV_NAME=${ENV_NAME}" >> $GITHUB_OUTPUT
-          echo "IMAGE_TAG=${IMAGE_TAG}" >> $GITHUB_OUTPUT
-          echo "KUBE_NS=${KUBE_NS}" >> $GITHUB_OUTPUT
-          echo "DEPLOYMENT_NAME=${DEPLOYMENT_NAME}" >> $GITHUB_OUTPUT
-          echo "KUBE_PATH=${KUBE_PATH}" >> $GITHUB_OUTPUT
-
-      - name: 🛡️ Setup Kubeconfig (Base64 Decode)
-        shell: bash
-        run: |
-          set -eo pipefail
-          printf '%s' "${{ secrets.KUBECONFIG }}" | tr -d '\r' | base64 --decode > "${{ env.KUBECONFIG }}"
-          chmod 600 "${{ env.KUBECONFIG }}"
-          export KUBECONFIG="${{ env.KUBECONFIG }}"
-          kubectl version --client --insecure-skip-tls-verify=true
-          echo "Testing cluster connectivity..."
-          timeout 30 kubectl cluster-info --insecure-skip-tls-verify=true || echo "⚠️ Cluster info check failed but continuing..."
-
-      - name: 🔐 Docker Hub Login
-        run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ env.DOCKER_USERNAME }}" --password-stdin
-
-      - name: 🧪 Docker Version Check
-        run: |
-          set -eo pipefail
-          docker version
-          docker buildx version || echo "🟡 buildx not installed, skipping..."
-
-      - name: 🔧 Ensure Docker Hub repo exists
+      - name: ⚙️ Setup Kubeconfig and check cluster
         shell: bash
         env:
-          DH_USER: ${{ secrets.DOCKER_USERNAME }}
-          DH_PASS: ${{ secrets.DOCKER_PASSWORD }}
+          KUBECONFIG_B64: ${{ secrets.KUBECONFIG }}
         run: |
-          set -eo pipefail
-          if ! command -v jq >/dev/null; then
-            JQ_BIN="$(mktemp -d)/jq"
-            curl -fsSL -o "$JQ_BIN" https://github.com/jqlang/jq/releases/download/jq-1.7.1/jq-linux-amd64
-            chmod +x "$JQ_BIN"
-            export PATH="$(dirname "$JQ_BIN"):$PATH"
-          fi
-          LOGIN_RES="$(curl -fsS -H 'Content-Type: application/json' \
-            -d "{\"username\":\"$DH_USER\",\"password\":\"$DH_PASS\"}" \
-            https://hub.docker.com/v2/users/login/ || true)"
-          TOK="$(echo "$LOGIN_RES" | jq -r '.token // empty')"
-          if [[ -z "$TOK" ]]; then
-            echo "❌ Failed to get Docker Hub API token"; exit 1
-          fi
-          ensure_repo() {
-            local repo="${1:-bsoft-frontend}"
-            STATUS="$(curl -s -o /dev/null -w '%{http_code}' \
-              -H "Authorization: JWT $TOK" \
-              "https://hub.docker.com/v2/repositories/$DH_USER/$repo/")"
-            if [[ "$STATUS" == "200" ]]; then echo "✅ Repo exists: $repo"; return; fi
-            echo "ℹ️ Creating $repo..."
-            curl -sS -X POST -H "Authorization: JWT $TOK" -H "Content-Type: application/json" \
-              -d "{\"namespace\":\"$DH_USER\",\"name\":\"$repo\",\"is_private\":true}" \
-              https://hub.docker.com/v2/repositories/ || true
-          }
-          ensure_repo "bsoft-frontend"
+          set -euo pipefail
+          printf '%s' "$KUBECONFIG_B64" | base64 -d > kubeconfig.yaml
+          chmod 600 kubeconfig.yaml
+          export KUBECONFIG="$PWD/kubeconfig.yaml"
+          kubectl version --client --insecure-skip-tls-verify=true
+          echo "Testing cluster connectivity..."
+          timeout 30 kubectl cluster-info --insecure-skip-tls-verify=true || echo "Warning: Cluster info failed, continuing..."
+          timeout 30 kubectl get nodes --insecure-skip-tls-verify=true || echo "Warning: Unable to get nodes, continuing..."
 
-      - name: 🐳 Build Docker Image
+      - name: 🔐 Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: 🐳 Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: 🛠️ Build & Push Docker Image
         shell: bash
         run: |
-          set -eo pipefail
-          TAG="${{ steps.env.outputs.IMAGE_TAG }}"
-          TAG="${TAG:-dev}"
-          docker build -t docker.io/${{ env.DOCKER_USERNAME }}/bsoft-frontend:$TAG -f ./Dockerfile .
-          echo "✅ Built image docker.io/${{ env.DOCKER_USERNAME }}/bsoft-frontend:$TAG"
-
-      - name: 📤 Push Docker Image
-        shell: bash
-        run: |
-          set -eo pipefail
-          TAG="${{ steps.env.outputs.IMAGE_TAG }}"
-          TAG="${TAG:-dev}"
-          docker push docker.io/${{ env.DOCKER_USERNAME }}/bsoft-frontend:$TAG
-          echo "✅ Image pushed to Docker Hub"
+          set -euo pipefail
+          for TAG in ${{ steps.env.outputs.IMAGE_TAGS }}; do
+            echo "Building and pushing tag: $TAG"
+            docker build -f ./Dockerfile -t docker.io/${{ secrets.DOCKER_USERNAME }}/bsoft-frontend:$TAG .
+            docker push docker.io/${{ secrets.DOCKER_USERNAME }}/bsoft-frontend:$TAG
+          done
 
       - name: 📦 Create/Verify Namespace
         shell: bash
         run: |
-          set -eo pipefail
-          export KUBECONFIG="${{ env.KUBECONFIG }}"
-          NS="${{ steps.env.outputs.KUBE_NS }}"
-          NS="${NS:-dev}"
-          kubectl get ns "$NS" --insecure-skip-tls-verify=true >/dev/null 2>&1 || kubectl create ns "$NS"
-          echo "✅ Namespace $NS ready"
+          set -euo pipefail
+          export KUBECONFIG="$PWD/kubeconfig.yaml"
+          echo "Ensuring namespace ${{ steps.env.outputs.NAMESPACE }} exists..."
+          kubectl create namespace ${{ steps.env.outputs.NAMESPACE }} --dry-run=client -o yaml | kubectl apply -f - --insecure-skip-tls-verify=true
 
-      - name: 🔍 Verify Deployment Files
+      - name: 🚀 Deploy to Kubernetes
         shell: bash
         run: |
-          set -eo pipefail
-          KUBE_PATH="${{ steps.env.outputs.KUBE_PATH }}"
-          KUBE_PATH="${KUBE_PATH:-kubernetes/dev}"
-          echo "Checking files in $KUBE_PATH..."
-          ls -la "$KUBE_PATH" || exit 1
-          cat "$KUBE_PATH"/deployment.yaml
-          cat "$KUBE_PATH"/service.yaml
-
-      - name: 🚢 Deploy to Kubernetes
-        shell: bash
-        run: |
-          set -eo pipefail
-          export KUBECONFIG="${{ env.KUBECONFIG }}"
-          NS="${{ steps.env.outputs.KUBE_NS }}"
-          NS="${NS:-dev}"
-          DEPLOY="${{ steps.env.outputs.DEPLOYMENT_NAME }}"
-          DEPLOY="${DEPLOY:-bsoft-frontend}"
-          KUBE_PATH="${{ steps.env.outputs.KUBE_PATH }}"
-          KUBE_PATH="${KUBE_PATH:-kubernetes/dev}"
-
-          kubectl apply -n "$NS" -f "$KUBE_PATH/deployment.yaml" --validate=false --insecure-skip-tls-verify=true
-          kubectl apply -n "$NS" -f "$KUBE_PATH/service.yaml" --validate=false --insecure-skip-tls-verify=true
-
-          kubectl rollout status deployment/"$DEPLOY" -n "$NS" --timeout=600s || {
-            echo "❌ Rollout failed"
-            kubectl rollout undo deployment/"$DEPLOY" -n "$NS"
+          set -euo pipefail
+          export KUBECONFIG="$PWD/kubeconfig.yaml"
+          echo "Deploying to ${{ steps.env.outputs.ENVIRONMENT }} environment..."
+          echo "Using manifests from: ${{ steps.env.outputs.KUBE_PATH }}"
+          if ! timeout 30 kubectl get namespaces --insecure-skip-tls-verify=true > /dev/null 2>&1; then
+            echo "Error: Cannot connect to Kubernetes cluster"
             exit 1
-          }
-          echo "✅ Frontend deployment succeeded"
+          fi
+          timeout 120 kubectl apply -f ${{ steps.env.outputs.KUBE_PATH }}/ --validate=false --insecure-skip-tls-verify=true
+          echo "Waiting for deployment to be ready..."
+          timeout 300 kubectl rollout status deployment/${{ steps.env.outputs.DEPLOYMENT_NAME }} -n ${{ steps.env.outputs.NAMESPACE }} --insecure-skip-tls-verify=true
 
-      - name: 🧼 Docker Cleanup
-        if: always()
+      - name: 🌐 Get Service URL (NodePort)
+        shell: bash
         run: |
-          set -eo pipefail
-          docker system prune -af
-          docker builder prune -af
+          export KUBECONFIG="$PWD/kubeconfig.yaml"
+          timeout 30 kubectl get svc -n ${{ steps.env.outputs.NAMESPACE }} -o wide --insecure-skip-tls-verify=true || echo "Warning: Unable to get service info"
 
-      - name: 🧹 Cleanup Kubeconfig
+      - name: 📧 Send Success Email
+        if: success()
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: 192.168.1.113
+          server_port: 25
+          ignore_cert: true
+          username: ${{ secrets.EMAIL_USERNAME }}
+          password: ${{ secrets.EMAIL_PASSWORD }}
+          subject: "✅ Frontend Deployed to ${{ steps.env.outputs.ENVIRONMENT }} - ${{ github.ref_name }}"
+          to: ${{ secrets.EMAIL_TO }}
+          from: "CI/CD Bot <${{ secrets.EMAIL_USERNAME }}>"
+
+      - name: 📧 Send Failure Email
+        if: failure()
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: 192.168.1.113
+          server_port: 25
+          ignore_cert: true
+          username: ${{ secrets.EMAIL_USERNAME }}
+          password: ${{ secrets.EMAIL_PASSWORD }}
+          subject: "❌ Frontend Deployment Failed - ${{ steps.env.outputs.ENVIRONMENT }} - ${{ github.ref_name }}"
+          to: ${{ secrets.EMAIL_TO }}
+          from: "CI/CD Bot <${{ secrets.EMAIL_USERNAME }}>"
+
+      - name: 🔁 Rollback on Failure
+        if: failure()
+        shell: bash
+        run: |
+          echo "Deployment failed. Rolling back to previous revision..."
+          export KUBECONFIG="$PWD/kubeconfig.yaml"
+          timeout 60 kubectl rollout undo deployment/${{ steps.env.outputs.DEPLOYMENT_NAME }} -n ${{ steps.env.outputs.NAMESPACE }} --insecure-skip-tls-verify=true || echo "Warning: Rollback failed or deployment doesn't exist"
+
+      - name: 🧹 Cleanup
         if: always()
         shell: bash
         run: |
-          set -eo pipefail
-          rm -f "${{ env.KUBECONFIG }}"
+          rm -f kubeconfig.yaml
