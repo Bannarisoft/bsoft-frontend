@@ -25,29 +25,25 @@ jobs:
             echo "NAMESPACE=dev" >> $GITHUB_OUTPUT
             echo "DEPLOYMENT_NAME=bsoft-frontend-dev" >> $GITHUB_OUTPUT
             echo "KUBE_PATH=kubernetes/dev" >> $GITHUB_OUTPUT
-            echo "IMAGE_TAGS=dev" >> $GITHUB_OUTPUT
           elif [[ "${{ github.ref_name }}" == "QA" ]]; then
             echo "ENVIRONMENT=qa" >> $GITHUB_OUTPUT
             echo "IMAGE_TAG=qa" >> $GITHUB_OUTPUT
             echo "NAMESPACE=qa" >> $GITHUB_OUTPUT
             echo "DEPLOYMENT_NAME=bsoft-frontend-qa" >> $GITHUB_OUTPUT
             echo "KUBE_PATH=kubernetes/qa" >> $GITHUB_OUTPUT
-            # Multiple tags for QA
-            echo "IMAGE_TAGS='qa latest'" >> $GITHUB_OUTPUT
           elif [[ "${{ github.ref_name }}" == "main" ]]; then
             echo "ENVIRONMENT=prod" >> $GITHUB_OUTPUT
             echo "IMAGE_TAG=latest" >> $GITHUB_OUTPUT
             echo "NAMESPACE=prod" >> $GITHUB_OUTPUT
             echo "DEPLOYMENT_NAME=bsoft-frontend-prod" >> $GITHUB_OUTPUT
             echo "KUBE_PATH=kubernetes/prod" >> $GITHUB_OUTPUT
-            echo "IMAGE_TAGS=latest" >> $GITHUB_OUTPUT
           else
             echo "ENVIRONMENT=unknown" >> $GITHUB_OUTPUT
             echo "IMAGE_TAG=dev" >> $GITHUB_OUTPUT
             echo "NAMESPACE=default" >> $GITHUB_OUTPUT
             echo "DEPLOYMENT_NAME=bsoft-frontend" >> $GITHUB_OUTPUT
             echo "KUBE_PATH=kubernetes" >> $GITHUB_OUTPUT
-            echo "IMAGE_TAGS=dev" >> $GITHUB_OUTPUT
+          fi
 
       - name: ⚙️ Setup Kubeconfig and check cluster
         shell: bash
@@ -55,13 +51,27 @@ jobs:
           KUBECONFIG_B64: ${{ secrets.KUBECONFIG }}
         run: |
           set -euo pipefail
+          
+          # Decode kubeconfig
           printf '%s' "$KUBECONFIG_B64" | base64 -d > kubeconfig.yaml
           chmod 600 kubeconfig.yaml
           export KUBECONFIG="$PWD/kubeconfig.yaml"
+          
+          # Check client version
           kubectl version --client --insecure-skip-tls-verify=true
+          
+          # Test cluster connectivity (with timeout)
           echo "Testing cluster connectivity..."
-          timeout 30 kubectl cluster-info --insecure-skip-tls-verify=true || echo "Warning: Cluster info failed, continuing..."
-          timeout 30 kubectl get nodes --insecure-skip-tls-verify=true || echo "Warning: Unable to get nodes, continuing..."
+          timeout 30 kubectl cluster-info --insecure-skip-tls-verify=true || {
+            echo "Warning: Cluster info failed, but continuing..."
+            exit 0
+          }
+          
+          # Get nodes (with timeout)
+          timeout 30 kubectl get nodes --insecure-skip-tls-verify=true || {
+            echo "Warning: Unable to get nodes, but continuing..."
+            exit 0
+          }
 
       - name: 🔐 Login to Docker Hub
         uses: docker/login-action@v3
@@ -73,20 +83,21 @@ jobs:
         uses: docker/setup-buildx-action@v3
 
       - name: 🛠️ Build & Push Docker Image
-        shell: bash
-        run: |
-          set -euo pipefail
-          for TAG in ${{ steps.env.outputs.IMAGE_TAGS }}; do
-            echo "Building and pushing tag: $TAG"
-            docker build -f ./Dockerfile -t docker.io/${{ secrets.DOCKER_USERNAME }}/bsoft-frontend:$TAG .
-            docker push docker.io/${{ secrets.DOCKER_USERNAME }}/bsoft-frontend:$TAG
-          done
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          tags: |
+            docker.io/${{ secrets.DOCKER_USERNAME }}/bsoft-frontend:${{ steps.env.outputs.IMAGE_TAG }}
+            docker.io/${{ secrets.DOCKER_USERNAME }}/bsoft-frontend:${{ steps.env.outputs.IMAGE_TAG }}-${{ github.sha }}
 
       - name: 📦 Create/Verify Namespace
         shell: bash
         run: |
           set -euo pipefail
           export KUBECONFIG="$PWD/kubeconfig.yaml"
+          
           echo "Ensuring namespace ${{ steps.env.outputs.NAMESPACE }} exists..."
           kubectl create namespace ${{ steps.env.outputs.NAMESPACE }} --dry-run=client -o yaml | kubectl apply -f - --insecure-skip-tls-verify=true
 
@@ -95,13 +106,21 @@ jobs:
         run: |
           set -euo pipefail
           export KUBECONFIG="$PWD/kubeconfig.yaml"
+          
           echo "Deploying to ${{ steps.env.outputs.ENVIRONMENT }} environment..."
           echo "Using manifests from: ${{ steps.env.outputs.KUBE_PATH }}"
+          
+          # Test kubectl connectivity first
           if ! timeout 30 kubectl get namespaces --insecure-skip-tls-verify=true > /dev/null 2>&1; then
             echo "Error: Cannot connect to Kubernetes cluster"
+            echo "Please check your KUBECONFIG secret and cluster connectivity"
             exit 1
           fi
+          
+          # Apply manifests with timeout
           timeout 120 kubectl apply -f ${{ steps.env.outputs.KUBE_PATH }}/ --validate=false --insecure-skip-tls-verify=true
+          
+          # Wait for rollout to complete
           echo "Waiting for deployment to be ready..."
           timeout 300 kubectl rollout status deployment/${{ steps.env.outputs.DEPLOYMENT_NAME }} -n ${{ steps.env.outputs.NAMESPACE }} --insecure-skip-tls-verify=true
 
@@ -109,7 +128,10 @@ jobs:
         shell: bash
         run: |
           export KUBECONFIG="$PWD/kubeconfig.yaml"
-          timeout 30 kubectl get svc -n ${{ steps.env.outputs.NAMESPACE }} -o wide --insecure-skip-tls-verify=true || echo "Warning: Unable to get service info"
+          timeout 30 kubectl get svc -n ${{ steps.env.outputs.NAMESPACE }} -o wide --insecure-skip-tls-verify=true || {
+            echo "Warning: Unable to get service info"
+            exit 0
+          }
 
       - name: 📧 Send Success Email
         if: success()
@@ -123,6 +145,16 @@ jobs:
           subject: "✅ Frontend Deployed to ${{ steps.env.outputs.ENVIRONMENT }} - ${{ github.ref_name }}"
           to: ${{ secrets.EMAIL_TO }}
           from: "CI/CD Bot <${{ secrets.EMAIL_USERNAME }}>"
+          html_body: |
+            <h3>✅ Deployment Success</h3>
+            <p><strong>Environment:</strong> ${{ steps.env.outputs.ENVIRONMENT }}</p>
+            <p><strong>Repository:</strong> ${{ github.repository }}</p>
+            <p><strong>Branch:</strong> ${{ github.ref_name }}</p>
+            <p><strong>Commit:</strong> ${{ github.sha }}</p>
+            <p><strong>Image Tag:</strong> ${{ steps.env.outputs.IMAGE_TAG }}</p>
+            <p><strong>Triggered by:</strong> ${{ github.actor }}</p>
+            <p><strong>Namespace:</strong> ${{ steps.env.outputs.NAMESPACE }}</p>
+            <p><strong>Status:</strong> Deployment succeeded.</p>
 
       - name: 📧 Send Failure Email
         if: failure()
@@ -136,6 +168,14 @@ jobs:
           subject: "❌ Frontend Deployment Failed - ${{ steps.env.outputs.ENVIRONMENT }} - ${{ github.ref_name }}"
           to: ${{ secrets.EMAIL_TO }}
           from: "CI/CD Bot <${{ secrets.EMAIL_USERNAME }}>"
+          html_body: |
+            <h3>🚨 Deployment Failed</h3>
+            <p><strong>Environment:</strong> ${{ steps.env.outputs.ENVIRONMENT }}</p>
+            <p><strong>Repository:</strong> ${{ github.repository }}</p>
+            <p><strong>Branch:</strong> ${{ github.ref_name }}</p>
+            <p><strong>Commit:</strong> ${{ github.sha }}</p>
+            <p><strong>Triggered by:</strong> ${{ github.actor }}</p>
+            <p>⚠️ Deployment failed and a rollback was attempted.</p>
 
       - name: 🔁 Rollback on Failure
         if: failure()
@@ -143,7 +183,10 @@ jobs:
         run: |
           echo "Deployment failed. Rolling back to previous revision..."
           export KUBECONFIG="$PWD/kubeconfig.yaml"
-          timeout 60 kubectl rollout undo deployment/${{ steps.env.outputs.DEPLOYMENT_NAME }} -n ${{ steps.env.outputs.NAMESPACE }} --insecure-skip-tls-verify=true || echo "Warning: Rollback failed or deployment doesn't exist"
+          timeout 60 kubectl rollout undo deployment/${{ steps.env.outputs.DEPLOYMENT_NAME }} -n ${{ steps.env.outputs.NAMESPACE }} --insecure-skip-tls-verify=true || {
+            echo "Warning: Rollback failed or deployment doesn't exist"
+            exit 0
+          }
 
       - name: 🧹 Cleanup
         if: always()
