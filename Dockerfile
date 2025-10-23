@@ -18,5 +18,5 @@ COPY . .
 RUN pnpm run build:auto
 
 # Production settings
-ENV NODE_ENV=production
+ENV NODE_ENV=qa
 CMD ["pnpm", "run", "start:auto"]
