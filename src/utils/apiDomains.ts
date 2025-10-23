@@ -1,20 +1,35 @@
+// export const apiDomainConfig: Record<string, Record<string, string>> = {
+//   "121.200.49.254": {
+//     base: "http://121.200.49.254:30574",
+//     fam: "http://121.200.49.254:30594",
+//     main: "http://121.200.49.254:30593",
+//     bg: "http://121.200.49.254:30511",
+//   },
+//     "192.168.1.138": {
+//     base: "http://192.168.1.138:30574",
+//     fam: "http://192.168.1.138:30594",
+//     main: "http://192.168.1.138:30593",
+//     bg: "http://192.168.1.138:30511",
+//   },
+//   localhost: {
+//     base: "http://121.200.49.254:30574",
+//     fam: "http://121.200.49.254:30594",
+//     main: "http://121.200.49.254:30593",
+//     bg: "http://121.200.49.254:30511",
+//   },
+// };
+
 export const apiDomainConfig: Record<string, Record<string, string>> = {
-  "121.200.49.254": {
-    base: "http://121.200.49.254:30574",
-    fam: "http://121.200.49.254:30594",
-    main: "http://121.200.49.254:30593",
-    bg: "http://121.200.49.254:30511",
-  },
-    "192.168.1.138": {
-    base: "http://192.168.1.138:30574",
-    fam: "http://192.168.1.138:30594",
-    main: "http://192.168.1.138:30593",
-    bg: "http://192.168.1.138:30511",
+  "frontend-service": {
+    base: "http://usermanagement-service.qa.svc.cluster.local:7031",
+    fam: "http://fixedasset-service.qa.svc.cluster.local:7039",
+    main: "http://maintenance-service.qa.svc.cluster.local:7243",
+    bg: "http://background-service.qa.svc.cluster.local:7111",
   },
   localhost: {
-    base: "http://121.200.49.254:30574",
-    fam: "http://121.200.49.254:30594",
-    main: "http://121.200.49.254:30593",
-    bg: "http://121.200.49.254:30511",
+    base: "http://usermanagement-service.qa.svc.cluster.local:7031",
+    fam: "http://fixedasset-service.qa.svc.cluster.local:7039",
+    main: "http://maintenance-service.qa.svc.cluster.local:7243",
+    bg: "http://background-service.qa.svc.cluster.local:7111",
   },
 };
