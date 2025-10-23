@@ -100,7 +100,22 @@ jobs:
           
           # Wait for rollout to complete
           echo "Waiting for deployment to be ready..."
-          timeout 300 kubectl rollout status deployment/bsoft-frontend-qa -n qa --insecure-skip-tls-verify=true
+          if ! timeout 600 kubectl rollout status deployment/bsoft-frontend-qa -n qa --insecure-skip-tls-verify=true; then
+            echo "Rollout timeout - checking for stuck pods..."
+            kubectl get pods -n qa -l app=bsoft-frontend-qa
+            
+            # Delete stuck terminating pods
+            TERMINATING_PODS=$(kubectl get pods -n qa -l app=bsoft-frontend-qa --field-selector=status.phase=Terminating -o jsonpath='{.items[*].metadata.name}')
+            if [ -n "$TERMINATING_PODS" ]; then
+              echo "Force deleting stuck pods: $TERMINATING_PODS"
+              kubectl delete pod $TERMINATING_PODS -n qa --grace-period=0 --force --insecure-skip-tls-verify=true
+              
+              # Wait again after force delete
+              timeout 120 kubectl rollout status deployment/bsoft-frontend-qa -n qa --insecure-skip-tls-verify=true
+            else
+              exit 1
+            fi
+          fi
 
       - name: 🌐 Get Service URL (NodePort)
         shell: bash
