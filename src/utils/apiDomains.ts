@@ -20,16 +20,16 @@
 // };
 
 export const apiDomainConfig: Record<string, Record<string, string>> = {
-  "frontend-service": {
-    base: "http://usermanagement-service.qa.svc.cluster.local:7031",
-    fam: "http://fixedasset-service.qa.svc.cluster.local:7039",
-    main: "http://maintenance-service.qa.svc.cluster.local:7243",
-    bg: "http://background-service.qa.svc.cluster.local:7111",
+  "bsoftqa.postiefs.com": {
+    base: "http://usermanagement-api.bsoftqa.postiefs.com",
+    fam: "http://fixedasset-api.bsoftqa.postiefs.com",
+    main: "http://maintenance-api.bsoftqa.postiefs.com",
+    bg: "http://background-api.bsoftqa.postiefs.com",
   },
   localhost: {
-    base: "http://usermanagement-service.qa.svc.cluster.local:7031",
-    fam: "http://fixedasset-service.qa.svc.cluster.local:7039",
-    main: "http://maintenance-service.qa.svc.cluster.local:7243",
-    bg: "http://background-service.qa.svc.cluster.local:7111",
+    base: "http://usermanagement-api.bsoftqa.postiefs.com",
+    fam: "http://fixedasset-api.bsoftqa.postiefs.com",
+    main: "http://maintenance-api.bsoftqa.postiefs.com",
+    bg: "http://background-api.bsoftqa.postiefs.com",
   },
 };
