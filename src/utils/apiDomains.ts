@@ -19,7 +19,6 @@
 //   },
 // };
 
-
 export const apiDomainConfig: Record<string, Record<string, string>> = {
   "bsoftqa.postiefs.com": {
     base: "http://usermanagement-api.bsoftqa.postiefs.com",
