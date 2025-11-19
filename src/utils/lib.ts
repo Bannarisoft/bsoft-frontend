@@ -89,7 +89,7 @@ function stringToColor(string: string) {
 
   /* eslint-disable no-bitwise */
   for (i = 0; i < string?.length; i += 1) {
-    hash = string.charCodeAt(i) + ((hash << 5) - hash);
+    hash = typeof string === "string" ? string.charCodeAt(i) + ((hash << 5) - hash) : 0
   }
 
   let color = "#";
@@ -104,7 +104,7 @@ function stringToColor(string: string) {
 }
 
 export function stringAvatar(name: string) {
-  const checkSpace = name?.split(" ") ?? [];
+  const checkSpace = typeof name === "string" ? name?.split(" ") ?? [] : ""
 
   return {
     sx: {
@@ -113,7 +113,7 @@ export function stringAvatar(name: string) {
     children:
       checkSpace.length === 1
         ? `${name?.at(0)}`
-        : `${name?.split(" ")[0][0]}${name?.split(" ")[1][0]}`,
+        : `${typeof name === "string" && name?.split(" ")[0][0]}${typeof name === "string" && name?.split(" ")[1][0]}`,
   };
 }
 
