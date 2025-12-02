@@ -21,16 +21,16 @@
 
 
 export const apiDomainConfig: Record<string, Record<string, string>> = {
-  "bsoftqa.postiefs.com": {
-    base: "http://usermanagement-api.bsoftqa.postiefs.com",
-    fam: "http://fixedasset-api.bsoftqa.postiefs.com",
-    main: "http://maintenance-api.bsoftqa.postiefs.com",
-    bg: "http://background-api.bsoftqa.postiefs.com",
+  "qa.bannarimill.com": {
+    base: "http://usermanagement-api.qa.bannarimill.com",
+    fam: "http://fixedasset-api.qa.bannarimill.com",
+    main: "http://maintenance-api.qa.bannarimill.com",
+    bg: "http://background-api.qa.bannarimill.com",
   },
   localhost: {
-    base: "http://usermanagement-api.bsoftqa.postiefs.com",
-    fam: "http://fixedasset-api.bsoftqa.postiefs.com",
-    main: "http://maintenance-api.bsoftqa.postiefs.com",
-    bg: "http://background-api.bsoftqa.postiefs.com",
+    base: "http://usermanagement-api.qa.bannarimill.com",
+    fam: "http://fixedasset-api.qa.bannarimill.com",
+    main: "http://maintenance-api.qa.bannarimill.com",
+    bg: "http://background-api.qa.bannarimill.com",
   },
 };
