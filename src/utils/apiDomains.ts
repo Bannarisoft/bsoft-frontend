@@ -21,15 +21,15 @@
 
 export const apiDomainConfig: Record<string, Record<string, string>> = {
   "frontend-service": {
-    base: "http://usermanagement-service.qa.svc.cluster.local:7031",
-    fam: "http://fixedasset-service.qa.svc.cluster.local:7039",
-    main: "http://maintenance-service.qa.svc.cluster.local:7243",
-    bg: "http://background-service.qa.svc.cluster.local:7111",
+    base: "https://usermanagement-service.qa.svc.cluster.local:7031",
+    fam: "https://fixedasset-service.qa.svc.cluster.local:7039",
+    main: "https://maintenance-service.qa.svc.cluster.local:7243",
+    bg: "https://background-service.qa.svc.cluster.local:7111",
   },
   localhost: {
-    base: "http://usermanagement-service.qa.svc.cluster.local:7031",
-    fam: "http://fixedasset-service.qa.svc.cluster.local:7039",
-    main: "http://maintenance-service.qa.svc.cluster.local:7243",
-    bg: "http://background-service.qa.svc.cluster.local:7111",
+    base: "https://usermanagement-service.qa.svc.cluster.local:7031",
+    fam: "https://fixedasset-service.qa.svc.cluster.local:7039",
+    main: "https://maintenance-service.qa.svc.cluster.local:7243",
+    bg: "https://background-service.qa.svc.cluster.local:7111",
   },
 };
