@@ -22,15 +22,15 @@
 
 export const apiDomainConfig: Record<string, Record<string, string>> = {
   "qa.bannarimill.com": {
-    base: "http://usermanagement-api.qa.bannarimill.com",
-    fam: "http://fixedasset-api.qa.bannarimill.com",
-    main: "http://maintenance-api.qa.bannarimill.com",
-    bg: "http://background-api.qa.bannarimill.com",
+    base: "https://usermanagement-api.qa.bannarimill.com",
+    fam: "https://fixedasset-api.qa.bannarimill.com",
+    main: "https://maintenance-api.qa.bannarimill.com",
+    bg: "https://background-api.qa.bannarimill.com",
   },
   localhost: {
-    base: "http://usermanagement-api.qa.bannarimill.com",
-    fam: "http://fixedasset-api.qa.bannarimill.com",
-    main: "http://maintenance-api.qa.bannarimill.com",
-    bg: "http://background-api.qa.bannarimill.com",
+    base: "https://usermanagement-api.qa.bannarimill.com",
+    fam: "https://fixedasset-api.qa.bannarimill.com",
+    main: "https://maintenance-api.qa.bannarimill.com",
+    bg: "https://background-api.qa.bannarimill.com",
   },
 };
